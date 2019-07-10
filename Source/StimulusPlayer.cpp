@@ -11,6 +11,20 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "StimulusPlayer.h"
 
+String returnHHMMSS(double lengthInSeconds)
+{
+    int hours = (int)lengthInSeconds / (60 * 60);
+    int minutes = ((int)lengthInSeconds / 60) % 60;
+    int seconds = ((int)lengthInSeconds) % 60;
+    int millis = floor((lengthInSeconds - floor(lengthInSeconds)) * 100);
+    // DBG(String(millis));
+    String output = String(hours).paddedLeft('0', 2) + ":" +
+    String(minutes).paddedLeft('0', 2) + ":" +
+    String(seconds).paddedLeft('0', 2) + "." +
+    String(millis).paddedLeft('0', 2);
+    return output;
+};
+
 //==============================================================================
 StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
 {
