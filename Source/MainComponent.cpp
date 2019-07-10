@@ -2,12 +2,10 @@
 
 MainComponent::MainComponent()
 {
-    
     addAndMakeVisible(sp);
     // Make sure you set the size of the component after
     // you add any child components.
-    
-    
+
     setSize (1400, 800);
 
     // Some platforms require permissions to open input channels so request that here
@@ -39,18 +37,18 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
     // You can use this function to initialise any resources you might need,
     // but be careful - it will be called on the audio thread, not the GUI thread.
 
-    // For more details, see the help for AudioProcessor::prepareToPlay()
+	// prepare stimulus player object
+	sp.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
-    // Your audio-processing code goes here!
-
-    // For more details, see the help for AudioProcessor::getNextAudioBlock()
+	// pass the buffer into the stimulus player to be filled with required audio
+	sp.getNextAudioBlock(bufferToFill);
 
     // Right now we are not producing any data, in which case we need to clear the buffer
     // (to prevent the output of random noise)
-    bufferToFill.clearActiveBufferRegion();
+    //bufferToFill.clearActiveBufferRegion();
 }
 
 void MainComponent::releaseResources()
@@ -58,7 +56,7 @@ void MainComponent::releaseResources()
     // This will be called when the audio device stops, or when it is being
     // restarted due to a setting change.
 
-    // For more details, see the help for AudioProcessor::releaseResources()
+	sp.releaseResources();
 }
 
 //==============================================================================
