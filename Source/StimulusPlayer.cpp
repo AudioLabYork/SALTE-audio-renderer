@@ -1,13 +1,3 @@
-/*
-  ==============================================================================
-
-    StimulusPlayer.cpp
-    Created: 9 Jul 2019 11:33:50am
-    Author:  TR
-
-  ==============================================================================
-*/
-
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "StimulusPlayer.h"
 
@@ -17,7 +7,7 @@ String returnHHMMSS(double lengthInSeconds)
     int minutes = ((int)lengthInSeconds / 60) % 60;
     int seconds = ((int)lengthInSeconds) % 60;
     int millis = floor((lengthInSeconds - floor(lengthInSeconds)) * 100);
-    // DBG(String(millis));
+
     String output = String(hours).paddedLeft('0', 2) + ":" +
     String(minutes).paddedLeft('0', 2) + ":" +
     String(seconds).paddedLeft('0', 2) + "." +
@@ -25,23 +15,14 @@ String returnHHMMSS(double lengthInSeconds)
     return output;
 };
 
-//==============================================================================
 StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
 {
     formatManager.registerBasicFormats();
     readAheadThread.startThread(3);
     
-    // createFilePathList("D:/ASP_TEST/aspConfigFile.csv"); // load this config file at startup
-    
-    // OSC sender and receiver connect
-    DBG("Connecting OSC ...");
-    remoteInterfaceTxRx.connectSender("127.0.0.1", 6000);
-    remoteInterfaceTxRx.connectReceiver(9000);
-    remoteInterfaceTxRx.addListener(this);
-    
     //EDITOR
     addAndMakeVisible(&openButton);
-    openButton.setButtonText("Open config file...");
+    openButton.setButtonText("Open file... (DOES NOTHING ATM)");
     openButton.addListener(this);
     
     addAndMakeVisible(&playButton);
@@ -59,14 +40,6 @@ StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
     
     playbackHeadPosition.setText("Time:", dontSendNotification);
     addAndMakeVisible(playbackHeadPosition);
-    
-    addAndMakeVisible(logWindow);
-    logWindow.setMultiLine(true);
-    logWindow.setReadOnly(true);
-    logWindow.setCaretVisible(false);
-    logWindow.setScrollbarsShown(true);
-    
-    //setSize (800, 600);
     
     startTimer(30);
     
@@ -135,9 +108,7 @@ void StimulusPlayer::resized()
     
     loadedFileName.setBounds(280, 20, 500, 25);
     playbackHeadPosition.setBounds(280, 45, 500, 25);
-    
-    logWindow.setBounds(10, 460, 520, 130);
-    
+        
     if (numberOfStimuli > 0)
     {
         int buttonWidth = 57;
@@ -209,7 +180,10 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
                                   &readAheadThread,       // this is the background thread to use for reading-ahead
                                   reader->sampleRate,     // allows for sample rate correction
                                   reader->numChannels);    // the maximum number of channels that may need to be played
+        // update GUI label
+        loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
         
+        // send message to the main log window
         sendMsgToLogWindow("Loaded: " + audioFile.getFileName());
         sendMsgToLogWindow(String(reader->numChannels) + "," +
                            String(reader->bitsPerSample) + "," +
@@ -221,79 +195,16 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 
 void StimulusPlayer::sendMsgToLogWindow(String message)
 {
-    logWindowMessage += message + "\n";
+    // is it safe? (1/2)
+    currentMessage += message + "\n";
     sendChangeMessage();  // broadcast change message to inform and update the editor
-}
-
-
-// OSC
-void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
-{
-    sendMsgToLogWindow("OSC RECEIVED ");
-    
-    
-    if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isInt32())
-    {
-        loadFileIntoTransport(File(filePathList[message[0].getInt32()]));
-    }
-    
-    if (message.size() == 1 && message.getAddressPattern() == "/transport" && message[0].isString())
-    {
-        if (message[0].getString() == "play")
-        {
-            transportSource.setPosition(0);
-            transportSource.start();
-        }
-        
-        if (message[0].getString() == "stop")
-        {
-            transportSource.stop();
-        }
-        
-    }
-    
-    
-    //logWindowMessage += String("Loaded: ") + message[0].getString() + "\n";
-    //sendChangeMessage(); // broadcast change message to inform and update the editor
-    
-    //
-    //DBG(message.getAddressPattern().toString() + message[0].getString());
-    
-    //if (message.size() == 1 && message.getAddressPattern() == "/lastmarker/number/str" && message[0].isString())
-    //{
-    //    lastMarkerIndex = message[0].getString().getIntValue();
-    //    DBG("Last marker index: " + String(lastMarkerIndex));
-    //}
-    //if (message.size() == 1 && message.getAddressPattern() == "/time" && message[0].isFloat32() && message[0].getFloat32() != 0)
-    //{
-    //    currentPosition = message[0].getFloat32();
-    //    markerTimeArray.set(markerIndex, currentPosition);
-    //    DBG("Last marker position: " + String(currentPosition));
-    //}
-    
-    //if (message.size() == 1 && message.getAddressPattern() == "/track/number/str" && message[0].isString())
-    //{
-    //    lastTrackIndex = message[0].getString().getIntValue();
-    //    DBG("Last track index: " + String(lastTrackIndex));
-    //}
-    //if (message.size() == 1 && message.getAddressPattern() == "/track/name" && message[0].isString())
-    //{
-    //    String trackName = message[0].getString();
-    //    DBG("Last track name: " + trackName);
-    //    if (trackName.startsWith("##"))
-    //    {
-    //        trackNameArray.set(trackArrayIndex, trackName);
-    //        trackArrayIndex++;
-    //    }
-    //}
-    
 }
 
 void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
 {
     if (buttonThatWasClicked == &openButton)
     {
-        browseForConfigFile();
+        // browseForConfigFile();
     }
     else if (buttonThatWasClicked == &playButton)
     {
@@ -314,52 +225,22 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
     repaint();
 }
 
-void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
-{
-    logWindow.setText(logWindowMessage);
-    logWindow.moveCaretToEnd();
-    loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
-}
-
 void StimulusPlayer::timerCallback()
 {
     double currentPosition = transportSource.getCurrentPosition();
     double lengthInSeconds = transportSource.getLengthInSeconds();
     
+    // update diplayed times in GUI
     playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
-}
-
-void StimulusPlayer::browseForConfigFile()
-{
-    
-#if JUCE_MODAL_LOOPS_PERMITTED
-    const bool useNativeVersion = true;
-    FileChooser fc("Choose a file to open...",
-                   File::getCurrentWorkingDirectory(),
-                   "*.csv",
-                   useNativeVersion);
-    
-    if (fc.browseForFileToOpen())
-    {
-        File chosenFile = fc.getResult();
-        createFilePathList(chosenFile.getFullPathName());
-        numberOfStimuli = filePathList.size();
-        createStimuliTriggerButtons(); // only for test
-    }
-#endif
 }
 
 void StimulusPlayer::createStimuliTriggerButtons()
 {
-    
-    // StringArray triggerButtonAlphabet = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
-    for (int i = 0; i < numberOfStimuli; ++i)
+        for (int i = 0; i < numberOfStimuli; ++i)
     {
         triggerStimuliButtonArray.add(new TextButton());
         triggerStimuliButtonArray[i]->getProperties().set("triggerStimuliButton", true);
         triggerStimuliButtonArray[i]->getProperties().set("buttonIndex", i);
-        //if (i < triggerButtonAlphabet.size()) triggerStimuliButtonArray[i]->setButtonText(triggerButtonAlphabet[i]);
-        //else triggerStimuliButtonArray[i]->setButtonText(String(i+1));
         triggerStimuliButtonArray[i]->setButtonText(fileIdList[i]);
         triggerStimuliButtonArray[i]->addListener(this);
         addAndMakeVisible(triggerStimuliButtonArray[i]);

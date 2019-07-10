@@ -1,26 +1,13 @@
-/*
-  ==============================================================================
-
-    StimulusPlayer.h
-    Created: 9 Jul 2019 11:33:50am
-    Author:  TR
-
-  ==============================================================================
-*/
-
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "OscTransceiver.h"
+// #include "OscTransceiver.h"
 
 
 class StimulusPlayer    :   public Component,
                             public AudioSource,
                             public ChangeBroadcaster,
-                            public OSCReceiver,
-                            public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
                             private Button::Listener,
-                            private ChangeListener,
                             private Timer
 {
 public:
@@ -39,7 +26,6 @@ public:
     AudioFormatManager formatManager;
     File currentlyLoadedFile;
     
-    String logWindowMessage;
     StringArray filePathList; // wave file paths
     StringArray fileIdList; // file-ids
     
@@ -47,24 +33,20 @@ public:
     void createFilePathList(String configFilePath);
     void loadFileIntoTransport(const File& audioFile);
     void sendMsgToLogWindow(String message);
-    
-    // OSC
-    oscTransceiver remoteInterfaceTxRx; // osc object to communicate with the user interface (Unity, iPad, ...)
-    void oscMessageReceived(const OSCMessage& message) override;
-    
+
     //EDITOR
     void buttonClicked(Button* buttonThatWasClicked) override;
-    void changeListenerCallback(ChangeBroadcaster* source) override;
     void timerCallback() override;
     
-    void browseForConfigFile();
     void createStimuliTriggerButtons();
     
     TextButton openButton, playButton, stopButton;
     Label loadedFileName, playbackHeadPosition;
     OwnedArray<TextButton> triggerStimuliButtonArray;
     int numberOfStimuli;
-    TextEditor logWindow;
+    
+    String currentMessage;
+
 
 private:
     ScopedPointer<AudioFormatReaderSource> currentAudioFileSource;

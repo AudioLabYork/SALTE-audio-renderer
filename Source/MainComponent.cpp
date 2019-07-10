@@ -2,41 +2,41 @@
 
 MainComponent::MainComponent()
 {
+    
+    // add and make visible the stimulus player object
     addAndMakeVisible(sp);
-    // Make sure you set the size of the component after
-    // you add any child components.
+    sp.addChangeListener(this);
 
+    // set size of the main app window
     setSize (1400, 800);
 
-    // Some platforms require permissions to open input channels so request that here
-    if (RuntimePermissions::isRequired (RuntimePermissions::recordAudio)
-        && ! RuntimePermissions::isGranted (RuntimePermissions::recordAudio))
-    {
-        RuntimePermissions::request (RuntimePermissions::recordAudio,
-                                     [&] (bool granted) { if (granted)  setAudioChannels (2, 2); });
-    }
-    else
-    {
-        // Specify the number of input and output channels that we want to open
-        setAudioChannels (0, 2);
-    }
+    // set number of output channels to 2 (binaural rendering case)
+    setAudioChannels (0, 2);
+    
+    // OSC sender and receiver connect
+    remoteInterfaceTxRx.connectSender("127.0.0.1", 6000);
+    remoteInterfaceTxRx.connectReceiver(9000);
+    remoteInterfaceTxRx.addListener(this);
+    
+    addAndMakeVisible(&openConfigButton);
+    openConfigButton.setButtonText("Open config file...");
+    openConfigButton.addListener(this);
+    
+    addAndMakeVisible(logWindow);
+    logWindow.setMultiLine(true);
+    logWindow.setReadOnly(true);
+    logWindow.setCaretVisible(false);
+    logWindow.setScrollbarsShown(true);
 }
 
 MainComponent::~MainComponent()
 {
-    // This shuts down the audio device and clears the audio source.
     shutdownAudio();
 }
 
 //==============================================================================
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-    // This function will be called when the audio device is started, or when
-    // its settings (i.e. sample rate, block size, etc) are changed.
-
-    // You can use this function to initialise any resources you might need,
-    // but be careful - it will be called on the audio thread, not the GUI thread.
-
 	// prepare stimulus player object
 	sp.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
@@ -45,30 +45,93 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 {
 	// pass the buffer into the stimulus player to be filled with required audio
 	sp.getNextAudioBlock(bufferToFill);
-
-    // Right now we are not producing any data, in which case we need to clear the buffer
-    // (to prevent the output of random noise)
-    //bufferToFill.clearActiveBufferRegion();
 }
 
 void MainComponent::releaseResources()
 {
-    // This will be called when the audio device stops, or when it is being
-    // restarted due to a setting change.
-
-	sp.releaseResources();
+	// relese resources taken by stimulus player object
+    sp.releaseResources();
 }
 
 //==============================================================================
 void MainComponent::paint (Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
-
-    // You can add your drawing code here!
 }
 
 void MainComponent::resized()
 {
-    sp.setBounds(300, 100, 800, 600);
+    sp.setBounds(10, 30, 800, 600);
+    openConfigButton.setBounds(10, 10, 230, 25);
+    logWindow.setBounds(10, 660, 500, 130);
+}
+
+void MainComponent::buttonClicked(Button* buttonThatWasClicked)
+{
+    if (buttonThatWasClicked == &openConfigButton)
+    {
+        browseForConfigFile();
+    }
+    repaint();
+}
+
+// load config file
+void MainComponent::browseForConfigFile()
+{
+    
+#if JUCE_MODAL_LOOPS_PERMITTED
+    const bool useNativeVersion = true;
+    FileChooser fc("Choose a file to open...",
+                   File::getCurrentWorkingDirectory(),
+                   "*.csv",
+                   useNativeVersion);
+    
+    if (fc.browseForFileToOpen())
+    {
+        File chosenFile = fc.getResult();
+        
+        // configure sample player
+        sp.createFilePathList(chosenFile.getFullPathName());
+        sp.numberOfStimuli = sp.filePathList.size();
+        sp.createStimuliTriggerButtons(); // only for test
+    }
+#endif
+}
+
+// OSC
+void MainComponent::oscMessageReceived(const OSCMessage& message)
+{
+    // DIRECT OSC CONTROL OF STIMULUS PLAYER
+    if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isInt32())
+    {
+        sp.loadFileIntoTransport(File(sp.filePathList[message[0].getInt32()]));
+    }
+    
+    if (message.size() == 1 && message.getAddressPattern() == "/transport" && message[0].isString())
+    {
+        if (message[0].getString() == "play")
+        {
+            sp.transportSource.setPosition(0);
+            sp.transportSource.start();
+        }
+        
+        if (message[0].getString() == "stop")
+        {
+            sp.transportSource.stop();
+        }
+    }
+}
+
+// LOG WINDOW
+void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
+{
+    if(source == &sp)
+    {
+        // is it safe? (2/2)
+        logWindowMessage += sp.currentMessage;
+        sp.currentMessage.clear();
+    }
+    
+    logWindow.setText(logWindowMessage);
+    logWindow.moveCaretToEnd();
 }

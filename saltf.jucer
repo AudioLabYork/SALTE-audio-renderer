@@ -3,9 +3,9 @@
 <JUCERPROJECT id="zmM4K5" name="saltf" projectType="guiapp" jucerVersion="5.4.3">
   <MAINGROUP id="H9ikxc" name="saltf">
     <GROUP id="{4F75A548-1CF0-634F-1E14-36BD701C1135}" name="Source">
-      <FILE id="TtUCii" name="OscTransceiver.h" compile="0" resource="0"
+      <FILE id="NFM0r4" name="OscTransceiver.h" compile="0" resource="0"
             file="Source/OscTransceiver.h"/>
-      <FILE id="hiOp9b" name="OscTransceiver.cpp" compile="1" resource="0"
+      <FILE id="pcfrcV" name="OscTransceiver.cpp" compile="1" resource="0"
             file="Source/OscTransceiver.cpp"/>
       <FILE id="tW1uaz" name="StimulusPlayer.cpp" compile="1" resource="0"
             file="Source/StimulusPlayer.cpp"/>
