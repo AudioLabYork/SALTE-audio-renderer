@@ -81,10 +81,8 @@ void StimulusPlayer::paint (Graphics& g)
     // INNER RECTANGLES
     Rectangle<int> tcRect(10, 10, 250, 150);        // manual transport control
     Rectangle<int> dispRect(270, 10, 520, 150);        // display state
-    Rectangle<int> wfRect(10, 170, 780, 120);        // waveform
-    Rectangle<int> trgRect(10, 300, 780, 150);        // triggers
-    Rectangle<int> cnslRect(10, 460, 520, 130);        // console
-    Rectangle<int> oscRect(540, 460, 250, 130);        // osc status
+    Rectangle<int> wfRect(10, 170, 780, 80);        // waveform
+    Rectangle<int> trgRect(10, 260, 780, 115);        // triggers
     
     // DRAW RECTANGLES
     g.setColour(Colours::black);
@@ -92,8 +90,6 @@ void StimulusPlayer::paint (Graphics& g)
     g.drawRect(dispRect, 1);
     g.drawRect(wfRect, 1);
     g.drawRect(trgRect, 1);
-    g.drawRect(cnslRect, 1);
-    g.drawRect(oscRect, 1);
     
     // TEXT
     g.setFont(Font(14.0f));
@@ -113,13 +109,14 @@ void StimulusPlayer::resized()
     {
         int buttonWidth = 57;
         int buttonHeight = 22;
-        int sliderPositionX = 20 + buttonWidth / 2;
-        int sliderPositionY = 310 + buttonHeight / 2;
+        int buttonListPositionX = 20 + buttonWidth / 2;
+        int buttonListPositionY = 270 + buttonHeight / 2;
         
         for (int i = 0; i < triggerStimuliButtonArray.size(); ++i)
         {
             triggerStimuliButtonArray[i]->setSize(buttonWidth, buttonHeight);
-            triggerStimuliButtonArray[i]->setCentrePosition(sliderPositionX + i % 12 * (buttonWidth + 5), sliderPositionY + floor(i / 12) * (buttonHeight + 5));
+            triggerStimuliButtonArray[i]->setCentrePosition(buttonListPositionX + i % 12 * (buttonWidth + 5),
+                                                            buttonListPositionY + floor(i / 12) * (buttonHeight + 5));
         }
     }
 }

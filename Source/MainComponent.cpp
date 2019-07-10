@@ -57,13 +57,21 @@ void MainComponent::releaseResources()
 void MainComponent::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+    
+    Rectangle<int> oscRect(250, 10, 330, 150);        // osc status / vr interface status
+    Rectangle<int> tstlogicRect(10, 170, 570, 480);        // test logic component
+    Rectangle<int> renderRect(590, 405, 800, 385);     // rendering component
+    g.drawRect(oscRect, 1);
+    g.drawRect(tstlogicRect, 1);
+    g.drawRect(renderRect, 1);
+    
 }
 
 void MainComponent::resized()
 {
-    sp.setBounds(10, 30, 800, 600);
+    sp.setBounds(590, 10, 800, 385);
     openConfigButton.setBounds(10, 10, 230, 25);
-    logWindow.setBounds(10, 660, 500, 130);
+    logWindow.setBounds(10, 660, 570, 130);
 }
 
 void MainComponent::buttonClicked(Button* buttonThatWasClicked)
