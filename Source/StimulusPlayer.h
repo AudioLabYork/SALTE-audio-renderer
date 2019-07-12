@@ -33,6 +33,8 @@ public:
     void createFilePathList(String configFilePath);
     void loadFileIntoTransport(const File& audioFile);
     void sendMsgToLogWindow(String message);
+    String returnHHMMSS(double lengthInSeconds);
+
 
     //EDITOR
     void buttonClicked(Button* buttonThatWasClicked) override;

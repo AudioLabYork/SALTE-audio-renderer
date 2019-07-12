@@ -3,6 +3,8 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
+#include "MushraComponent.h"
+
 
 
 class MainComponent   :     public AudioAppComponent,
@@ -27,6 +29,10 @@ public:
     void buttonClicked(Button* buttonThatWasClicked) override;
 
     void browseForConfigFile();
+    
+    // MUSHRA COMPONENT
+    MushraComponent mc;
+    void configureMushra();
     
     // OSC
     oscTransceiver remoteInterfaceTxRx; // osc object to communicate with the user interface (Unity, iPad, ...)

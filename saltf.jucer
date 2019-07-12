@@ -3,6 +3,10 @@
 <JUCERPROJECT id="zmM4K5" name="saltf" projectType="guiapp" jucerVersion="5.4.3">
   <MAINGROUP id="H9ikxc" name="saltf">
     <GROUP id="{4F75A548-1CF0-634F-1E14-36BD701C1135}" name="Source">
+      <FILE id="GF936q" name="MushraComponent.h" compile="0" resource="0"
+            file="Source/MushraComponent.h"/>
+      <FILE id="eVWJjz" name="MushraComponent.cpp" compile="1" resource="0"
+            file="Source/MushraComponent.cpp"/>
       <FILE id="NFM0r4" name="OscTransceiver.h" compile="0" resource="0"
             file="Source/OscTransceiver.h"/>
       <FILE id="pcfrcV" name="OscTransceiver.cpp" compile="1" resource="0"

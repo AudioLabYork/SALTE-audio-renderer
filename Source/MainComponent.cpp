@@ -27,6 +27,9 @@ MainComponent::MainComponent()
     logWindow.setReadOnly(true);
     logWindow.setCaretVisible(false);
     logWindow.setScrollbarsShown(true);
+    
+    // configure MUSHRA
+    configureMushra();
 }
 
 MainComponent::~MainComponent()
@@ -72,6 +75,9 @@ void MainComponent::resized()
     sp.setBounds(590, 10, 800, 385);
     openConfigButton.setBounds(10, 10, 230, 25);
     logWindow.setBounds(10, 660, 570, 130);
+    
+    // fit mushra interface
+    mc.setBounds(10, 170, 570, 480);
 }
 
 void MainComponent::buttonClicked(Button* buttonThatWasClicked)
@@ -104,6 +110,32 @@ void MainComponent::browseForConfigFile()
         sp.createStimuliTriggerButtons(); // only for test
     }
 #endif
+}
+
+void MainComponent::configureMushra()
+{
+    int numberOfRegions = 4;
+    for(int i = 0; i < numberOfRegions; ++i)
+    {
+        mc.regionArray.add(new SampleRegion());
+        mc.regionArray[i]->dawStartTime = 0.0f; //markerTimeArray[i * 2];         // 0 2 4 6
+        mc.regionArray[i]->dawStopTime = 5.0f;  //markerTimeArray[(i * 2) + 1];    // 1 3 5 7
+        mc.regionArray[i]->calculateStartEndTimes();
+    }
+    
+    int numberOfSamplesPerRegion = 8;
+    mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
+    
+//    mc.trackNameArray.addArray(trackNameArray);
+//    mc.hostIp = hostIp;
+//    mc.connectOsc(dawIp, clientIp, dawTxPort, dawRxPort, clientTxPort, clientRxPort);
+    mc.createGui();
+    addAndMakeVisible(mc);
+//    mushraComponentConnected = true;
+//    removeGuiInitButton();
+//    addAndMakeVisible(saveResultsButton);
+//    addAndMakeVisible(initClientGuiButton);
+    repaint();
 }
 
 // OSC
