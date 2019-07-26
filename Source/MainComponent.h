@@ -4,7 +4,7 @@
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
 #include "MushraComponent.h"
-
+#include "BinauralRenderer.h"
 
 
 class MainComponent   :     public AudioAppComponent,
@@ -46,7 +46,8 @@ private:
     // Your private member variables go here...
     
     StimulusPlayer sp;
-    
+	BinauralRenderer br;
+
     String logWindowMessage;
     TextEditor logWindow;
     

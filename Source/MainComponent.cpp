@@ -6,8 +6,11 @@ MainComponent::MainComponent()
     // add and make visible the stimulus player object
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
-
-    // set size of the main app window
+	
+	addAndMakeVisible(br);
+	br.init();
+   
+	// set size of the main app window
     setSize (1400, 800);
 
     // set number of output channels to 2 (binaural rendering case)
@@ -34,6 +37,7 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
+	br.deinit();
     shutdownAudio();
 }
 
@@ -42,6 +46,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 {
 	// prepare stimulus player object
 	sp.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	br.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
 void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
@@ -49,13 +54,14 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 	// pass the buffer into the stimulus player to be filled with required audio
 	sp.getNextAudioBlock(bufferToFill);
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
-	// br.getNextAudioBlock(bufferToFill)
+	br.getNextAudioBlock(bufferToFill);
 }
 
 void MainComponent::releaseResources()
 {
 	// relese resources taken by stimulus player object
     sp.releaseResources();
+	br.releaseResources();
 }
 
 //==============================================================================
@@ -75,6 +81,7 @@ void MainComponent::paint (Graphics& g)
 void MainComponent::resized()
 {
     sp.setBounds(590, 10, 800, 385);
+	br.setBounds(590, 405, 800, 385);
     openConfigButton.setBounds(10, 10, 230, 25);
     logWindow.setBounds(10, 660, 570, 130);
     
