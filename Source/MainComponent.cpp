@@ -48,6 +48,8 @@ void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFil
 {
 	// pass the buffer into the stimulus player to be filled with required audio
 	sp.getNextAudioBlock(bufferToFill);
+	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
+	// br.getNextAudioBlock(bufferToFill)
 }
 
 void MainComponent::releaseResources()
@@ -126,15 +128,10 @@ void MainComponent::configureMushra()
     int numberOfSamplesPerRegion = 8;
     mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
     
-//    mc.trackNameArray.addArray(trackNameArray);
-//    mc.hostIp = hostIp;
+
 //    mc.connectOsc(dawIp, clientIp, dawTxPort, dawRxPort, clientTxPort, clientRxPort);
     mc.createGui();
     addAndMakeVisible(mc);
-//    mushraComponentConnected = true;
-//    removeGuiInitButton();
-//    addAndMakeVisible(saveResultsButton);
-//    addAndMakeVisible(initClientGuiButton);
     repaint();
 }
 
@@ -142,10 +139,18 @@ void MainComponent::configureMushra()
 void MainComponent::oscMessageReceived(const OSCMessage& message)
 {
     // DIRECT OSC CONTROL OF STIMULUS PLAYER
+
+	// load file from the list (index received by osc)
     if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isInt32())
     {
         sp.loadFileIntoTransport(File(sp.filePathList[message[0].getInt32()]));
     }
+
+	// load file from path (file path received by osc)
+	if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isString())
+	{
+		sp.loadFileIntoTransport(File(message[0].getString()));
+	}
     
     if (message.size() == 1 && message.getAddressPattern() == "/transport" && message[0].isString())
     {

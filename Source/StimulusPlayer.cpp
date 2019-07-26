@@ -49,6 +49,7 @@ void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFi
     }
     
     transportSource.getNextAudioBlock (bufferToFill);
+	// ambisonic rotation ar.process(bufferToFill);
 }
 void StimulusPlayer::releaseResources()
 {
