@@ -32,7 +32,7 @@ MainComponent::MainComponent()
     logWindow.setScrollbarsShown(true);
     
     // configure MUSHRA
-    configureMushra();
+    // configureMushra();
 }
 
 MainComponent::~MainComponent()
@@ -49,12 +49,22 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 	br.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
 
-void MainComponent::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
+void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
 {
+	AudioBuffer<float> newbuffer(4, bufferToFill.buffer->getNumSamples());
+	AudioSourceChannelInfo newinfo(newbuffer);
+
 	// pass the buffer into the stimulus player to be filled with required audio
-	sp.getNextAudioBlock(bufferToFill);
+	sp.getNextAudioBlock(newinfo);
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
-	br.getNextAudioBlock(bufferToFill);
+	br.getNextAudioBlock(newinfo);
+
+	AudioBuffer<float>* sourceBuffer = bufferToFill.buffer;
+
+	for (int c = 0; c < sourceBuffer->getNumChannels(); ++c)
+	{
+		sourceBuffer->copyFrom(c, 0, *newinfo.buffer, c, 0, sourceBuffer->getNumSamples());
+	}
 }
 
 void MainComponent::releaseResources()

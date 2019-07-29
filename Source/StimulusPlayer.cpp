@@ -8,7 +8,7 @@ StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
     
     //EDITOR
     addAndMakeVisible(&openButton);
-    openButton.setButtonText("Open file... (DOES NOTHING ATM)");
+    openButton.setButtonText("Open Ambisonic audio file");
     openButton.addListener(this);
     
     addAndMakeVisible(&playButton);
@@ -26,9 +26,41 @@ StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
     
     playbackHeadPosition.setText("Time:", dontSendNotification);
     addAndMakeVisible(playbackHeadPosition);
+
+	yawSlider.setSliderStyle(Slider::LinearHorizontal);
+	yawSlider.setRange(-180,180);
+	yawSlider.setValue(0);
+	yawSlider.setTextValueSuffix(" deg");
+	yawSlider.setTextBoxStyle(Slider::TextBoxRight,false, 100, 25);
+	yawSlider.addListener(this);
+	addAndMakeVisible(yawSlider);
+	yawSliderLabel.setText("Yaw",dontSendNotification);
+	yawSliderLabel.attachToComponent(&yawSlider, true);
+	addAndMakeVisible(yawSliderLabel);
+
+	pitchSlider.setSliderStyle(Slider::LinearHorizontal);
+	pitchSlider.setRange(-180, 180);
+	pitchSlider.setValue(0);
+	pitchSlider.setTextValueSuffix(" deg");
+	pitchSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
+	pitchSlider.addListener(this);
+	addAndMakeVisible(pitchSlider);
+	pitchSliderLabel.setText("Pitch", dontSendNotification);
+	pitchSliderLabel.attachToComponent(&pitchSlider, true);
+	addAndMakeVisible(pitchSliderLabel);
+
+	rollSlider.setSliderStyle(Slider::LinearHorizontal);
+	rollSlider.setRange(-180, 180);
+	rollSlider.setValue(0);
+	rollSlider.setTextValueSuffix(" deg");
+	rollSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
+	rollSlider.addListener(this);
+	addAndMakeVisible(rollSlider);
+	rollSliderLabel.setText("Roll", dontSendNotification);
+	rollSliderLabel.attachToComponent(&rollSlider, true);
+	addAndMakeVisible(rollSliderLabel);
     
     startTimer(30);
-    
 }
 
 StimulusPlayer::~StimulusPlayer()
@@ -48,9 +80,10 @@ void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFi
         return;
     }
     
-    transportSource.getNextAudioBlock (bufferToFill);
-	// ambisonic rotation ar.process(bufferToFill);
+    transportSource.getNextAudioBlock(bufferToFill);
+	ar.process(*bufferToFill.buffer);
 }
+
 void StimulusPlayer::releaseResources()
 {
     transportSource.releaseResources();
@@ -91,6 +124,11 @@ void StimulusPlayer::resized()
     
     loadedFileName.setBounds(280, 20, 500, 25);
     playbackHeadPosition.setBounds(280, 45, 500, 25);
+
+	yawSlider.setBounds(380, 80, 300, 25);
+	pitchSlider.setBounds(380, 105, 300, 25);
+	rollSlider.setBounds(380, 130, 300, 25);
+
         
     if (numberOfStimuli > 0)
     {
@@ -108,87 +146,11 @@ void StimulusPlayer::resized()
     }
 }
 
-void StimulusPlayer::createFilePathList(String configFilePath)
-{
-    File fileToLoad = File(configFilePath);
-    StringArray loadedData;
-    loadedData.clear();
-    loadedData.addLines(fileToLoad.loadFileAsString());
-    if (loadedData[0].startsWith("#ASP#Config#File#"))
-    {
-        filePathList.clear();
-        int header = 10; // number of header lines
-        for (int i = header; i < loadedData.size(); ++i)
-        {
-            StringArray tokens;
-            tokens.addTokens(loadedData[i], ",", "\"");
-            if (tokens[3].length() != 0)
-            {
-                filePathList.set(i, tokens[2] + "/" + tokens[3]); // concatenate file path + file name and add the full path to the file path list
-                fileIdList.set(i, tokens[0] + tokens[1]); // add the file-id to the file-id list
-                
-                // output log
-                sendMsgToLogWindow(tokens[0] + tokens[1] + ": "+ tokens[3] + " added.");
-            }
-        }
-        
-        // load the first file from the list
-        loadFileIntoTransport(File(filePathList[0]));
-    }
-    else
-    {
-        AlertWindow::showMessageBoxAsync(AlertWindow::InfoIcon, "Invalid config file.", fileToLoad.getFullPathName());
-    }
-}
-
-
-void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
-{
-    // unload the previous file source and delete it..
-    transportSource.stop();
-    transportSource.setSource(nullptr);
-    currentAudioFileSource = nullptr;
-    
-    AudioFormatReader* reader = formatManager.createReaderFor(audioFile);
-    currentlyLoadedFile = audioFile;
-    
-    if (reader != nullptr)
-    {
-        currentAudioFileSource = new AudioFormatReaderSource(reader, true);
-        
-        // loading into transport source using a separate thread comes from https://github.com/jonathonracz/AudioFilePlayerPlugin
-        // ..and plug it into our transport source
-        transportSource.setSource(
-                                  currentAudioFileSource,
-                                  32768,                  // tells it to buffer this many samples ahead
-                                  &readAheadThread,       // this is the background thread to use for reading-ahead
-                                  reader->sampleRate,     // allows for sample rate correction
-                                  reader->numChannels);    // the maximum number of channels that may need to be played
-        // update GUI label
-        loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
-        
-        // send message to the main log window
-        sendMsgToLogWindow("Loaded: " + audioFile.getFileName());
-        sendMsgToLogWindow(String(reader->numChannels) + "," +
-                           String(reader->bitsPerSample) + "," +
-                           String(reader->sampleRate) + "," +
-                           String(reader->lengthInSamples) + "," +
-                           String(reader->lengthInSamples / reader->sampleRate));
-    }
-}
-
-void StimulusPlayer::sendMsgToLogWindow(String message)
-{
-    // is it safe? (1/2)
-    currentMessage += message + "\n";
-    sendChangeMessage();  // broadcast change message to inform and update the editor
-}
-
 void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
 {
     if (buttonThatWasClicked == &openButton)
     {
-        // browseForConfigFile();
+        browseForFile();
     }
     else if (buttonThatWasClicked == &playButton)
     {
@@ -209,6 +171,11 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
     repaint();
 }
 
+void StimulusPlayer::sliderValueChanged(Slider* slider)
+{
+
+}
+
 void StimulusPlayer::timerCallback()
 {
     double currentPosition = transportSource.getCurrentPosition();
@@ -216,6 +183,95 @@ void StimulusPlayer::timerCallback()
     
     // update diplayed times in GUI
     playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
+}
+
+void StimulusPlayer::createFilePathList(String configFilePath)
+{
+	File fileToLoad = File(configFilePath);
+	StringArray loadedData;
+	loadedData.clear();
+	loadedData.addLines(fileToLoad.loadFileAsString());
+	if (loadedData[0].startsWith("#ASP#Config#File#"))
+	{
+		filePathList.clear();
+		int header = 10; // number of header lines
+		for (int i = header; i < loadedData.size(); ++i)
+		{
+			StringArray tokens;
+			tokens.addTokens(loadedData[i], ",", "\"");
+			if (tokens[3].length() != 0)
+			{
+				filePathList.set(i, tokens[2] + "/" + tokens[3]); // concatenate file path + file name and add the full path to the file path list
+				fileIdList.set(i, tokens[0] + tokens[1]); // add the file-id to the file-id list
+
+				// output log
+				sendMsgToLogWindow(tokens[0] + tokens[1] + ": " + tokens[3] + " added.");
+			}
+		}
+
+		// load the first file from the list
+		loadFileIntoTransport(File(filePathList[0]));
+	}
+	else
+	{
+		AlertWindow::showMessageBoxAsync(AlertWindow::InfoIcon, "Invalid config file.", fileToLoad.getFullPathName());
+	}
+}
+
+void StimulusPlayer::browseForFile()
+{
+	FileChooser chooser("Select a Wave file to play...",
+		File::getSpecialLocation(File::userHomeDirectory),
+		"*.wav", true);
+
+	if (chooser.browseForFileToOpen())
+	{
+		auto file = chooser.getResult();
+		loadFileIntoTransport(file);
+	}
+}
+
+
+void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
+{
+	// unload the previous file source and delete it..
+	transportSource.stop();
+	transportSource.setSource(nullptr);
+	currentAudioFileSource = nullptr;
+
+	AudioFormatReader* reader = formatManager.createReaderFor(audioFile);
+	currentlyLoadedFile = audioFile;
+
+	if (reader != nullptr)
+	{
+		currentAudioFileSource = new AudioFormatReaderSource(reader, true);
+
+		// loading into transport source using a separate thread comes from https://github.com/jonathonracz/AudioFilePlayerPlugin
+		// ..and plug it into our transport source
+		transportSource.setSource(
+			currentAudioFileSource,
+			32768,                  // tells it to buffer this many samples ahead
+			&readAheadThread,       // this is the background thread to use for reading-ahead
+			reader->sampleRate,     // allows for sample rate correction
+			reader->numChannels);    // the maximum number of channels that may need to be played
+// update GUI label
+		loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
+
+		// send message to the main log window
+		sendMsgToLogWindow("Loaded: " + audioFile.getFileName());
+		sendMsgToLogWindow(String(reader->numChannels) + "," +
+			String(reader->bitsPerSample) + "," +
+			String(reader->sampleRate) + "," +
+			String(reader->lengthInSamples) + "," +
+			String(reader->lengthInSamples / reader->sampleRate));
+	}
+}
+
+void StimulusPlayer::sendMsgToLogWindow(String message)
+{
+	// is it safe? (1/2)
+	currentMessage += message + "\n";
+	sendChangeMessage();  // broadcast change message to inform and update the editor
 }
 
 String StimulusPlayer::returnHHMMSS(double lengthInSeconds)

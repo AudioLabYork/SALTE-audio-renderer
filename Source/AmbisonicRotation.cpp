@@ -1,8 +1,11 @@
+/*	THIS CODE WAS PRETTY MUCH COPIED FROM:
+	https://git.iem.at/audioplugins/IEMPluginSuite/blob/master/SceneRotator/
+*/
+
 #include "AmbisonicRotation.h"
 
 void AmbisonicRotation::init()
 {
-
 }
 
 void AmbisonicRotation::process(AudioSampleBuffer& buffer)
@@ -14,6 +17,7 @@ void AmbisonicRotation::process(AudioSampleBuffer& buffer)
 	int bufferLength = buffer.getNumSamples();
 
 	bool newRotationMatrix = false;
+
 	if (rotationParamsHaveChanged.get())
 	{
 		newRotationMatrix = true;
@@ -50,9 +54,6 @@ void AmbisonicRotation::process(AudioSampleBuffer& buffer)
 	if (newRotationMatrix)
 		for (int l = 1; l <= actualOrder; ++l)
 			*orderMatricesCopy[l] = *orderMatrices[l];
-
-
-
 }
 
 double AmbisonicRotation::P(int i, int l, int a, int b, Matrix<float>& R1, Matrix<float>& Rlm1)
@@ -121,9 +122,13 @@ double AmbisonicRotation::W(int l, int m, int n, Matrix<float>& Rone, Matrix<flo
 
 void AmbisonicRotation::calcRotationMatrix(const int order)
 {
-	const auto yawRadians = degreesToRadians(*yaw) * (*invertYaw > 0.5 ? -1 : 1);
-	const auto pitchRadians = degreesToRadians(*pitch) * (*invertPitch > 0.5 ? -1 : 1);
-	const auto rollRadians = degreesToRadians(*roll) * (*invertRoll > 0.5 ? -1 : 1);
+	//const auto yawRadians = degreesToRadians(*yaw) * (*invertYaw > 0.5 ? -1 : 1);
+	//const auto pitchRadians = degreesToRadians(*pitch) * (*invertPitch > 0.5 ? -1 : 1);
+	//const auto rollRadians = degreesToRadians(*roll) * (*invertRoll > 0.5 ? -1 : 1);
+
+	const auto yawRadians = degreesToRadians(yaw);
+	const auto pitchRadians = degreesToRadians(pitch);
+	const auto rollRadians = degreesToRadians(roll);
 
 	auto ca = std::cos(yawRadians);
 	auto cb = std::cos(pitchRadians);
@@ -136,7 +141,7 @@ void AmbisonicRotation::calcRotationMatrix(const int order)
 
 	Matrix<float> rotMat(3, 3);
 
-	if (*rotationSequence >= 0.5f) // roll -> pitch -> yaw (extrinsic rotations)
+	if (rotationSequence == true) // roll -> pitch -> yaw (extrinsic rotations)
 	{
 		rotMat(0, 0) = ca * cb;
 		rotMat(1, 0) = sa * cb;
@@ -214,5 +219,4 @@ void AmbisonicRotation::calcRotationMatrix(const int order)
 	}
 
 	rotationParamsHaveChanged = false;
-
 }

@@ -1,3 +1,7 @@
+/*	THIS CODE WAS PRETTY MUCH COPIED FROM:
+	https://git.iem.at/audioplugins/IEMPluginSuite/blob/master/SceneRotator/
+*/
+
 #pragma once
 #include "../JuceLibraryCode/JuceHeader.h"
 
@@ -15,18 +19,22 @@ public:
 
 private:
 
-	float* yaw;
-	float* pitch;
-	float* roll;
+	float yaw = 0.0f;
+	float pitch = 0.0f;
+	float roll = 0.0f;
+
+
 	//float* qw;
 	//float* qx;
 	//float* qy;
 	//float* qz;
-	float* invertYaw;
-	float* invertPitch;
-	float* invertRoll;
+	//float* invertYaw;
+	//float* invertPitch;
+	//float* invertRoll;
 	//float* invertQuaternion;
-	float* rotationSequence;
+	//float* rotationSequence;
+
+	bool rotationSequence = false;
 
 	//Atomic<bool> updatingParams{ false };
 	Atomic<bool> rotationParamsHaveChanged{ true };
