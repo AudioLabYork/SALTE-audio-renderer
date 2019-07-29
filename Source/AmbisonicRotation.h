@@ -11,7 +11,10 @@ using namespace juce::dsp;
 class AmbisonicRotation
 {
 public:
-	void init();
+	//void init();
+	AmbisonicRotation();
+	~AmbisonicRotation();
+
 	void process(AudioSampleBuffer& buffer);
 	void calcRotationMatrix(const int order);
 

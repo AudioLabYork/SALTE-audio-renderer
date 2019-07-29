@@ -4,9 +4,24 @@
 
 #include "AmbisonicRotation.h"
 
-void AmbisonicRotation::init()
+
+AmbisonicRotation::AmbisonicRotation()
 {
+	orderMatrices.add(new Matrix<float>(0, 0)); // 0th
+	orderMatricesCopy.add(new Matrix<float>(0, 0)); // 0th
+
+	for (int l = 1; l <= 7; ++l)
+	{
+		const int nCh = (2 * l + 1);
+		auto elem = orderMatrices.add(new Matrix<float>(nCh, nCh));
+		elem->clear();
+		auto elemCopy = orderMatricesCopy.add(new Matrix<float>(nCh, nCh));
+		elemCopy->clear();
+	}
 }
+
+AmbisonicRotation::~AmbisonicRotation()
+{}
 
 void AmbisonicRotation::process(AudioSampleBuffer& buffer)
 {
@@ -24,6 +39,9 @@ void AmbisonicRotation::process(AudioSampleBuffer& buffer)
 		calcRotationMatrix(actualOrder);
 	}
 
+	// prepare duplicated buffer
+	copyBuffer.clear();
+	copyBuffer.setSize(numberOfChannels, bufferLength);
 
 	// make copy of the buffer
 	for (int ch = 0; ch < numberOfChannels; ++ch)
