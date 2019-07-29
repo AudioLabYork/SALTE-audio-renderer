@@ -115,12 +115,40 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 
 	for (int i = 0; i < m_loudspeakerChannels; ++i)
 	{
-		for (int j = 0; j < m_ambisonicChannels; ++j)
-		{
+		//for (int j = 0; j < m_ambisonicChannels; ++j)
+		//{
 			for (int k = 0; k < numSamples; ++k)
 			{
-				out[i][k] += in[j][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + j];
+				//out[i][k] += in[0][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 0];
+				//out[i][k] += in[1][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 1];
+				//out[i][k] += in[2][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 2];
+				//out[i][k] += in[3][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 3];
+
+				//out[i][k] += in[0][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 0];
+				//out[i][k] += in[1][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 2];
+				//out[i][k] += in[2][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 3];
+				//out[i][k] += in[3][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + 1];
+
 			}
+		//}
+	}
+
+	const float weight = 1.0f / m_loudspeakerChannels;
+	const float sqrt2 = sqrtf(2.0f);
+
+	for (int i = 0; i < m_loudspeakerChannels; ++i)
+	{
+		const float costheta = cos(m_azimuths[i]);
+		const float sintheta = sin(m_azimuths[i]);
+		const float cosphi = cos(m_elevations[i]);
+		const float sinphi = sin(m_elevations[i]);
+
+		for (int j = 0; j < numSamples; ++j)
+		{
+			out[i][j] += weight * in[0][j];
+			out[i][j] += weight * in[1][j] * sqrt2 * costheta * cosphi;
+			out[i][j] += weight * in[2][j] * sqrt2 * sintheta * cosphi;
+			out[i][j] += weight * in[3][j] * sqrt2 * sinphi;
 		}
 	}
 
