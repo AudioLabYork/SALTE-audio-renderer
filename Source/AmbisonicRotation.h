@@ -17,6 +17,7 @@ public:
 
 	void process(AudioSampleBuffer& buffer);
 	void calcRotationMatrix(const int order);
+	void updateEuler(float y, float p, float r);
 
 
 
