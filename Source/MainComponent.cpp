@@ -6,15 +6,15 @@ MainComponent::MainComponent()
     // add and make visible the stimulus player object
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
-	
-	addAndMakeVisible(br);
+
 	br.init();
-   
+	addAndMakeVisible(br);
+
 	// set size of the main app window
     setSize (1400, 800);
 
     // set number of output channels to 2 (binaural rendering case)
-    setAudioChannels (0, 2);
+    setAudioChannels (4, 4);
     
     // OSC sender and receiver connect
     remoteInterfaceTxRx.connectSender("127.0.0.1", 6000);

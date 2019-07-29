@@ -1,11 +1,15 @@
 #include "BinauralRenderer.h"
 
 BinauralRenderer::BinauralRenderer()
-	: m_order(0)
-	, m_ambisonicChannels(1)
+	: m_order(1)
+	, m_ambisonicChannels(4)
 	, m_loudspeakerChannels(2)
 	, m_blockSize(0)
 	, m_sampleRate(0.0)
+{
+}
+
+void BinauralRenderer::init()
 {
 	sofaFileBrowse.setButtonText("Select SOFA file...");
 	sofaFileBrowse.addListener(this);
@@ -15,20 +19,19 @@ BinauralRenderer::BinauralRenderer()
 	triggerDebug.addListener(this);
 	addAndMakeVisible(&triggerDebug);
 
-	m_decodeMatrix = {};
+	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
+	m_decodeMatrix = { 0.255550625999976, 0.632455532033675, 0.0, 0.156492159287191,
+		0.255550625999976, -0.632455532033675, 0, 0.156492159287190 };
+
+	// default stereo for the time being
 	m_azimuths = { 30.0f, 330.0f };
 	m_elevations = { 0.0f, 0.0f };
 }
 
-void BinauralRenderer::init()
-{
-	
-}
-
 void BinauralRenderer::reset()
 {
-	m_order = 0;
-	m_ambisonicChannels = 1;
+	m_order = 1;
+	m_ambisonicChannels = 4;
 	m_loudspeakerChannels = 2;
 	m_blockSize = 0;
 	m_sampleRate = 0.0;
@@ -99,7 +102,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 	}
 
 	// TEMP - Return as this processing is not complete yet
-	return;
+	//return;
 
 	AudioBuffer<float> workingBuffer(buffer->getNumChannels(), buffer->getNumSamples());
 	workingBuffer.clear();
@@ -119,6 +122,11 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 				out[i][k] += in[j][k] * m_decodeMatrix[(i * m_loudspeakerChannels) + j];
 			}
 		}
+	}
+
+	for (int c = 0; c < buffer->getNumChannels(); ++c)
+	{
+		buffer->copyFrom(c, 0, workingBuffer, c, 0, buffer->getNumSamples());
 	}
 
 	// process each channel (virtual loudspeaker) with appropriate HRTF

@@ -17,6 +17,9 @@ Precompiled DLL files for FFTW can be found [here](http://www.fftw.org/install/w
 
 fftw-3.3.5-dll64.zip should be unzipped and extracted to the 'Libraries' folder (shown above)
 
+To install on Windows it is necessary to run the required commands to create import libraries.
+Please see the link above for instructions on how to do that.
+
 - SOFA
 
 Source for the libsofa library can be found [here](https://github.com/sofacoustics/API_Cpp/)
