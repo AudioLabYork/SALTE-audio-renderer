@@ -3,6 +3,12 @@
 <JUCERPROJECT id="zmM4K5" name="saltf" projectType="guiapp" jucerVersion="5.4.3">
   <MAINGROUP id="H9ikxc" name="saltf">
     <GROUP id="{4F75A548-1CF0-634F-1E14-36BD701C1135}" name="Source">
+      <GROUP id="{63E3C94B-474D-4592-AD5A-1246BDB34199}" name="WDL">
+        <FILE id="GQdU4k" name="convoengine.cpp" compile="1" resource="0" file="../../Libraries/WDL/convoengine.cpp"/>
+        <FILE id="mzMoHd" name="convoengine.h" compile="0" resource="0" file="../../Libraries/WDL/convoengine.h"/>
+        <FILE id="A9l0hz" name="fft.c" compile="1" resource="0" file="../../Libraries/WDL/fft.c"/>
+        <FILE id="ufAhKz" name="fft.h" compile="0" resource="0" file="../../Libraries/WDL/fft.h"/>
+      </GROUP>
       <FILE id="ARAEsH" name="AmbisonicRotation.cpp" compile="1" resource="0"
             file="Source/AmbisonicRotation.cpp"/>
       <FILE id="g3TxyX" name="AmbisonicRotation.h" compile="0" resource="0"
@@ -61,9 +67,9 @@
     </XCODE_MAC>
     <VS2019 targetFolder="Builds/VisualStudio2019" externalLibraries="libfftw3f-3.lib&#10;libsofa_debug_x64.lib&#10;libcurl_imp_x64.lib&#10;libhdf5_hl_x64.lib&#10;libhdf5_x64.lib&#10;netcdf_x64.lib&#10;zlib_x64.lib">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include"
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include"
                        libraryPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"/>
-        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include"
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include"
                        libraryPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
