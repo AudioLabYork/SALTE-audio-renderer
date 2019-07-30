@@ -8,13 +8,33 @@ MainComponent::MainComponent()
     sp.addChangeListener(this);
 
 	br.init();
+	br.setOrder(1);
+
+	std::vector<float> azimuths = { 45.0f, 135.0f, 225.0f, 315.0 };
+	std::vector<float> elevations = { 0.0f, 0.0f, 0.0f, 0.0f };
+	
+	for (int i = 0; i < 4; ++i)
+	{
+		azimuths[i] = degreesToRadians(azimuths[i]);
+		elevations[i] = degreesToRadians(elevations[i]);
+	}
+
+	br.setLoudspeakerChannels(azimuths, elevations, 4);
+
+	std::vector<float> decodeMatrix = { 0.316227766016838, 0.316227766016838, 0, 0.316227766016838,
+						0.316227766016838, 0.316227766016838, 0, -0.316227766016838,
+						0.316227766016838, -0.316227766016838, 0, -0.316227766016838,
+						0.316227766016838, -0.316227766016838, 0, 0.316227766016838 };
+
+	br.setDecodingMatrix(decodeMatrix);
+
 	addAndMakeVisible(br);
 
 	// set size of the main app window
     setSize (1400, 800);
 
     // set number of output channels to 2 (binaural rendering case)
-    setAudioChannels (4, 4);
+    setAudioChannels (0, 2);
     
     // OSC sender and receiver connect
     remoteInterfaceTxRx.connectSender("127.0.0.1", 6000);
@@ -79,9 +99,9 @@ void MainComponent::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
     
-    Rectangle<int> oscRect(250, 10, 330, 150);        // osc status / vr interface status
-    Rectangle<int> tstlogicRect(10, 170, 570, 480);        // test logic component
-    Rectangle<int> renderRect(590, 405, 800, 385);     // rendering component
+    juce::Rectangle<int> oscRect(250, 10, 330, 150);        // osc status / vr interface status
+    juce::Rectangle<int> tstlogicRect(10, 170, 570, 480);        // test logic component
+    juce::Rectangle<int> renderRect(590, 405, 800, 385);     // rendering component
     g.drawRect(oscRect, 1);
     g.drawRect(tstlogicRect, 1);
     g.drawRect(renderRect, 1);
