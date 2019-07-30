@@ -18,7 +18,7 @@ MainComponent::MainComponent()
     
     // OSC sender and receiver connect
     remoteInterfaceTxRx.connectSender("127.0.0.1", 6000);
-    remoteInterfaceTxRx.connectReceiver(9000);
+    remoteInterfaceTxRx.connectReceiver(9001);
     remoteInterfaceTxRx.addListener(this);
     
     addAndMakeVisible(&openConfigButton);
@@ -182,6 +182,17 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
             sp.transportSource.stop();
         }
     }
+
+	// HEAD TRACKING DATA
+	if (message.size() == 3 && message.getAddressPattern() == "/rpy")
+	{
+		// sp.ar.updateEuler(message[0].getFloat32(), message[1].getFloat32(), message[2].getFloat32());
+		//sp.rollSlider.setValue(message[0].getFloat32());
+		//sp.pitchSlider.setValue(message[1].getFloat32());
+		//sp.yawSlider.setValue(message[2].getFloat32());
+	}
+		
+
 }
 
 // LOG WINDOW

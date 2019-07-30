@@ -38,7 +38,7 @@ private:
 	//float* invertQuaternion;
 	//float* rotationSequence;
 
-	bool rotationSequence = false;
+	bool rotationSequence = true;
 
 	//Atomic<bool> updatingParams{ false };
 	Atomic<bool> rotationParamsHaveChanged{ true };
