@@ -24,11 +24,14 @@ void BinauralRenderer::init()
 	triggerDebug.addListener(this);
 	addAndMakeVisible(&triggerDebug);
 
-	m_xAxisVal.setText("deg", dontSendNotification);
+	m_enableRotation.setButtonText("Enable rotation");
+	addAndMakeVisible(&m_enableRotation);
+
+	m_xAxisVal.setText("Yaw: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_xAxisVal);
-	m_yAxisVal.setText("deg", dontSendNotification);
+	m_yAxisVal.setText("Pitch: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_yAxisVal);
-	m_zAxisVal.setText("deg", dontSendNotification);
+	m_zAxisVal.setText("Roll: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_zAxisVal);
 
 	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
@@ -89,9 +92,10 @@ void BinauralRenderer::resized()
 {
 	sofaFileBrowse.setBounds(10, 10, 150, 30);
 	triggerDebug.setBounds(10, 45, 150, 30);
-	m_xAxisVal.setBounds(10, 80, 150, 30);
-	m_yAxisVal.setBounds(10, 110, 150, 30);
-	m_zAxisVal.setBounds(10,140, 150, 30);
+	m_enableRotation.setBounds(10, 80, 150, 30);
+	m_xAxisVal.setBounds(10, 110, 150, 20);
+	m_yAxisVal.setBounds(10, 130, 150, 20);
+	m_zAxisVal.setBounds(10, 150, 150, 20);
 }
 
 void BinauralRenderer::buttonClicked(Button* buttonClicked)
@@ -130,7 +134,8 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		return;
 	}
 
-	m_headTrackRotator.process(*buffer);
+	if(m_enableRotation.getToggleState())
+		m_headTrackRotator.process(*buffer);
 
 	AudioBuffer<float> workingBuffer(m_numLsChans, buffer->getNumSamples());
 	workingBuffer.clear();
@@ -308,7 +313,10 @@ void BinauralRenderer::doDebugStuff()
 
 void BinauralRenderer::timerCallback()
 {
-	m_xAxisVal.setText(String(m_yaw) + " deg", dontSendNotification);
-	m_yAxisVal.setText(String(m_pitch) + " deg", dontSendNotification);
-	m_zAxisVal.setText(String(m_roll) + " deg", dontSendNotification);
+	if (m_enableRotation.getToggleState())
+	{
+		m_xAxisVal.setText("Yaw: " + String(m_yaw, 2) + " deg", dontSendNotification);
+		m_yAxisVal.setText("Pitch: " + String(m_pitch, 2) + " deg", dontSendNotification);
+		m_zAxisVal.setText("Roll: " + String(m_roll, 2) + " deg", dontSendNotification);
+	}
 }

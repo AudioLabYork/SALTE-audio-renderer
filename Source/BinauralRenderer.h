@@ -65,6 +65,7 @@ private:
 	float m_pitch;
 	float m_roll;
 
+	ToggleButton m_enableRotation;
 	Label m_xAxisVal;
 	Label m_yAxisVal;
 	Label m_zAxisVal;
