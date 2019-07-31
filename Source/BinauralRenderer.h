@@ -33,15 +33,20 @@ public:
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
-
+	
+	void browseForAmbixConfigFile();
 	void browseForSofaFile();
+	void loadAmbixConfigFile(File file);
 	void loadSofaFile(File file);
 
+	void loadHRIRFileToEngine(File file);
+	
 private:
 	void doDebugStuff();
 
 	virtual void timerCallback() override;
 
+	TextButton ambixFileBrowse;
 	TextButton sofaFileBrowse;
 	TextButton triggerDebug;
 
@@ -69,6 +74,8 @@ private:
 	Label m_xAxisVal;
 	Label m_yAxisVal;
 	Label m_zAxisVal;
+
+	bool m_isConfigChanging;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BinauralRenderer)
 };

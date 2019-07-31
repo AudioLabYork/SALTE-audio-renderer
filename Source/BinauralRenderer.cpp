@@ -9,12 +9,17 @@ BinauralRenderer::BinauralRenderer()
 	, m_yaw(0.0f)
 	, m_pitch(0.0f)
 	, m_roll(0.0f)
+	, m_isConfigChanging(false)
 {
 }
 
 void BinauralRenderer::init()
 {
 	startTimer(100);
+
+	ambixFileBrowse.setButtonText("Select Ambix Config file...");
+	ambixFileBrowse.addListener(this);
+	addAndMakeVisible(&ambixFileBrowse);
 
 	sofaFileBrowse.setButtonText("Select SOFA file...");
 	sofaFileBrowse.addListener(this);
@@ -35,7 +40,7 @@ void BinauralRenderer::init()
 	addAndMakeVisible(&m_zAxisVal);
 
 	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
-	m_decodeMatrix = {	0.255550625999976, 0.632455532033675, 0, 0.156492159287191,
+	m_decodeMatrix = { 0.255550625999976, 0.632455532033675, 0, 0.156492159287191,
 						0.255550625999976, -0.632455532033675, 0, 0.156492159287190 };
 
 	// default stereo
@@ -90,17 +95,22 @@ void BinauralRenderer::paint(Graphics& g)
 
 void BinauralRenderer::resized()
 {
-	sofaFileBrowse.setBounds(10, 10, 150, 30);
-	triggerDebug.setBounds(10, 45, 150, 30);
-	m_enableRotation.setBounds(10, 80, 150, 30);
-	m_xAxisVal.setBounds(10, 110, 150, 20);
-	m_yAxisVal.setBounds(10, 130, 150, 20);
-	m_zAxisVal.setBounds(10, 150, 150, 20);
+	ambixFileBrowse.setBounds(10, 10, 150, 30);
+	sofaFileBrowse.setBounds(10, 45, 150, 30);
+	triggerDebug.setBounds(10, 80, 150, 30);
+	m_enableRotation.setBounds(10, 115, 150, 30);
+	m_xAxisVal.setBounds(10, 145, 150, 20);
+	m_yAxisVal.setBounds(10, 165, 150, 20);
+	m_zAxisVal.setBounds(10, 185, 150, 20);
 }
 
 void BinauralRenderer::buttonClicked(Button* buttonClicked)
 {
-	if (buttonClicked == &sofaFileBrowse)
+	if (buttonClicked == &ambixFileBrowse)
+	{
+		browseForAmbixConfigFile();
+	}
+	else if (buttonClicked == &sofaFileBrowse)
 	{
 		browseForSofaFile();
 	}
@@ -118,14 +128,14 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 
 void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
 {
-	AudioBuffer<float>* buffer = bufferToFill.buffer;
-
-	if (buffer->getNumChannels() < jmax(m_numAmbiChans, m_numLsChans))
+	// maybe need to lock this out if we are changing the config...
+	// a flag is used for now
+	if (m_isConfigChanging)
 	{
-		// not enough channels to do this process
-		jassertfalse;
 		return;
 	}
+
+	AudioBuffer<float>* buffer = bufferToFill.buffer;
 
 	if (m_decodeMatrix.size() < m_numAmbiChans * m_numLsChans)
 	{
@@ -134,7 +144,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		return;
 	}
 
-	if(m_enableRotation.getToggleState())
+	if (m_enableRotation.getToggleState())
 		m_headTrackRotator.process(*buffer);
 
 	AudioBuffer<float> workingBuffer(m_numLsChans, buffer->getNumSamples());
@@ -152,10 +162,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		{
 			for (int k = 0; k < numSamps; ++k)
 			{
-				out[i][k] += in[0][k] * m_decodeMatrix[(i * m_numAmbiChans) + 0];
-				out[i][k] += in[1][k] * m_decodeMatrix[(i * m_numAmbiChans) + 1];
-				out[i][k] += in[2][k] * m_decodeMatrix[(i * m_numAmbiChans) + 2];
-				out[i][k] += in[3][k] * m_decodeMatrix[(i * m_numAmbiChans) + 3];
+				out[i][k] += in[j][k] * m_decodeMatrix[(i * m_numAmbiChans) + j];
 			}
 		}
 	}
@@ -195,7 +202,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		if (availSamples > 0)
 		{
 			float* convo = nullptr;
-		
+
 			// this needs to be number of channels of impulse
 			for (int k = 0; k < numConvChans; ++k)
 			{
@@ -220,6 +227,22 @@ void BinauralRenderer::releaseResources()
 {
 }
 
+void BinauralRenderer::browseForAmbixConfigFile()
+{
+#if JUCE_MODAL_LOOPS_PERMITTED
+	FileChooser fc("Select Ambix Config file to open...",
+		File::getCurrentWorkingDirectory(),
+		"*.config",
+		true);
+
+	if (fc.browseForFileToOpen())
+	{
+		File chosenFile = fc.getResult();
+		loadAmbixConfigFile(chosenFile);
+	}
+#endif
+}
+
 void BinauralRenderer::browseForSofaFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
@@ -234,6 +257,137 @@ void BinauralRenderer::browseForSofaFile()
 		loadSofaFile(chosenFile);
 	}
 #endif
+}
+
+void BinauralRenderer::loadAmbixConfigFile(File file)
+{
+	m_isConfigChanging = true;
+
+	FileInputStream fis(file);
+
+	StringArray lines;
+
+	file.readLines(lines);
+
+	while (!fis.isExhausted())
+	{
+		String line = fis.readNextLine();
+
+		if (line.contains("#GLOBAL"))
+		{
+			// this is the globals line
+			// the following lines contain global configuration details
+			while (!fis.isExhausted())
+			{
+				String line = fis.readNextLine().trim();
+
+				if (line.contains("#END"))
+					break;
+
+				if (line.startsWithIgnoreCase("/debug_msg"))
+				{
+					String res = line.fromFirstOccurrenceOf("/debug_msg ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/dec_mat_gain"))
+				{
+					String res = line.fromFirstOccurrenceOf("/dec_mat_gain ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/coeff_scale"))
+				{
+					String res = line.fromFirstOccurrenceOf("/coeff_scale ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/coeff_seq"))
+				{
+					String res = line.fromFirstOccurrenceOf("/coeff_seq ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/flip"))
+				{
+					String res = line.fromFirstOccurrenceOf("/flip ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/flop"))
+				{
+					String res = line.fromFirstOccurrenceOf("/flop ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/flap"))
+				{
+					String res = line.fromFirstOccurrenceOf("/flap ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/global_hrtf_gain"))
+				{
+					String res = line.fromFirstOccurrenceOf("/global_hrtf_gain ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/invert_condon_shortley"))
+				{
+					String res = line.fromFirstOccurrenceOf("/invert_condon_shortley ", false, true);
+					Logger::outputDebugString(res);
+				}
+			}
+		}
+		else if (line.contains("#HRTF"))
+		{
+			// this is the hrtf line
+			// the following lines contain references to the HRTF files that should be loaded
+			// for this configuration
+
+			// clean up the engines
+			m_convEngines.clear();
+			m_numLsChans = 0;
+
+			while (!fis.isExhausted())
+			{
+				String line = fis.readNextLine().trim();
+
+				if (line.contains("#END"))
+					break;
+
+				String path = file.getParentDirectory().getFullPathName();
+
+				File hrtfFile(path + File::getSeparatorString() + line);
+
+				if (hrtfFile.existsAsFile())
+				{
+					loadHRIRFileToEngine(hrtfFile);
+					m_numLsChans++;
+				}
+				else
+				{
+					Logger::outputDebugString(hrtfFile.getFullPathName() + " does not exist");
+				}
+			}
+		}
+		else if (line.contains("#DECODERMATRIX"))
+		{
+			// this is the decode matrix line
+			// the following lines contain a decode matrix to be used on the ambisonic input
+			m_decodeMatrix.clear();
+
+			while (!fis.isExhausted())
+			{
+				line = fis.readNextLine().trim();
+
+				if (line.contains("#END"))
+					break;
+
+				juce::String::CharPointerType charptr = line.getCharPointer();
+
+				while (charptr != charptr.findTerminatingNull())
+				{
+					float nextval = static_cast<float>(CharacterFunctions::readDoubleValue(charptr));
+					m_decodeMatrix.push_back(nextval);
+				}
+			}
+		}
+	}
+
+	m_isConfigChanging = false;
 }
 
 void BinauralRenderer::loadSofaFile(File file)
@@ -252,11 +406,40 @@ void BinauralRenderer::loadSofaFile(File file)
 
 		// WDL buffers and engines
 		WDL_ImpulseBuffer impulseBuffer;
-		
+
 		impulseBuffer.SetNumChannels(channels);
 
 		for (int c = 0; c < channels; ++c)
 			impulseBuffer.impulses[c].Set(HRIRData.data(), HRIRData.size());
+
+		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
+
+		convEngine->SetImpulse(&impulseBuffer);
+		convEngine->Reset();
+
+		m_convEngines.push_back(std::move(convEngine));
+	}
+}
+
+void BinauralRenderer::loadHRIRFileToEngine(File file)
+{
+	if (file.exists())
+	{
+		AudioFormatManager formatManager;
+		formatManager.registerBasicFormats();
+		std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(file));
+
+		AudioBuffer<float> inputBuffer(reader->numChannels, reader->lengthInSamples);
+
+		reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
+
+		// WDL buffers and engines
+		WDL_ImpulseBuffer impulseBuffer;
+		impulseBuffer.samplerate = reader->sampleRate;
+		impulseBuffer.SetNumChannels(reader->numChannels);
+
+		for (int c = 0; c < inputBuffer.getNumChannels(); ++c)
+			impulseBuffer.impulses[c].Set(inputBuffer.getWritePointer(c), inputBuffer.getNumSamples());
 
 		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
 
@@ -282,32 +465,7 @@ void BinauralRenderer::doDebugStuff()
 	for (auto& file : filestoload)
 	{
 		File inputFile(inputFileLocation.getChildFile(file));
-
-		if (inputFile.exists())
-		{
-			AudioFormatManager formatManager;
-			formatManager.registerBasicFormats();
-			std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(inputFile));
-
-			AudioBuffer<float> inputBuffer(reader->numChannels, reader->lengthInSamples);
-
-			reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
-
-			// WDL buffers and engines
-			WDL_ImpulseBuffer impulseBuffer;
-			impulseBuffer.samplerate = reader->sampleRate;
-			impulseBuffer.SetNumChannels(reader->numChannels);
-
-			for (int c = 0; c < inputBuffer.getNumChannels(); ++c)
-				impulseBuffer.impulses[c].Set(inputBuffer.getWritePointer(c), inputBuffer.getNumSamples());
-
-			std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
-
-			convEngine->SetImpulse(&impulseBuffer);
-			convEngine->Reset();
-
-			m_convEngines.push_back(std::move(convEngine));
-		}
+		loadHRIRFileToEngine(inputFile);
 	}
 }
 
