@@ -210,6 +210,8 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 		//sp.rollSlider.setValue(message[0].getFloat32());
 		//sp.pitchSlider.setValue(message[1].getFloat32());
 		//sp.yawSlider.setValue(message[2].getFloat32());
+
+		br.setHeadTrackingData(message[0].getFloat32(), message[1].getFloat32(), message[2].getFloat32());
 	}
 		
 

@@ -6,11 +6,16 @@ BinauralRenderer::BinauralRenderer()
 	, m_numLsChans(2)
 	, m_blockSize(0)
 	, m_sampleRate(0.0)
+	, m_yaw(0.0f)
+	, m_pitch(0.0f)
+	, m_roll(0.0f)
 {
 }
 
 void BinauralRenderer::init()
 {
+	startTimer(100);
+
 	sofaFileBrowse.setButtonText("Select SOFA file...");
 	sofaFileBrowse.addListener(this);
 	addAndMakeVisible(&sofaFileBrowse);
@@ -18,6 +23,13 @@ void BinauralRenderer::init()
 	triggerDebug.setButtonText("Trigger debug");
 	triggerDebug.addListener(this);
 	addAndMakeVisible(&triggerDebug);
+
+	m_xAxisVal.setText("deg", dontSendNotification);
+	addAndMakeVisible(&m_xAxisVal);
+	m_yAxisVal.setText("deg", dontSendNotification);
+	addAndMakeVisible(&m_yAxisVal);
+	m_zAxisVal.setText("deg", dontSendNotification);
+	addAndMakeVisible(&m_zAxisVal);
 
 	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
 	m_decodeMatrix = {	0.255550625999976, 0.632455532033675, 0, 0.156492159287191,
@@ -39,6 +51,7 @@ void BinauralRenderer::reset()
 
 void BinauralRenderer::deinit()
 {
+	stopTimer();
 }
 
 void BinauralRenderer::setOrder(std::size_t order)
@@ -59,6 +72,15 @@ void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
 	m_decodeMatrix = decodeMatrix;
 }
 
+void BinauralRenderer::setHeadTrackingData(float yaw, float pitch, float roll)
+{
+	m_yaw = yaw;
+	m_pitch = pitch;
+	m_roll = roll;
+
+	m_headTrackRotator.updateEuler(m_yaw, m_pitch, m_roll);
+}
+
 void BinauralRenderer::paint(Graphics& g)
 {
 }
@@ -67,6 +89,9 @@ void BinauralRenderer::resized()
 {
 	sofaFileBrowse.setBounds(10, 10, 150, 30);
 	triggerDebug.setBounds(10, 45, 150, 30);
+	m_xAxisVal.setBounds(10, 80, 150, 30);
+	m_yAxisVal.setBounds(10, 110, 150, 30);
+	m_zAxisVal.setBounds(10,140, 150, 30);
 }
 
 void BinauralRenderer::buttonClicked(Button* buttonClicked)
@@ -104,6 +129,8 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		jassertfalse;
 		return;
 	}
+
+	m_headTrackRotator.process(*buffer);
 
 	AudioBuffer<float> workingBuffer(m_numLsChans, buffer->getNumSamples());
 	workingBuffer.clear();
@@ -277,4 +304,11 @@ void BinauralRenderer::doDebugStuff()
 			m_convEngines.push_back(std::move(convEngine));
 		}
 	}
+}
+
+void BinauralRenderer::timerCallback()
+{
+	m_xAxisVal.setText(String(m_yaw) + " deg", dontSendNotification);
+	m_yAxisVal.setText(String(m_pitch) + " deg", dontSendNotification);
+	m_zAxisVal.setText(String(m_roll) + " deg", dontSendNotification);
 }
