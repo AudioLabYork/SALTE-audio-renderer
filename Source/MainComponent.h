@@ -52,6 +52,7 @@ private:
     TextEditor logWindow;
     
     TextButton openConfigButton;
+	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)

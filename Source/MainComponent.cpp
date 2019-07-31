@@ -7,6 +7,8 @@ MainComponent::MainComponent()
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
 
+
+	// setup binaural renderer
 	br.init();
 	br.setOrder(1);
 
@@ -35,10 +37,31 @@ MainComponent::MainComponent()
 
     // set number of output channels to 2 (binaural rendering case)
     setAudioChannels (0, 2);
+
+	// OSC labels
+	clientTxIpLabel.setEditable(false, true, false);
+	clientTxPortLabel.setEditable(false, true, false);
+	clientRxPortLabel.setEditable(false, true, false);
+	clientTxIpLabel.setText("127.0.0.1", dontSendNotification);
+	clientTxPortLabel.setText("6000", dontSendNotification);
+	clientRxPortLabel.setText("9001", dontSendNotification);
+	clientTxIpLabel.setJustificationType(Justification::centredLeft);
+	clientTxPortLabel.setJustificationType(Justification::centredLeft);
+	clientRxPortLabel.setJustificationType(Justification::centredLeft);
+	clientTxIpLabel.setColour(Label::textColourId, Colours::black);
+	clientTxPortLabel.setColour(Label::textColourId, Colours::black);
+	clientRxPortLabel.setColour(Label::textColourId, Colours::black);
+	addAndMakeVisible(clientTxIpLabel);
+	addAndMakeVisible(clientTxPortLabel);
+	addAndMakeVisible(clientRxPortLabel);
     
     // OSC sender and receiver connect
-    remoteInterfaceTxRx.connectSender("127.0.0.1", 6000);
-    remoteInterfaceTxRx.connectReceiver(9001);
+	String clientIp = clientTxIpLabel.getText();
+	int clientSendToPort = clientTxPortLabel.getText().getIntValue();
+	int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
+
+    remoteInterfaceTxRx.connectSender(clientIp, clientSendToPort);
+    remoteInterfaceTxRx.connectReceiver(clientReceiveAtPort);
     remoteInterfaceTxRx.addListener(this);
     
     addAndMakeVisible(&openConfigButton);
@@ -100,8 +123,8 @@ void MainComponent::paint (Graphics& g)
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
     
     juce::Rectangle<int> oscRect(250, 10, 330, 150);        // osc status / vr interface status
-    juce::Rectangle<int> tstlogicRect(10, 170, 570, 480);        // test logic component
-    juce::Rectangle<int> renderRect(590, 405, 800, 385);     // rendering component
+    juce::Rectangle<int> tstlogicRect(10, 170, 570, 480);   // test logic component
+    juce::Rectangle<int> renderRect(590, 405, 800, 385);    // rendering component
     g.drawRect(oscRect, 1);
     g.drawRect(tstlogicRect, 1);
     g.drawRect(renderRect, 1);
@@ -113,6 +136,12 @@ void MainComponent::resized()
     sp.setBounds(590, 10, 800, 385);
 	br.setBounds(590, 405, 800, 385);
     openConfigButton.setBounds(10, 10, 230, 25);
+
+	clientTxIpLabel.setBounds(260, 25, 75, 25);
+	clientTxPortLabel.setBounds(260 + 75, 25, 50, 25);
+	clientRxPortLabel.setBounds(260 + 125, 25, 50, 25);
+
+
     logWindow.setBounds(10, 660, 570, 130);
     
     // fit mushra interface
@@ -206,11 +235,6 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 	// HEAD TRACKING DATA
 	if (message.size() == 3 && message.getAddressPattern() == "/rpy")
 	{
-		// sp.ar.updateEuler(message[0].getFloat32(), message[1].getFloat32(), message[2].getFloat32());
-		//sp.rollSlider.setValue(message[0].getFloat32());
-		//sp.pitchSlider.setValue(message[1].getFloat32());
-		//sp.yawSlider.setValue(message[2].getFloat32());
-
 		br.setHeadTrackingData(message[0].getFloat32(), message[1].getFloat32(), message[2].getFloat32());
 	}
 		
