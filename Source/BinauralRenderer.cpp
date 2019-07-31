@@ -32,11 +32,11 @@ void BinauralRenderer::init()
 	m_enableRotation.setButtonText("Enable rotation");
 	addAndMakeVisible(&m_enableRotation);
 
-	m_xAxisVal.setText("Yaw: " + String(0.0f, 2) + " deg", dontSendNotification);
+	m_yAxisVal.setText("Roll: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_xAxisVal);
-	m_yAxisVal.setText("Pitch: " + String(0.0f, 2) + " deg", dontSendNotification);
+	m_xAxisVal.setText("Pitch: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_yAxisVal);
-	m_zAxisVal.setText("Roll: " + String(0.0f, 2) + " deg", dontSendNotification);
+	m_zAxisVal.setText("Yaw: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_zAxisVal);
 
 	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
@@ -80,13 +80,14 @@ void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
 	m_decodeMatrix = decodeMatrix;
 }
 
-void BinauralRenderer::setHeadTrackingData(float yaw, float pitch, float roll)
+void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
 {
-	m_yaw = yaw;
-	m_pitch = pitch;
 	m_roll = roll;
+	m_pitch = pitch;
+	m_yaw = yaw;
 
-	m_headTrackRotator.updateEuler(m_yaw, m_pitch, m_roll);
+
+	m_headTrackRotator.updateEuler(m_roll, m_pitch, m_yaw);
 }
 
 void BinauralRenderer::paint(Graphics& g)
@@ -99,8 +100,8 @@ void BinauralRenderer::resized()
 	sofaFileBrowse.setBounds(10, 45, 150, 30);
 	triggerDebug.setBounds(10, 80, 150, 30);
 	m_enableRotation.setBounds(10, 115, 150, 30);
-	m_xAxisVal.setBounds(10, 145, 150, 20);
-	m_yAxisVal.setBounds(10, 165, 150, 20);
+	m_yAxisVal.setBounds(10, 145, 150, 20);
+	m_xAxisVal.setBounds(10, 165, 150, 20);
 	m_zAxisVal.setBounds(10, 185, 150, 20);
 }
 
@@ -461,6 +462,8 @@ void BinauralRenderer::doDebugStuff()
 	};
 
 	File inputFileLocation(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Libraries/Database-Master/D1/D1_HRIR_WAV/48K_24bit/"));
+	// File inputFileLocation("D:/TR_FILES/Libraries/Database-Master/D1/D1_HRIR_WAV/48K_24bit/");
+
 
 	for (auto& file : filestoload)
 	{
@@ -473,8 +476,8 @@ void BinauralRenderer::timerCallback()
 {
 	if (m_enableRotation.getToggleState())
 	{
-		m_xAxisVal.setText("Yaw: " + String(m_yaw, 2) + " deg", dontSendNotification);
-		m_yAxisVal.setText("Pitch: " + String(m_pitch, 2) + " deg", dontSendNotification);
-		m_zAxisVal.setText("Roll: " + String(m_roll, 2) + " deg", dontSendNotification);
+		m_yAxisVal.setText("Roll: " + String(m_roll, 2) + " deg", dontSendNotification);
+		m_xAxisVal.setText("Pitch: " + String(m_pitch, 2) + " deg", dontSendNotification);
+		m_zAxisVal.setText("Yaw: " + String(m_yaw, 2) + " deg", dontSendNotification);
 	}
 }

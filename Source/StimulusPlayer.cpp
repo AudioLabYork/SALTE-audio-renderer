@@ -27,16 +27,16 @@ StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
     playbackHeadPosition.setText("Time:", dontSendNotification);
     addAndMakeVisible(playbackHeadPosition);
 
-	yawSlider.setSliderStyle(Slider::LinearHorizontal);
-	yawSlider.setRange(-180,180);
-	yawSlider.setValue(0);
-	yawSlider.setTextValueSuffix(" deg");
-	yawSlider.setTextBoxStyle(Slider::TextBoxRight,false, 100, 25);
-	yawSlider.addListener(this);
-	addAndMakeVisible(yawSlider);
-	yawSliderLabel.setText("Yaw",dontSendNotification);
-	yawSliderLabel.attachToComponent(&yawSlider, true);
-	addAndMakeVisible(yawSliderLabel);
+	rollSlider.setSliderStyle(Slider::LinearHorizontal);
+	rollSlider.setRange(-180, 180);
+	rollSlider.setValue(0);
+	rollSlider.setTextValueSuffix(" deg");
+	rollSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
+	rollSlider.addListener(this);
+	addAndMakeVisible(rollSlider);
+	rollSliderLabel.setText("Roll", dontSendNotification);
+	rollSliderLabel.attachToComponent(&rollSlider, true);
+	addAndMakeVisible(rollSliderLabel);
 
 	pitchSlider.setSliderStyle(Slider::LinearHorizontal);
 	pitchSlider.setRange(-180, 180);
@@ -49,16 +49,16 @@ StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
 	pitchSliderLabel.attachToComponent(&pitchSlider, true);
 	addAndMakeVisible(pitchSliderLabel);
 
-	rollSlider.setSliderStyle(Slider::LinearHorizontal);
-	rollSlider.setRange(-180, 180);
-	rollSlider.setValue(0);
-	rollSlider.setTextValueSuffix(" deg");
-	rollSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
-	rollSlider.addListener(this);
-	addAndMakeVisible(rollSlider);
-	rollSliderLabel.setText("Roll", dontSendNotification);
-	rollSliderLabel.attachToComponent(&rollSlider, true);
-	addAndMakeVisible(rollSliderLabel);
+	yawSlider.setSliderStyle(Slider::LinearHorizontal);
+	yawSlider.setRange(-180, 180);
+	yawSlider.setValue(0);
+	yawSlider.setTextValueSuffix(" deg");
+	yawSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
+	yawSlider.addListener(this);
+	addAndMakeVisible(yawSlider);
+	yawSliderLabel.setText("Yaw", dontSendNotification);
+	yawSliderLabel.attachToComponent(&yawSlider, true);
+	addAndMakeVisible(yawSliderLabel);
     
     startTimer(30);
 }
@@ -125,9 +125,9 @@ void StimulusPlayer::resized()
     loadedFileName.setBounds(280, 20, 500, 25);
     playbackHeadPosition.setBounds(280, 45, 500, 25);
 
-	yawSlider.setBounds(380, 80, 300, 25);
+	rollSlider.setBounds(380, 80, 300, 25);
 	pitchSlider.setBounds(380, 105, 300, 25);
-	rollSlider.setBounds(380, 130, 300, 25);
+	yawSlider.setBounds(380, 130, 300, 25);
 
         
     if (numberOfStimuli > 0)
@@ -173,10 +173,11 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
 
 void StimulusPlayer::sliderValueChanged(Slider* slider)
 {
-	float yaw = yawSlider.getValue();
-	float pitch = pitchSlider.getValue();
 	float roll = rollSlider.getValue();
-	ar.updateEuler(yaw, pitch, roll);
+	float pitch = pitchSlider.getValue();
+	float yaw = yawSlider.getValue();
+
+	ar.updateEuler(roll, pitch, yaw);
 }
 
 void StimulusPlayer::timerCallback()

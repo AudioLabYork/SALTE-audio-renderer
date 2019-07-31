@@ -71,8 +71,8 @@ private:
 	float m_roll;
 
 	ToggleButton m_enableRotation;
-	Label m_xAxisVal;
 	Label m_yAxisVal;
+	Label m_xAxisVal;
 	Label m_zAxisVal;
 
 	bool m_isConfigChanging;

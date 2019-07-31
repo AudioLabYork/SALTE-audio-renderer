@@ -140,7 +140,7 @@ double AmbisonicRotation::W(int l, int m, int n, Matrix<float>& Rone, Matrix<flo
 
 void AmbisonicRotation::calcRotationMatrix(const int order)
 {
-	const auto yawRadians = degreesToRadians(yaw);
+	const auto yawRadians = degreesToRadians(yaw) * -1;
 	const auto pitchRadians = degreesToRadians(pitch);
 	const auto rollRadians = degreesToRadians(roll);
 
@@ -235,14 +235,15 @@ void AmbisonicRotation::calcRotationMatrix(const int order)
 	rotationParamsHaveChanged = false;
 }
 
-void AmbisonicRotation::updateEuler(float y, float p, float r)
+void AmbisonicRotation::updateEuler(float r, float p, float y)
 {
 	//updatingParams = true;
-	if (yaw != y || pitch != p || roll != r)
+	if (roll != r || pitch != p || yaw != y)
 	{
-		yaw = y;
-		pitch = p;
 		roll = r;
+		pitch = p;
+		yaw = y;
+
 		rotationParamsHaveChanged = true;
 	}
 	//updatingParams = false;
