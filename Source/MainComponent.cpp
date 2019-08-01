@@ -2,11 +2,9 @@
 
 MainComponent::MainComponent()
 {
-    
     // add and make visible the stimulus player object
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
-
 
 	// setup binaural renderer
 	br.init();
@@ -67,6 +65,10 @@ MainComponent::MainComponent()
     addAndMakeVisible(&openConfigButton);
     openConfigButton.setButtonText("Open config file...");
     openConfigButton.addListener(this);
+
+	addAndMakeVisible(&openAudioDeviceManager);
+	openAudioDeviceManager.setButtonText("Audio device setup");
+	openAudioDeviceManager.addListener(this);
     
     addAndMakeVisible(logWindow);
     logWindow.setMultiLine(true);
@@ -136,6 +138,8 @@ void MainComponent::resized()
     sp.setBounds(590, 10, 800, 385);
 	br.setBounds(590, 405, 800, 385);
     openConfigButton.setBounds(10, 10, 230, 25);
+	openAudioDeviceManager.setBounds(10, 40, 230, 25);
+
 
 	clientTxIpLabel.setBounds(260, 25, 75, 25);
 	clientTxPortLabel.setBounds(260 + 75, 25, 50, 25);
@@ -154,6 +158,18 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
     {
         browseForConfigFile();
     }
+
+	if (buttonThatWasClicked == &openAudioDeviceManager)
+	{
+		// set visible audio device manager
+
+
+	}
+
+
+
+
+
     repaint();
 }
 

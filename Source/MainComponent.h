@@ -51,7 +51,7 @@ private:
     String logWindowMessage;
     TextEditor logWindow;
     
-    TextButton openConfigButton;
+    TextButton openConfigButton, openAudioDeviceManager;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
 
