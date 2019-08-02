@@ -1,9 +1,14 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "StimulusPlayer.h"
 
-StimulusPlayer::StimulusPlayer() : readAheadThread("transport read ahead")
+StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
+									thumbnailCache(10), // maxNumThumbsToStore parameter lets you specify how many previews should be kept in memory at once.
+									thumbnail(512, formatManager, thumbnailCache)
+						
 {
-    formatManager.registerBasicFormats();
+	transportSource.addChangeListener(this);
+	thumbnail.addChangeListener(this);
+	formatManager.registerBasicFormats();
     readAheadThread.startThread(3);
     
     //EDITOR
@@ -114,6 +119,12 @@ void StimulusPlayer::paint (Graphics& g)
     // TEXT
     g.setFont(Font(14.0f));
     g.setColour(Colours::white);
+
+	// PAINT WAVEFORm
+	if (thumbnail.getNumChannels() == 0)
+		paintIfNoFileLoaded(g, wfRect);
+	else
+		paintIfFileLoaded(g, wfRect);
 }
 
 void StimulusPlayer::resized()
@@ -144,6 +155,35 @@ void StimulusPlayer::resized()
                                                             buttonListPositionY + floor(i / 12) * (buttonHeight + 5));
         }
     }
+}
+
+void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
+{
+	//if (source == &transportSource) transportSourceChanged();
+	if (source == &thumbnail)       repaint();
+}
+
+void StimulusPlayer::paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
+{
+	g.setColour(Colours::darkgrey);
+	g.fillRect(thumbnailBounds);
+	g.setColour(Colours::white);
+	g.drawFittedText("No File Loaded", thumbnailBounds, Justification::centred, 1);
+}
+
+void StimulusPlayer::paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
+{
+	g.setColour(Colours::white);
+	g.fillRect(thumbnailBounds);
+
+	g.setColour(Colours::red);                                     // [8]
+
+	thumbnail.drawChannel(g,                                      // [9]
+		thumbnailBounds,
+		0.0,                                    // start time
+		thumbnail.getTotalLength(),             // end time
+		0,										// channel number
+		1.0f);                                  // vertical zoom
 }
 
 void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
@@ -258,7 +298,11 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 			&readAheadThread,       // this is the background thread to use for reading-ahead
 			reader->sampleRate,     // allows for sample rate correction
 			reader->numChannels);    // the maximum number of channels that may need to be played
-// update GUI label
+		
+		// create thumbnail
+		thumbnail.setSource(new FileInputSource(currentlyLoadedFile));
+		
+		// update GUI label
 		loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
 
 		// send message to the main log window
