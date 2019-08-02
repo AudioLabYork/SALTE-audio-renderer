@@ -3,6 +3,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <fftw3.h>
 #include <convoengine.h>
+#include <Eigen/Dense>
 
 #include "SOFAReader.h"
 #include "ConvolutionEngine.h"
@@ -36,12 +37,13 @@ public:
 	
 	void browseForAmbixConfigFile();
 	void browseForSofaFile();
+
+private:
 	void loadAmbixConfigFile(File file);
 	void loadSofaFile(File file);
-
 	void loadHRIRFileToEngine(File file);
-	
-private:
+	void updateMatrices();
+	void convertResponsesToSHD();
 	void doDebugStuff();
 
 	virtual void timerCallback() override;
@@ -53,18 +55,25 @@ private:
 	std::size_t m_order;
 	std::size_t m_numAmbiChans;
 	std::size_t m_numLsChans;
+	std::size_t m_numHrirLoaded;
 
 	std::size_t m_blockSize;
 	double m_sampleRate;
 
+	std::vector<AudioBuffer<float>> m_hrirBuffers;
+	std::vector<AudioBuffer<float>> m_hrirShdBuffers;
+
 	std::vector<float> m_decodeMatrix;
+	std::vector<float> m_encodeMatrix;
+
 	std::vector<float> m_azimuths;
 	std::vector<float> m_elevations;
 
 	AmbisonicRotation m_headTrackRotator;
-	
+
 	std::vector<std::unique_ptr<ConvolutionEngine>> m_engines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_convEngines;
+	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_shdConvEngines;
 
 	float m_yaw;
 	float m_pitch;
