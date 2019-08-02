@@ -27,3 +27,15 @@ Source for the libsofa library can be found [here](https://github.com/sofacousti
 The libsofa directory should be copied to the 'Libraries' folder (shown above)
 
 This library can then be compiled using Visual Studio
+
+- WDL
+
+Source for a mirror of the WDL library can be found [here](https://github.com/justinfrankel/WDL/tree/master/WDL)
+
+The WDL directory should be copied to the 'Libraries' folder (shown above)
+
+- Eigen
+
+Source for the Eigen library can be found [here](http://eigen.tuxfamily.org/index.php?title=Main_Page)
+
+The Eigen directory should be copied to the 'Libraries' folder (shown above)

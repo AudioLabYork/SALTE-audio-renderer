@@ -4,6 +4,7 @@ BinauralRenderer::BinauralRenderer()
 	: m_order(1)
 	, m_numAmbiChans(4)
 	, m_numLsChans(2)
+	, m_numHrirLoaded(0)
 	, m_blockSize(0)
 	, m_sampleRate(0.0)
 	, m_yaw(0.0f)
@@ -40,8 +41,10 @@ void BinauralRenderer::init()
 	addAndMakeVisible(&m_zAxisVal);
 
 	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
-	m_decodeMatrix = { 0.255550625999976, 0.632455532033675, 0, 0.156492159287191,
-						0.255550625999976, -0.632455532033675, 0, 0.156492159287190 };
+	m_decodeMatrix = { 0.255550625999976f, 0.632455532033675f, 0.0f, 0.156492159287191f,
+						0.255550625999976f, -0.632455532033675f, 0.0f, 0.156492159287190f };
+
+	updateMatrices();
 
 	// default stereo
 	m_azimuths = { 30.0f, 330.0f };
@@ -131,9 +134,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 	// maybe need to lock this out if we are changing the config...
 	// a flag is used for now
 	if (m_isConfigChanging)
-	{
 		return;
-	}
 
 	AudioBuffer<float>* buffer = bufferToFill.buffer;
 
@@ -144,82 +145,56 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		return;
 	}
 
+	// rotating the ambisonic scene
+
 	if (m_enableRotation.getToggleState())
 		m_headTrackRotator.process(*buffer);
 
-	AudioBuffer<float> workingBuffer(m_numLsChans, buffer->getNumSamples());
+	// convolving SHD ambisonic input with SHD HRIRs
+
+	AudioBuffer<float> workingBuffer(buffer->getNumChannels(), buffer->getNumSamples());
 	workingBuffer.clear();
 
-	const float** in = buffer->getArrayOfReadPointers();
-	float** out = workingBuffer.getArrayOfWritePointers();
+	for (int c = 0; c < buffer->getNumChannels(); ++c)
+		workingBuffer.copyFrom(c, 0, buffer->getWritePointer(c), buffer->getNumSamples());
 
-	// decode ambisonics into virtual loudspeakers
 	int numSamps = buffer->getNumSamples();
-
-	for (int i = 0; i < m_numLsChans; ++i)
-	{
-		for (int j = 0; j < m_numAmbiChans; ++j)
-		{
-			for (int k = 0; k < numSamps; ++k)
-			{
-				out[i][k] += in[j][k] * m_decodeMatrix[(i * m_numAmbiChans) + j];
-			}
-		}
-	}
-
-	// for each loudspeaker channel, need to perform the convolution
-	// the number of engines should equal the number of loudspeaker channels
-	if (m_convEngines.size() != m_numLsChans)
-	{
-		// not enough convolution engines to perform this process
+	
+	// not enough convolution engines to perform this process
+	if (m_shdConvEngines.size() != m_numAmbiChans)
 		return;
-	}
 
-	// clear the buffer ready for output
 	buffer->clear();
 
-	for (int i = 0; i < m_numLsChans; ++i)
+	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
-		// create a new stereo buffer because each convolution will be using one source speaker,
-		// but it will be convolved with a stereo impulse response
 		AudioBuffer<float> convBuffer(2, numSamps);
 		convBuffer.clear();
 
 		int numConvChans = convBuffer.getNumChannels();
 
 		for (int j = 0; j < numConvChans; ++j)
-		{
-			// copy the loudspeaker channel into both sides of the convolution buffer
-			// 0.5f is maybe correct... or should it be 0.707......
-			convBuffer.copyFrom(j, 0, out[i], numSamps, 0.5f);
-		}
+			convBuffer.copyFrom(j, 0, workingBuffer.getWritePointer(i), numSamps, 0.5f);
 
-		// add the convolution buffer to the engine in preperation for convolution process
-		m_convEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), numConvChans);
-
-		int availSamples = jmin((int)m_convEngines[i]->Avail(numSamps), numSamps);
-
+		m_shdConvEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), numConvChans);
+		
+		int availSamples = jmin((int)m_shdConvEngines[i]->Avail(numSamps), numSamps);
+		
 		if (availSamples > 0)
 		{
 			float* convo = nullptr;
 
-			// this needs to be number of channels of impulse
 			for (int k = 0; k < numConvChans; ++k)
 			{
-				// get the results from convolution
-				convo = m_convEngines[i]->Get()[k];
-				// need to copy back the results
+				convo = m_shdConvEngines[i]->Get()[k];
 				convBuffer.copyFrom(k, 0, convo, availSamples);
 			}
 
-			m_convEngines[i]->Advance(availSamples);
+			m_shdConvEngines[i]->Advance(availSamples);
 		}
 
-		// sum to the left and right outputs
-		for (int m = 0; m < numConvChans; ++m)
-		{
-			buffer->addFrom(m, 0, convBuffer.getWritePointer(m), numSamps);
-		}
+		for (int c = 0; c < numConvChans; ++c)
+			buffer->addFrom(c, 0, convBuffer.getWritePointer(c), numSamps);
 	}
 }
 
@@ -279,7 +254,7 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 			// the following lines contain global configuration details
 			while (!fis.isExhausted())
 			{
-				String line = fis.readNextLine().trim();
+				line = fis.readNextLine().trim();
 
 				if (line.contains("#END"))
 					break;
@@ -337,16 +312,27 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 			// the following lines contain references to the HRTF files that should be loaded
 			// for this configuration
 
+			// clean up the HRIR buffers
+			m_hrirBuffers.clear();
+			m_hrirShdBuffers.clear();
+			m_shdConvEngines.clear();
+
 			// clean up the engines
 			m_convEngines.clear();
+			m_shdConvEngines.clear();
+
+			// reset the number of loudspeaker channels, because we don't know how many there are yet
 			m_numLsChans = 0;
+			m_numHrirLoaded = 0;
 
 			while (!fis.isExhausted())
 			{
-				String line = fis.readNextLine().trim();
+				line = fis.readNextLine().trim();
 
 				if (line.contains("#END"))
+				{
 					break;
+				}
 
 				String path = file.getParentDirectory().getFullPathName();
 
@@ -356,6 +342,7 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 				{
 					loadHRIRFileToEngine(hrtfFile);
 					m_numLsChans++;
+					m_numHrirLoaded++;
 				}
 				else
 				{
@@ -368,13 +355,16 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 			// this is the decode matrix line
 			// the following lines contain a decode matrix to be used on the ambisonic input
 			m_decodeMatrix.clear();
+			m_encodeMatrix.clear();
 
 			while (!fis.isExhausted())
 			{
 				line = fis.readNextLine().trim();
 
 				if (line.contains("#END"))
+				{
 					break;
+				}
 
 				juce::String::CharPointerType charptr = line.getCharPointer();
 
@@ -387,13 +377,14 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 		}
 	}
 
+	updateMatrices();
+	convertResponsesToSHD();
+
 	m_isConfigChanging = false;
 }
 
 void BinauralRenderer::loadSofaFile(File file)
 {
-	// TODO: need to clean up the current configuration to deinit all the current hrir units etc
-
 	SOFAReader reader(file.getFullPathName().toStdString());
 
 	std::vector<float> HRIRData;
@@ -407,10 +398,10 @@ void BinauralRenderer::loadSofaFile(File file)
 		// WDL buffers and engines
 		WDL_ImpulseBuffer impulseBuffer;
 
-		impulseBuffer.SetNumChannels(channels);
+		impulseBuffer.SetNumChannels((int)channels);
 
 		for (int c = 0; c < channels; ++c)
-			impulseBuffer.impulses[c].Set(HRIRData.data(), HRIRData.size());
+			impulseBuffer.impulses[c].Set(HRIRData.data(), (int)HRIRData.size());
 
 		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
 
@@ -429,24 +420,91 @@ void BinauralRenderer::loadHRIRFileToEngine(File file)
 		formatManager.registerBasicFormats();
 		std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(file));
 
-		AudioBuffer<float> inputBuffer(reader->numChannels, reader->lengthInSamples);
+		AudioBuffer<float> inputBuffer(reader->numChannels, static_cast<int>(reader->lengthInSamples));
 
 		reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
 
-		// WDL buffers and engines
+		m_hrirBuffers.push_back(inputBuffer);
+
 		WDL_ImpulseBuffer impulseBuffer;
 		impulseBuffer.samplerate = reader->sampleRate;
 		impulseBuffer.SetNumChannels(reader->numChannels);
-
-		for (int c = 0; c < inputBuffer.getNumChannels(); ++c)
+		
+		for (int c = 0; c < jmin(inputBuffer.getNumChannels(), 2); ++c)
 			impulseBuffer.impulses[c].Set(inputBuffer.getWritePointer(c), inputBuffer.getNumSamples());
+		
+		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
+		
+		convEngine->SetImpulse(&impulseBuffer);
+		convEngine->Reset();
+		
+		m_convEngines.push_back(std::move(convEngine));
+	}
+}
+
+void BinauralRenderer::updateMatrices()
+{
+	Eigen::MatrixXf decode(m_numLsChans, m_numAmbiChans);
+
+	for (int i = 0; i < m_numLsChans; ++i)
+	{
+		for (int j = 0; j < m_numAmbiChans; ++j)
+		{
+			decode(i, j) = m_decodeMatrix[(i * m_numAmbiChans) + j];
+		}
+	}
+	
+	Eigen::MatrixXf encode(m_numAmbiChans, m_numLsChans);
+	
+	encode = decode.transpose();
+
+	for (int i = 0; i < m_numAmbiChans; ++i)
+	{
+		for (int j = 0; j < m_numLsChans; ++j)
+		{
+			m_encodeMatrix.push_back(encode(i, j));
+		}
+	}
+}
+
+void BinauralRenderer::convertResponsesToSHD()
+{
+	int numSamps = m_hrirBuffers[0].getNumSamples();
+
+	m_hrirShdBuffers.resize(m_numAmbiChans);
+
+	for (auto& hrirShdBuffer : m_hrirShdBuffers)
+	{
+		hrirShdBuffer.setSize(2, numSamps);
+		hrirShdBuffer.clear();
+	}
+
+	for (int i = 0; i < m_numAmbiChans; ++i)
+	{
+		float** out = m_hrirShdBuffers[i].getArrayOfWritePointers();
+
+		for (int j = 0; j < m_numLsChans; ++j)
+		{
+			const float** in = m_hrirBuffers[j].getArrayOfReadPointers();
+			float weight = m_encodeMatrix[(i * m_numLsChans) + j];
+
+			for (int k = 0; k < 2; ++k)
+				FloatVectorOperations::addWithMultiply(out[k], in[k], weight, numSamps);
+		}
+
+		WDL_ImpulseBuffer impulseBuffer;
+		impulseBuffer.samplerate = m_sampleRate;
+		impulseBuffer.SetNumChannels(2);
+
+		for (int m = 0; m < 2; ++m)
+			impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getWritePointer(m), numSamps);
 
 		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
 
 		convEngine->SetImpulse(&impulseBuffer);
 		convEngine->Reset();
 
-		m_convEngines.push_back(std::move(convEngine));
+		m_shdConvEngines.push_back(std::move(convEngine));
 	}
 }
 
