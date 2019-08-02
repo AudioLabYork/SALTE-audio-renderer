@@ -10,7 +10,7 @@ class AudioSetup    :	public Component,
 						private Timer
 {
 public:
-    AudioSetup();
+    AudioSetup(AudioDeviceManager& deviceManager);
     ~AudioSetup();
 
     void paint (Graphics&) override;
@@ -23,6 +23,8 @@ private:
 	void timerCallback() override;
 	void dumpDeviceInfo();
 	void logMessage(const String& m);
+
+	AudioDeviceManager* admPointer;
 
 	Random random;
 	AudioDeviceSelectorComponent audioSetupComp;

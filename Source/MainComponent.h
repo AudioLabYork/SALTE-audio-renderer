@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "AudioSetup.h"
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
 #include "MushraComponent.h"
@@ -45,6 +46,8 @@ private:
     //==============================================================================
     // Your private member variables go here...
     
+
+	AudioSetup as;
     StimulusPlayer sp;
 	BinauralRenderer br;
 

@@ -2,7 +2,7 @@
 #include "AudioSetup.h"
 
 //==============================================================================
-AudioSetup::AudioSetup()
+AudioSetup::AudioSetup(AudioDeviceManager& deviceManager)
 	: audioSetupComp(deviceManager,
 		0,     // minimum input channels
 		256,   // maximum input channels
@@ -12,7 +12,9 @@ AudioSetup::AudioSetup()
 		false, // ability to select midi output device
 		false, // treat channels as stereo pairs
 		false) // hide advanced options
-{
+{	
+	admPointer = &deviceManager;
+
 	addAndMakeVisible(audioSetupComp);
 	addAndMakeVisible(diagnosticsBox);
 
@@ -34,19 +36,21 @@ AudioSetup::AudioSetup()
 	setSize(760, 360);
 
 	//setAudioChannels(2, 2);
-	deviceManager.addChangeListener(this);
+	admPointer->addChangeListener(this);
 
 	startTimer(50);
 }
 
 AudioSetup::~AudioSetup()
 {
-	deviceManager.removeChangeListener(this);
+	admPointer->removeChangeListener(this);
 
 }
 
 void AudioSetup::paint (Graphics& g)
 {
+	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
+	g.drawRect(getLocalBounds(), 1);
 	g.setColour(Colours::grey);
 	g.fillRect(getLocalBounds().removeFromRight(proportionOfWidth(0.4f)));
 }
@@ -85,18 +89,18 @@ String AudioSetup::getListOfActiveBits(const BigInteger& b)
 
 void AudioSetup::timerCallback()
 {
-	auto cpu = deviceManager.getCpuUsage() * 100;
+	auto cpu = admPointer->getCpuUsage() * 100;
 	cpuUsageText.setText(String(cpu, 6) + " %", dontSendNotification);
 }
 
 void AudioSetup::dumpDeviceInfo()
 {
 	logMessage("--------------------------------------");
-	logMessage("Current audio device type: " + (deviceManager.getCurrentDeviceTypeObject() != nullptr
-		? deviceManager.getCurrentDeviceTypeObject()->getTypeName()
+	logMessage("Current audio device type: " + (admPointer->getCurrentDeviceTypeObject() != nullptr
+		? admPointer->getCurrentDeviceTypeObject()->getTypeName()
 		: "<none>"));
 
-	if (auto * device = deviceManager.getCurrentAudioDevice())
+	if (auto * device = admPointer->getCurrentAudioDevice())
 	{
 		logMessage("Current audio device: " + device->getName().quoted());
 		logMessage("Sample rate: " + String(device->getCurrentSampleRate()) + " Hz");

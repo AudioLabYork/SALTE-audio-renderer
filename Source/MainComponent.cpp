@@ -1,7 +1,9 @@
 #include "MainComponent.h"
 
 MainComponent::MainComponent()
+	: as(deviceManager)
 {
+
     // add and make visible the stimulus player object
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
@@ -46,9 +48,9 @@ MainComponent::MainComponent()
 	clientTxIpLabel.setJustificationType(Justification::centredLeft);
 	clientTxPortLabel.setJustificationType(Justification::centredLeft);
 	clientRxPortLabel.setJustificationType(Justification::centredLeft);
-	clientTxIpLabel.setColour(Label::textColourId, Colours::black);
-	clientTxPortLabel.setColour(Label::textColourId, Colours::black);
-	clientRxPortLabel.setColour(Label::textColourId, Colours::black);
+	//clientTxIpLabel.setColour(Label::textColourId, Colours::black);
+	//clientTxPortLabel.setColour(Label::textColourId, Colours::black);
+	//clientRxPortLabel.setColour(Label::textColourId, Colours::black);
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
@@ -135,6 +137,8 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
+
+	as.setTopLeftPosition(200, 200);
     sp.setBounds(590, 10, 800, 385);
 	br.setBounds(590, 405, 800, 385);
     openConfigButton.setBounds(10, 10, 230, 25);
@@ -161,12 +165,11 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 	if (buttonThatWasClicked == &openAudioDeviceManager)
 	{
-		// set visible audio device manager
-
-
+		if (as.isVisible())
+			as.setVisible(false);
+		else
+			addAndMakeVisible(as);
 	}
-
-
 
 
 
