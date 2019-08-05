@@ -44,7 +44,6 @@ private:
 	void loadHRIRFileToEngine(File file);
 	void updateMatrices();
 	void convertResponsesToSHD();
-	void doDebugStuff();
 
 	virtual void timerCallback() override;
 

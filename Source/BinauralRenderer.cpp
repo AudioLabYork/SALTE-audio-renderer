@@ -39,16 +39,6 @@ void BinauralRenderer::init()
 	addAndMakeVisible(&m_yAxisVal);
 	m_zAxisVal.setText("Yaw: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_zAxisVal);
-
-	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
-	m_decodeMatrix = { 0.255550625999976f, 0.632455532033675f, 0.0f, 0.156492159287191f,
-						0.255550625999976f, -0.632455532033675f, 0.0f, 0.156492159287190f };
-
-	updateMatrices();
-
-	// default stereo
-	m_azimuths = { 30.0f, 330.0f };
-	m_elevations = { 0.0f, 0.0f };
 }
 
 void BinauralRenderer::reset()
@@ -89,7 +79,6 @@ void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
 	m_pitch = pitch;
 	m_yaw = yaw;
 
-
 	m_headTrackRotator.updateEuler(m_roll, m_pitch, m_yaw);
 }
 
@@ -120,7 +109,6 @@ void BinauralRenderer::buttonClicked(Button* buttonClicked)
 	}
 	else if (buttonClicked == &triggerDebug)
 	{
-		doDebugStuff();
 	}
 }
 
@@ -506,27 +494,6 @@ void BinauralRenderer::convertResponsesToSHD()
 		convEngine->Reset();
 
 		m_shdConvEngines.push_back(std::move(convEngine));
-	}
-}
-
-void BinauralRenderer::doDebugStuff()
-{
-	StringArray filestoload
-	{
-		"azi_45,0_ele_0,0.wav",
-		"azi_135,0_ele_0,0.wav",
-		"azi_225,0_ele_0,0.wav",
-		"azi_315,0_ele_0,0.wav"
-	};
-
-	File inputFileLocation(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Libraries/Database-Master/D1/D1_HRIR_WAV/48K_24bit/"));
-	// File inputFileLocation("D:/TR_FILES/Libraries/Database-Master/D1/D1_HRIR_WAV/48K_24bit/");
-
-
-	for (auto& file : filestoload)
-	{
-		File inputFile(inputFileLocation.getChildFile(file));
-		loadHRIRFileToEngine(inputFile);
 	}
 }
 
