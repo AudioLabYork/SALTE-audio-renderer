@@ -32,6 +32,10 @@ MainComponent::MainComponent()
 
 	addAndMakeVisible(br);
 
+	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
+	
+	sourcePath.createDirectory();
+	
 	// set size of the main app window
     setSize (1400, 800);
 
@@ -256,8 +260,26 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 	{
 		br.setHeadTrackingData(message[0].getFloat32(), message[1].getFloat32(), message[2].getFloat32());
 	}
-		
 
+	if (message.size() == 1 && message.getAddressPattern() == "/sofaload" && message[0].isString())
+	{
+		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
+
+		if (sourcePath.exists())
+		{
+			String filename = message[0].getString();
+			sourcePath = sourcePath.getChildFile(filename);
+
+			if (sourcePath.existsAsFile())
+			{
+				br.loadSofaFile(sourcePath);
+			}
+			else
+			{
+				Logger::outputDebugString("SOFA file could not be located, please check that it exists");
+			}
+		}
+	}
 }
 
 // LOG WINDOW
