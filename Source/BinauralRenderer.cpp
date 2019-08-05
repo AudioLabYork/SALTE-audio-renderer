@@ -145,7 +145,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 	workingBuffer.clear();
 
 	for (int c = 0; c < buffer->getNumChannels(); ++c)
-		workingBuffer.copyFrom(c, 0, buffer->getWritePointer(c), buffer->getNumSamples());
+		workingBuffer.copyFrom(c, 0, buffer->getReadPointer(c), buffer->getNumSamples());
 
 	int numSamps = buffer->getNumSamples();
 	
@@ -163,7 +163,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		int numConvChans = convBuffer.getNumChannels();
 
 		for (int j = 0; j < numConvChans; ++j)
-			convBuffer.copyFrom(j, 0, workingBuffer.getWritePointer(i), numSamps, 0.5f);
+			convBuffer.copyFrom(j, 0, workingBuffer.getReadPointer(i), numSamps, 0.5f);
 
 		m_shdConvEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), numConvChans);
 		
@@ -183,7 +183,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		}
 
 		for (int c = 0; c < numConvChans; ++c)
-			buffer->addFrom(c, 0, convBuffer.getWritePointer(c), numSamps);
+			buffer->addFrom(c, 0, convBuffer.getReadPointer(c), numSamps);
 	}
 }
 
