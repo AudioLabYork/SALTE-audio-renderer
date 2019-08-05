@@ -132,22 +132,33 @@ void MainComponent::paint (Graphics& g)
     g.drawRect(oscRect, 1);
     g.drawRect(tstlogicRect, 1);
     g.drawRect(renderRect, 1);
+
+	// OSC WINDOW
+	g.setColour(Colours::white);
+
+	int labelXPos = 260;
+	int labelYPos = 10;
+	g.drawText("IP", labelXPos + 45, labelYPos, 50, 25, Justification::centredLeft, true);
+	g.drawText("Send to", labelXPos + 120, labelYPos, 50, 25, Justification::centredLeft, true);
+	g.drawText("Receive at", labelXPos + 185, labelYPos, 75, 25, Justification::centredLeft, true);
+	g.drawText("Client", labelXPos, labelYPos + 20, 50, 25, Justification::centredLeft, true);
+
     
 }
 
 void MainComponent::resized()
 {
 
-	as.setTopLeftPosition(200, 200);
+	as.setCentrePosition(getWidth()/2, getHeight()/2);
     sp.setBounds(590, 10, 800, 385);
 	br.setBounds(590, 405, 800, 385);
     openConfigButton.setBounds(10, 10, 230, 25);
 	openAudioDeviceManager.setBounds(10, 40, 230, 25);
 
 
-	clientTxIpLabel.setBounds(260, 25, 75, 25);
-	clientTxPortLabel.setBounds(260 + 75, 25, 50, 25);
-	clientRxPortLabel.setBounds(260 + 125, 25, 50, 25);
+	clientTxIpLabel.setBounds(297, 30, 75, 25);
+	clientTxPortLabel.setBounds(260 + 120, 30, 50, 25);
+	clientRxPortLabel.setBounds(260 + 185, 30, 50, 25);
 
 
     logWindow.setBounds(10, 660, 570, 130);
