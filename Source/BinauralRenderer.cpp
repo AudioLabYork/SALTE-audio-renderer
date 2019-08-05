@@ -39,16 +39,6 @@ void BinauralRenderer::init()
 	addAndMakeVisible(&m_yAxisVal);
 	m_zAxisVal.setText("Yaw: " + String(0.0f, 2) + " deg", dontSendNotification);
 	addAndMakeVisible(&m_zAxisVal);
-
-	// pinv, maxre, energy preservation decode matrix for first order to stereo decoding
-	m_decodeMatrix = { 0.255550625999976f, 0.632455532033675f, 0.0f, 0.156492159287191f,
-						0.255550625999976f, -0.632455532033675f, 0.0f, 0.156492159287190f };
-
-	updateMatrices();
-
-	// default stereo
-	m_azimuths = { 30.0f, 330.0f };
-	m_elevations = { 0.0f, 0.0f };
 }
 
 void BinauralRenderer::reset()
@@ -89,7 +79,6 @@ void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
 	m_pitch = pitch;
 	m_yaw = yaw;
 
-
 	m_headTrackRotator.updateEuler(m_roll, m_pitch, m_yaw);
 }
 
@@ -120,7 +109,6 @@ void BinauralRenderer::buttonClicked(Button* buttonClicked)
 	}
 	else if (buttonClicked == &triggerDebug)
 	{
-		doDebugStuff();
 	}
 }
 
@@ -157,7 +145,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 	workingBuffer.clear();
 
 	for (int c = 0; c < buffer->getNumChannels(); ++c)
-		workingBuffer.copyFrom(c, 0, buffer->getWritePointer(c), buffer->getNumSamples());
+		workingBuffer.copyFrom(c, 0, buffer->getReadPointer(c), buffer->getNumSamples());
 
 	int numSamps = buffer->getNumSamples();
 	
@@ -175,7 +163,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		int numConvChans = convBuffer.getNumChannels();
 
 		for (int j = 0; j < numConvChans; ++j)
-			convBuffer.copyFrom(j, 0, workingBuffer.getWritePointer(i), numSamps, 0.5f);
+			convBuffer.copyFrom(j, 0, workingBuffer.getReadPointer(i), numSamps, 0.5f);
 
 		m_shdConvEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), numConvChans);
 		
@@ -195,7 +183,7 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		}
 
 		for (int c = 0; c < numConvChans; ++c)
-			buffer->addFrom(c, 0, convBuffer.getWritePointer(c), numSamps);
+			buffer->addFrom(c, 0, convBuffer.getReadPointer(c), numSamps);
 	}
 }
 
@@ -235,9 +223,14 @@ void BinauralRenderer::browseForSofaFile()
 #endif
 }
 
-void BinauralRenderer::loadAmbixConfigFile(File file)
+void BinauralRenderer::loadAmbixConfigFile(const File& file)
 {
 	m_isConfigChanging = true;
+
+	resetConvolution();
+
+	// reset number of loudspeakers in configuration
+	m_numLsChans = 0;
 
 	FileInputStream fis(file);
 
@@ -313,19 +306,6 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 			// the following lines contain references to the HRTF files that should be loaded
 			// for this configuration
 
-			// clean up the HRIR buffers
-			m_hrirBuffers.clear();
-			m_hrirShdBuffers.clear();
-			m_shdConvEngines.clear();
-
-			// clean up the engines
-			m_convEngines.clear();
-			m_shdConvEngines.clear();
-
-			// reset the number of loudspeaker channels, because we don't know how many there are yet
-			m_numLsChans = 0;
-			m_numHrirLoaded = 0;
-
 			while (!fis.isExhausted())
 			{
 				line = fis.readNextLine().trim();
@@ -384,36 +364,37 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 	m_isConfigChanging = false;
 }
 
-void BinauralRenderer::loadSofaFile(File file)
+void BinauralRenderer::loadSofaFile(const File& file)
 {
+	m_isConfigChanging = true;
+
+	resetConvolution();
+
 	SOFAReader reader(file.getFullPathName().toStdString());
 
 	std::vector<float> HRIRData;
 
 	std::size_t channels = reader.getNumImpulseChannels();
+	std::size_t samples = reader.getNumImpulseSamples();
 
 	for (int i = 0; i < m_numLsChans; ++i)
 	{
 		reader.getResponseForSpeakerPosition(HRIRData, m_azimuths[i], m_elevations[i]);
 
-		// WDL buffers and engines
-		WDL_ImpulseBuffer impulseBuffer;
-
-		impulseBuffer.SetNumChannels((int)channels);
-
+		AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
+		
 		for (int c = 0; c < channels; ++c)
-			impulseBuffer.impulses[c].Set(HRIRData.data(), (int)HRIRData.size());
+			inputBuffer.copyFrom(c, 0, HRIRData.data(), samples);
 
-		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
-
-		convEngine->SetImpulse(&impulseBuffer);
-		convEngine->Reset();
-
-		m_convEngines.push_back(std::move(convEngine));
+		loadHRIRToEngine(inputBuffer, reader.getSampleRate());
 	}
+
+	convertResponsesToSHD();
+
+	m_isConfigChanging = false;
 }
 
-void BinauralRenderer::loadHRIRFileToEngine(File file)
+void BinauralRenderer::loadHRIRFileToEngine(const File& file)
 {
 	if (file.exists())
 	{
@@ -425,23 +406,32 @@ void BinauralRenderer::loadHRIRFileToEngine(File file)
 
 		reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
 
-		m_hrirBuffers.push_back(inputBuffer);
-
-		WDL_ImpulseBuffer impulseBuffer;
-		impulseBuffer.samplerate = reader->sampleRate;
-		impulseBuffer.SetNumChannels(reader->numChannels);
-		
-		for (int c = 0; c < jmin(inputBuffer.getNumChannels(), 2); ++c)
-			impulseBuffer.impulses[c].Set(inputBuffer.getWritePointer(c), inputBuffer.getNumSamples());
-		
-		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
-		
-		convEngine->SetImpulse(&impulseBuffer);
-		convEngine->Reset();
-		
-		m_convEngines.push_back(std::move(convEngine));
+		loadHRIRToEngine(inputBuffer, reader->sampleRate);
 	}
 }
+
+void BinauralRenderer::loadHRIRToEngine(const AudioBuffer<float>& buffer, const double sampleRate)
+{
+	m_hrirBuffers.push_back(buffer);
+
+	WDL_ImpulseBuffer impulseBuffer;
+	impulseBuffer.samplerate = sampleRate;
+	impulseBuffer.SetNumChannels(buffer.getNumChannels());
+
+	for (int c = 0; c < jmin(buffer.getNumChannels(), 2); ++c)
+	{
+		const float* data = buffer.getReadPointer(c);
+		impulseBuffer.impulses[c].Set(data, buffer.getNumSamples());
+	}
+
+	std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
+
+	convEngine->SetImpulse(&impulseBuffer);
+	convEngine->Reset();
+
+	m_convEngines.push_back(std::move(convEngine));
+}
+
 
 void BinauralRenderer::updateMatrices()
 {
@@ -498,7 +488,7 @@ void BinauralRenderer::convertResponsesToSHD()
 		impulseBuffer.SetNumChannels(2);
 
 		for (int m = 0; m < 2; ++m)
-			impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getWritePointer(m), numSamps);
+			impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getReadPointer(m), numSamps);
 
 		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
 
@@ -509,25 +499,18 @@ void BinauralRenderer::convertResponsesToSHD()
 	}
 }
 
-void BinauralRenderer::doDebugStuff()
+void BinauralRenderer::resetConvolution()
 {
-	StringArray filestoload
-	{
-		"azi_45,0_ele_0,0.wav",
-		"azi_135,0_ele_0,0.wav",
-		"azi_225,0_ele_0,0.wav",
-		"azi_315,0_ele_0,0.wav"
-	};
+	// clean up the HRIR buffers
+	m_hrirBuffers.clear();
+	m_hrirShdBuffers.clear();
+	m_shdConvEngines.clear();
 
-	File inputFileLocation(File::getSpecialLocation(File::userDocumentsDirectory).getChildFile("Libraries/Database-Master/D1/D1_HRIR_WAV/48K_24bit/"));
-	// File inputFileLocation("D:/TR_FILES/Libraries/Database-Master/D1/D1_HRIR_WAV/48K_24bit/");
+	// clean up the engines
+	m_convEngines.clear();
+	m_shdConvEngines.clear();
 
-
-	for (auto& file : filestoload)
-	{
-		File inputFile(inputFileLocation.getChildFile(file));
-		loadHRIRFileToEngine(inputFile);
-	}
+	m_numHrirLoaded = 0;
 }
 
 void BinauralRenderer::timerCallback()

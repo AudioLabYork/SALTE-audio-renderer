@@ -16,6 +16,7 @@ public:
 	void getImpulseData(std::vector<float>& impulses);
 	void getSourcePositions(std::vector<float>& azimuths, std::vector<float>& elevations);
 	
+	float getSampleRate();
 	std::size_t getNumImpulses();
 	std::size_t getNumImpulseChannels();
 	std::size_t getNumImpulseSamples();

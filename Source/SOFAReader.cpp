@@ -137,6 +137,13 @@ void SOFAReader::getSourcePositions(std::vector<float>& azimuths, std::vector<fl
 	}
 }
 
+float SOFAReader::getSampleRate()
+{
+	double sampleRate = 0.0;
+	loadedFile->GetValues(&sampleRate, 0, 0, "Data.SamplingRate");
+	return static_cast<float>(sampleRate);
+}
+
 std::size_t SOFAReader::getNumImpulses()
 {
 	return loadedFile->GetDimension("M"); // number of measurements

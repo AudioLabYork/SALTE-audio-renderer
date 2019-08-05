@@ -37,14 +37,17 @@ public:
 	
 	void browseForAmbixConfigFile();
 	void browseForSofaFile();
+	
+	void loadAmbixConfigFile(const File& file);
+	void loadSofaFile(const File& file);
 
 private:
-	void loadAmbixConfigFile(File file);
-	void loadSofaFile(File file);
-	void loadHRIRFileToEngine(File file);
+	void loadHRIRFileToEngine(const File& file);
+	void loadHRIRToEngine(const AudioBuffer<float>& buffer, const double sampleRate);
 	void updateMatrices();
 	void convertResponsesToSHD();
-	void doDebugStuff();
+	
+	void resetConvolution();
 
 	virtual void timerCallback() override;
 
