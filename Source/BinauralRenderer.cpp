@@ -223,9 +223,14 @@ void BinauralRenderer::browseForSofaFile()
 #endif
 }
 
-void BinauralRenderer::loadAmbixConfigFile(File file)
+void BinauralRenderer::loadAmbixConfigFile(const File& file)
 {
 	m_isConfigChanging = true;
+
+	resetConvolution();
+
+	// reset number of loudspeakers in configuration
+	m_numLsChans = 0;
 
 	FileInputStream fis(file);
 
@@ -301,19 +306,6 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 			// the following lines contain references to the HRTF files that should be loaded
 			// for this configuration
 
-			// clean up the HRIR buffers
-			m_hrirBuffers.clear();
-			m_hrirShdBuffers.clear();
-			m_shdConvEngines.clear();
-
-			// clean up the engines
-			m_convEngines.clear();
-			m_shdConvEngines.clear();
-
-			// reset the number of loudspeaker channels, because we don't know how many there are yet
-			m_numLsChans = 0;
-			m_numHrirLoaded = 0;
-
 			while (!fis.isExhausted())
 			{
 				line = fis.readNextLine().trim();
@@ -372,36 +364,37 @@ void BinauralRenderer::loadAmbixConfigFile(File file)
 	m_isConfigChanging = false;
 }
 
-void BinauralRenderer::loadSofaFile(File file)
+void BinauralRenderer::loadSofaFile(const File& file)
 {
+	m_isConfigChanging = true;
+
+	resetConvolution();
+
 	SOFAReader reader(file.getFullPathName().toStdString());
 
 	std::vector<float> HRIRData;
 
 	std::size_t channels = reader.getNumImpulseChannels();
+	std::size_t samples = reader.getNumImpulseSamples();
 
 	for (int i = 0; i < m_numLsChans; ++i)
 	{
 		reader.getResponseForSpeakerPosition(HRIRData, m_azimuths[i], m_elevations[i]);
 
-		// WDL buffers and engines
-		WDL_ImpulseBuffer impulseBuffer;
-
-		impulseBuffer.SetNumChannels((int)channels);
-
+		AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
+		
 		for (int c = 0; c < channels; ++c)
-			impulseBuffer.impulses[c].Set(HRIRData.data(), (int)HRIRData.size());
+			inputBuffer.copyFrom(c, 0, HRIRData.data(), samples);
 
-		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
-
-		convEngine->SetImpulse(&impulseBuffer);
-		convEngine->Reset();
-
-		m_convEngines.push_back(std::move(convEngine));
+		loadHRIRToEngine(inputBuffer, reader.getSampleRate());
 	}
+
+	convertResponsesToSHD();
+
+	m_isConfigChanging = false;
 }
 
-void BinauralRenderer::loadHRIRFileToEngine(File file)
+void BinauralRenderer::loadHRIRFileToEngine(const File& file)
 {
 	if (file.exists())
 	{
@@ -413,23 +406,32 @@ void BinauralRenderer::loadHRIRFileToEngine(File file)
 
 		reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
 
-		m_hrirBuffers.push_back(inputBuffer);
-
-		WDL_ImpulseBuffer impulseBuffer;
-		impulseBuffer.samplerate = reader->sampleRate;
-		impulseBuffer.SetNumChannels(reader->numChannels);
-		
-		for (int c = 0; c < jmin(inputBuffer.getNumChannels(), 2); ++c)
-			impulseBuffer.impulses[c].Set(inputBuffer.getWritePointer(c), inputBuffer.getNumSamples());
-		
-		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
-		
-		convEngine->SetImpulse(&impulseBuffer);
-		convEngine->Reset();
-		
-		m_convEngines.push_back(std::move(convEngine));
+		loadHRIRToEngine(inputBuffer, reader->sampleRate);
 	}
 }
+
+void BinauralRenderer::loadHRIRToEngine(const AudioBuffer<float>& buffer, const double sampleRate)
+{
+	m_hrirBuffers.push_back(buffer);
+
+	WDL_ImpulseBuffer impulseBuffer;
+	impulseBuffer.samplerate = sampleRate;
+	impulseBuffer.SetNumChannels(buffer.getNumChannels());
+
+	for (int c = 0; c < jmin(buffer.getNumChannels(), 2); ++c)
+	{
+		const float* data = buffer.getReadPointer(c);
+		impulseBuffer.impulses[c].Set(data, buffer.getNumSamples());
+	}
+
+	std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
+
+	convEngine->SetImpulse(&impulseBuffer);
+	convEngine->Reset();
+
+	m_convEngines.push_back(std::move(convEngine));
+}
+
 
 void BinauralRenderer::updateMatrices()
 {
@@ -486,7 +488,7 @@ void BinauralRenderer::convertResponsesToSHD()
 		impulseBuffer.SetNumChannels(2);
 
 		for (int m = 0; m < 2; ++m)
-			impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getWritePointer(m), numSamps);
+			impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getReadPointer(m), numSamps);
 
 		std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
 
@@ -495,6 +497,20 @@ void BinauralRenderer::convertResponsesToSHD()
 
 		m_shdConvEngines.push_back(std::move(convEngine));
 	}
+}
+
+void BinauralRenderer::resetConvolution()
+{
+	// clean up the HRIR buffers
+	m_hrirBuffers.clear();
+	m_hrirShdBuffers.clear();
+	m_shdConvEngines.clear();
+
+	// clean up the engines
+	m_convEngines.clear();
+	m_shdConvEngines.clear();
+
+	m_numHrirLoaded = 0;
 }
 
 void BinauralRenderer::timerCallback()
