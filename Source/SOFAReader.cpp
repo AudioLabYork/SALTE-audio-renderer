@@ -76,7 +76,7 @@ void SOFAReader::displayInformation()
 	//file->GetValues(sourcePosition, "SourcePosition");
 }
 
-void SOFAReader::getResponseForSpeakerPosition(std::vector<float>& response, float theta, float phi)
+bool SOFAReader::getResponseForSpeakerPosition(std::vector<float>& response, float theta, float phi)
 {
 	std::size_t N = loadedFile->GetDimension("N"); // number of data samples in a measurement
 	std::size_t R = loadedFile->GetDimension("R"); // number of receivers
@@ -101,11 +101,13 @@ void SOFAReader::getResponseForSpeakerPosition(std::vector<float>& response, flo
 			std::vector<double>::const_iterator last = impulseResponse.begin() + (index * N * R) + (N * R);
 			
 			response.insert(response.begin(), first, last);
-			break;
+			return true;
 		}
 
 		index++;
 	}
+
+	return false;
 }
 
 void SOFAReader::getImpulseData(std::vector<float>& impulses)
