@@ -191,6 +191,12 @@ void BinauralRenderer::releaseResources()
 {
 }
 
+void BinauralRenderer::sendMsgToLogWindow(const String& message)
+{
+	m_currentLogMessage += message + "\n";
+	sendChangeMessage(); // broadcast change message to inform and update the editor
+}
+
 void BinauralRenderer::browseForAmbixConfigFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
@@ -361,6 +367,8 @@ void BinauralRenderer::loadAmbixConfigFile(const File& file)
 	updateMatrices();
 	convertResponsesToSHD();
 
+	sendMsgToLogWindow("Ambix Config file " + file.getFileName() + " was loaded");
+
 	m_isConfigChanging = false;
 }
 
@@ -395,6 +403,8 @@ void BinauralRenderer::loadSofaFile(const File& file)
 	}
 
 	convertResponsesToSHD();
+
+	sendMsgToLogWindow("SOFA file " + file.getFileName() + " was loaded");
 
 	m_isConfigChanging = false;
 }
