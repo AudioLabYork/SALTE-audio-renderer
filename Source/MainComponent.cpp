@@ -51,9 +51,12 @@ MainComponent::MainComponent()
 	clientTxIpLabel.setText("127.0.0.1", dontSendNotification);
 	clientTxPortLabel.setText("6000", dontSendNotification);
 	clientRxPortLabel.setText("9001", dontSendNotification);
-	clientTxIpLabel.setJustificationType(Justification::centredLeft);
-	clientTxPortLabel.setJustificationType(Justification::centredLeft);
-	clientRxPortLabel.setJustificationType(Justification::centredLeft);
+	clientTxIpLabel.setColour(Label::outlineColourId,Colours::black);
+	clientTxPortLabel.setColour(Label::outlineColourId, Colours::black);
+	clientRxPortLabel.setColour(Label::outlineColourId, Colours::black);
+	clientTxIpLabel.setJustificationType(Justification::centred);
+	clientTxPortLabel.setJustificationType(Justification::centred);
+	clientRxPortLabel.setJustificationType(Justification::centred);
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
@@ -66,26 +69,30 @@ MainComponent::MainComponent()
     remoteInterfaceTxRx.connectSender(clientIp, clientSendToPort);
     remoteInterfaceTxRx.connectReceiver(clientReceiveAtPort);
     remoteInterfaceTxRx.addListener(this);
-    
-    addAndMakeVisible(&openConfigButton);
-    openConfigButton.setButtonText("Open config file...");
-    openConfigButton.addListener(this);
 
 	addAndMakeVisible(&openAudioDeviceManager);
 	openAudioDeviceManager.setButtonText("Audio device setup");
 	openAudioDeviceManager.addListener(this);
     
+	// optional test interfeace load buttons
+	addAndMakeVisible(&loadOSCTestButton);
+	loadOSCTestButton.setButtonText("OSC Communication Test");
+	loadOSCTestButton.addListener(this);
+
+	addAndMakeVisible(&loadMushraBtn);
+	loadMushraBtn.setButtonText("MUSHRA Test");
+	loadMushraBtn.addListener(this);
+
+	addAndMakeVisible(&loadLocTestBtn);
+	loadLocTestBtn.setButtonText("Localisation Test");
+	loadLocTestBtn.addListener(this);
+
+	// log window
     addAndMakeVisible(logWindow);
     logWindow.setMultiLine(true);
     logWindow.setReadOnly(true);
     logWindow.setCaretVisible(false);
     logWindow.setScrollbarsShown(true);
-    
-    // configure MUSHRA
-    // configureMushra();
-
-	// add OSC test component
-	addAndMakeVisible(otc);
 }
 
 MainComponent::~MainComponent()
@@ -145,12 +152,10 @@ void MainComponent::paint (Graphics& g)
 	// OSC WINDOW
 	g.setColour(Colours::white);
 
-	int labelXPos = 260;
-	int labelYPos = 10;
-	g.drawText("IP", labelXPos + 45, labelYPos, 50, 25, Justification::centredLeft, true);
-	g.drawText("Send to", labelXPos + 120, labelYPos, 50, 25, Justification::centredLeft, true);
-	g.drawText("Receive at", labelXPos + 185, labelYPos, 75, 25, Justification::centredLeft, true);
-	g.drawText("Client", labelXPos, labelYPos + 20, 50, 25, Justification::centredLeft, true);
+	g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
+	g.drawText("Send to", 410, 10, 50, 25, Justification::centredLeft, true);
+	g.drawText("Receive at", 490, 10, 75, 25, Justification::centredLeft, true);
+	g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
 
     
 }
@@ -161,30 +166,27 @@ void MainComponent::resized()
 	as.setCentrePosition(getWidth()/2, getHeight()/2);
     sp.setBounds(590, 10, 800, 385);
 	br.setBounds(590, 405, 800, 385);
-    openConfigButton.setBounds(10, 10, 230, 25);
 	openAudioDeviceManager.setBounds(10, 40, 230, 25);
 
+	clientTxIpLabel.setBounds(310, 35, 80, 25);
+	clientTxPortLabel.setBounds(410, 35, 60, 25);
+	clientRxPortLabel.setBounds(490, 35, 60, 25);
 
-	clientTxIpLabel.setBounds(297, 30, 75, 25);
-	clientTxPortLabel.setBounds(260 + 120, 30, 50, 25);
-	clientRxPortLabel.setBounds(260 + 185, 30, 50, 25);
+	loadOSCTestButton.setBounds(40, 200, 250, 25);
+	loadMushraBtn.setBounds(40, 250, 250, 25);
+	loadLocTestBtn.setBounds(40, 300, 250, 25);
+
 
     logWindow.setBounds(10, 660, 570, 130);
-    
-    // fit mushra interface
-    //mc.setBounds(10, 170, 570, 480);
 
 	// fit OSC test component
 	otc.setBounds(10, 170, 570, 480);
+    // fit mushra interface
+    mc.setBounds(10, 170, 570, 480);
 }
 
 void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 {
-    if (buttonThatWasClicked == &openConfigButton)
-    {
-        //browseForConfigFile();
-    }
-
 	if (buttonThatWasClicked == &openAudioDeviceManager)
 	{
 		if (as.isVisible())
@@ -192,6 +194,23 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		else
 			addAndMakeVisible(as);
 	}
+
+	if (buttonThatWasClicked == &loadOSCTestButton)
+	{
+		// add OSC test component
+		addAndMakeVisible(otc);
+	}
+
+	if (buttonThatWasClicked == &loadMushraBtn)
+	{
+		configureMushra();
+	}
+
+	if (buttonThatWasClicked == &loadLocTestBtn)
+	{
+
+	}
+
 
     repaint();
 }
@@ -273,47 +292,23 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
     logWindow.moveCaretToEnd();
 }
 
+void MainComponent::configureMushra()
+{
+    int numberOfRegions = 4;
+    for(int i = 0; i < numberOfRegions; ++i)
+    {
+        mc.regionArray.add(new SampleRegion());
+        mc.regionArray[i]->dawStartTime = 0.0f; //markerTimeArray[i * 2];         // 0 2 4 6
+        mc.regionArray[i]->dawStopTime = 5.0f;  //markerTimeArray[(i * 2) + 1];    // 1 3 5 7
+        mc.regionArray[i]->calculateStartEndTimes();
+    }
+    
+    int numberOfSamplesPerRegion = 8;
+    mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
+    
 
-// load config file
-//void MainComponent::browseForConfigFile()
-//{
-//    
-//#if JUCE_MODAL_LOOPS_PERMITTED
-//    const bool useNativeVersion = true;
-//    FileChooser fc("Choose a file to open...",
-//                   File::getCurrentWorkingDirectory(),
-//                   "*.csv",
-//                   useNativeVersion);
-//    
-//    if (fc.browseForFileToOpen())
-//    {
-//        File chosenFile = fc.getResult();
-//        
-//        // configure sample player
-//        sp.createFilePathList(chosenFile.getFullPathName());
-//        sp.numberOfStimuli = sp.filePathList.size();
-//        sp.createStimuliTriggerButtons(); // only for test
-//    }
-//#endif
-//}
-
-//void MainComponent::configureMushra()
-//{
-//    int numberOfRegions = 4;
-//    for(int i = 0; i < numberOfRegions; ++i)
-//    {
-//        mc.regionArray.add(new SampleRegion());
-//        mc.regionArray[i]->dawStartTime = 0.0f; //markerTimeArray[i * 2];         // 0 2 4 6
-//        mc.regionArray[i]->dawStopTime = 5.0f;  //markerTimeArray[(i * 2) + 1];    // 1 3 5 7
-//        mc.regionArray[i]->calculateStartEndTimes();
-//    }
-//    
-//    int numberOfSamplesPerRegion = 8;
-//    mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
-//    
-//
-////    mc.connectOsc(dawIp, clientIp, dawTxPort, dawRxPort, clientTxPort, clientRxPort);
-//    mc.createGui();
-//    addAndMakeVisible(mc);
-//    repaint();
-//}
+//    mc.connectOsc(dawIp, clientIp, dawTxPort, dawRxPort, clientTxPort, clientRxPort);
+    mc.createGui();
+    addAndMakeVisible(mc);
+    repaint();
+}

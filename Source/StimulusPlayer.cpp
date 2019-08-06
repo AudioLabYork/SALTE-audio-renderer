@@ -354,3 +354,26 @@ void StimulusPlayer::createStimuliTriggerButtons()
     }
     resized();
 }
+
+// load config file
+//void StimulusPlayer::browseForConfigFile()
+//{
+//    
+//#if JUCE_MODAL_LOOPS_PERMITTED
+//    const bool useNativeVersion = true;
+//    FileChooser fc("Choose a file to open...",
+//                   File::getCurrentWorkingDirectory(),
+//                   "*.csv",
+//                   useNativeVersion);
+//    
+//    if (fc.browseForFileToOpen())
+//    {
+//        File chosenFile = fc.getResult();
+//        
+//        // configure sample player
+//        createFilePathList(chosenFile.getFullPathName());
+//        numberOfStimuli = filePathList.size();
+//        createStimuliTriggerButtons(); // only for test
+//    }
+//#endif
+//}

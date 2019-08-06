@@ -36,6 +36,7 @@ public:
     StringArray fileIdList; // file-ids
     
     // METHODS
+	//void browseForConfigFile();
     void createFilePathList(String configFilePath);
 	void browseForFile();
     void loadFileIntoTransport(const File& audioFile);

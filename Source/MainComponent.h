@@ -5,6 +5,8 @@
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
 #include "BinauralRenderer.h"
+
+// additional test modules
 #include "MushraComponent.h"
 #include "OscTestComponent.h"
 
@@ -45,16 +47,16 @@ private:
     String logWindowMessage;
     TextEditor logWindow;
     
-    TextButton openConfigButton, openAudioDeviceManager;
+    TextButton openAudioDeviceManager;
+	TextButton loadOSCTestButton, loadMushraBtn, loadLocTestBtn;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
 	// OSC test component
 	OscTestComponent otc;
 
-	//void browseForConfigFile();
 	// MUSHRA COMPONENT
-	//MushraComponent mc;
-	//void configureMushra();
+	MushraComponent mc;
+	void configureMushra();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
