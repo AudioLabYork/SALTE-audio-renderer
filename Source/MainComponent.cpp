@@ -130,6 +130,9 @@ void MainComponent::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
     
+	// RECTANGULAR OUTLINE
+	g.setColour(Colours::black);
+	g.drawRect(getLocalBounds(), 1);
     juce::Rectangle<int> oscRect(250, 10, 330, 150);        // osc status / vr interface status
     juce::Rectangle<int> tstlogicRect(10, 170, 570, 480);   // test logic component
     juce::Rectangle<int> renderRect(590, 405, 800, 385);    // rendering component
@@ -163,7 +166,6 @@ void MainComponent::resized()
 	clientTxIpLabel.setBounds(297, 30, 75, 25);
 	clientTxPortLabel.setBounds(260 + 120, 30, 50, 25);
 	clientRxPortLabel.setBounds(260 + 185, 30, 50, 25);
-
 
     logWindow.setBounds(10, 660, 570, 130);
     

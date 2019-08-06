@@ -33,8 +33,10 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
     addAndMakeVisible(playbackHeadPosition);
 
 	rollSlider.setSliderStyle(Slider::LinearHorizontal);
-	rollSlider.setRange(-180, 180);
+	rollSlider.setRange(-180, 180, 0.1);
 	rollSlider.setValue(0);
+	rollSlider.setDoubleClickReturnValue(true, 0);
+	rollSlider.setTextBoxIsEditable(true);
 	rollSlider.setTextValueSuffix(" deg");
 	rollSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
 	rollSlider.addListener(this);
@@ -44,8 +46,10 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 	addAndMakeVisible(rollSliderLabel);
 
 	pitchSlider.setSliderStyle(Slider::LinearHorizontal);
-	pitchSlider.setRange(-180, 180);
+	pitchSlider.setRange(-180, 180, 0.1);
 	pitchSlider.setValue(0);
+	pitchSlider.setDoubleClickReturnValue(true, 0);
+	pitchSlider.setTextBoxIsEditable(true);
 	pitchSlider.setTextValueSuffix(" deg");
 	pitchSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
 	pitchSlider.addListener(this);
@@ -55,8 +59,10 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 	addAndMakeVisible(pitchSliderLabel);
 
 	yawSlider.setSliderStyle(Slider::LinearHorizontal);
-	yawSlider.setRange(-180, 180);
+	yawSlider.setRange(-180, 180, 0.1);
 	yawSlider.setValue(0);
+	yawSlider.setDoubleClickReturnValue(true, 0);
+	yawSlider.setTextBoxIsEditable(true);
 	yawSlider.setTextValueSuffix(" deg");
 	yawSlider.setTextBoxStyle(Slider::TextBoxRight, false, 100, 25);
 	yawSlider.addListener(this);
@@ -136,9 +142,9 @@ void StimulusPlayer::resized()
     loadedFileName.setBounds(280, 20, 500, 25);
     playbackHeadPosition.setBounds(280, 45, 500, 25);
 
-	rollSlider.setBounds(380, 80, 300, 25);
-	pitchSlider.setBounds(380, 105, 300, 25);
-	yawSlider.setBounds(380, 130, 300, 25);
+	rollSlider.setBounds(320, 75, 300, 25);
+	pitchSlider.setBounds(320, 100, 300, 25);
+	yawSlider.setBounds(320, 125, 300, 25);
 
         
     if (numberOfStimuli > 0)
@@ -274,7 +280,6 @@ void StimulusPlayer::browseForFile()
 		loadFileIntoTransport(file);
 	}
 }
-
 
 void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 {
