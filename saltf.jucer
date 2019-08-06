@@ -31,6 +31,10 @@
             file="Source/MushraComponent.cpp"/>
       <FILE id="GF936q" name="MushraComponent.h" compile="0" resource="0"
             file="Source/MushraComponent.h"/>
+      <FILE id="GkwJ6t" name="OscTestComponent.cpp" compile="1" resource="0"
+            file="Source/OscTestComponent.cpp"/>
+      <FILE id="vYC25w" name="OscTestComponent.h" compile="0" resource="0"
+            file="Source/OscTestComponent.h"/>
       <FILE id="pcfrcV" name="OscTransceiver.cpp" compile="1" resource="0"
             file="Source/OscTransceiver.cpp"/>
       <FILE id="NFM0r4" name="OscTransceiver.h" compile="0" resource="0"

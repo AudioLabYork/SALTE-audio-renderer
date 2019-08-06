@@ -52,9 +52,6 @@ MainComponent::MainComponent()
 	clientTxIpLabel.setJustificationType(Justification::centredLeft);
 	clientTxPortLabel.setJustificationType(Justification::centredLeft);
 	clientRxPortLabel.setJustificationType(Justification::centredLeft);
-	//clientTxIpLabel.setColour(Label::textColourId, Colours::black);
-	//clientTxPortLabel.setColour(Label::textColourId, Colours::black);
-	//clientRxPortLabel.setColour(Label::textColourId, Colours::black);
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
@@ -84,6 +81,9 @@ MainComponent::MainComponent()
     
     // configure MUSHRA
     // configureMushra();
+
+	// add OSC test component
+	addAndMakeVisible(otc);
 }
 
 MainComponent::~MainComponent()
@@ -168,14 +168,17 @@ void MainComponent::resized()
     logWindow.setBounds(10, 660, 570, 130);
     
     // fit mushra interface
-    mc.setBounds(10, 170, 570, 480);
+    //mc.setBounds(10, 170, 570, 480);
+
+	// fit OSC test component
+	otc.setBounds(10, 170, 570, 480);
 }
 
 void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 {
     if (buttonThatWasClicked == &openConfigButton)
     {
-        browseForConfigFile();
+        //browseForConfigFile();
     }
 
 	if (buttonThatWasClicked == &openAudioDeviceManager)
@@ -186,52 +189,6 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 			addAndMakeVisible(as);
 	}
 
-
-
-    repaint();
-}
-
-// load config file
-void MainComponent::browseForConfigFile()
-{
-    
-#if JUCE_MODAL_LOOPS_PERMITTED
-    const bool useNativeVersion = true;
-    FileChooser fc("Choose a file to open...",
-                   File::getCurrentWorkingDirectory(),
-                   "*.csv",
-                   useNativeVersion);
-    
-    if (fc.browseForFileToOpen())
-    {
-        File chosenFile = fc.getResult();
-        
-        // configure sample player
-        sp.createFilePathList(chosenFile.getFullPathName());
-        sp.numberOfStimuli = sp.filePathList.size();
-        sp.createStimuliTriggerButtons(); // only for test
-    }
-#endif
-}
-
-void MainComponent::configureMushra()
-{
-    int numberOfRegions = 4;
-    for(int i = 0; i < numberOfRegions; ++i)
-    {
-        mc.regionArray.add(new SampleRegion());
-        mc.regionArray[i]->dawStartTime = 0.0f; //markerTimeArray[i * 2];         // 0 2 4 6
-        mc.regionArray[i]->dawStopTime = 5.0f;  //markerTimeArray[(i * 2) + 1];    // 1 3 5 7
-        mc.regionArray[i]->calculateStartEndTimes();
-    }
-    
-    int numberOfSamplesPerRegion = 8;
-    mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
-    
-
-//    mc.connectOsc(dawIp, clientIp, dawTxPort, dawRxPort, clientTxPort, clientRxPort);
-    mc.createGui();
-    addAndMakeVisible(mc);
     repaint();
 }
 
@@ -306,3 +263,48 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
     logWindow.setText(logWindowMessage);
     logWindow.moveCaretToEnd();
 }
+
+
+// load config file
+//void MainComponent::browseForConfigFile()
+//{
+//    
+//#if JUCE_MODAL_LOOPS_PERMITTED
+//    const bool useNativeVersion = true;
+//    FileChooser fc("Choose a file to open...",
+//                   File::getCurrentWorkingDirectory(),
+//                   "*.csv",
+//                   useNativeVersion);
+//    
+//    if (fc.browseForFileToOpen())
+//    {
+//        File chosenFile = fc.getResult();
+//        
+//        // configure sample player
+//        sp.createFilePathList(chosenFile.getFullPathName());
+//        sp.numberOfStimuli = sp.filePathList.size();
+//        sp.createStimuliTriggerButtons(); // only for test
+//    }
+//#endif
+//}
+
+//void MainComponent::configureMushra()
+//{
+//    int numberOfRegions = 4;
+//    for(int i = 0; i < numberOfRegions; ++i)
+//    {
+//        mc.regionArray.add(new SampleRegion());
+//        mc.regionArray[i]->dawStartTime = 0.0f; //markerTimeArray[i * 2];         // 0 2 4 6
+//        mc.regionArray[i]->dawStopTime = 5.0f;  //markerTimeArray[(i * 2) + 1];    // 1 3 5 7
+//        mc.regionArray[i]->calculateStartEndTimes();
+//    }
+//    
+//    int numberOfSamplesPerRegion = 8;
+//    mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
+//    
+//
+////    mc.connectOsc(dawIp, clientIp, dawTxPort, dawRxPort, clientTxPort, clientRxPort);
+//    mc.createGui();
+//    addAndMakeVisible(mc);
+//    repaint();
+//}

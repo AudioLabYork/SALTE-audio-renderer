@@ -4,8 +4,9 @@
 #include "AudioSetup.h"
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
-#include "MushraComponent.h"
 #include "BinauralRenderer.h"
+#include "MushraComponent.h"
+#include "OscTestComponent.h"
 
 
 class MainComponent   :     public AudioAppComponent,
@@ -29,12 +30,6 @@ public:
     void resized() override;
     void buttonClicked(Button* buttonThatWasClicked) override;
 
-    void browseForConfigFile();
-    
-    // MUSHRA COMPONENT
-    MushraComponent mc;
-    void configureMushra();
-    
     // OSC
     oscTransceiver remoteInterfaceTxRx; // osc object to communicate with the user interface (Unity, iPad, ...)
     void oscMessageReceived(const OSCMessage& message) override;
@@ -43,10 +38,6 @@ public:
     void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
-    //==============================================================================
-    // Your private member variables go here...
-    
-
 	AudioSetup as;
     StimulusPlayer sp;
 	BinauralRenderer br;
@@ -57,6 +48,13 @@ private:
     TextButton openConfigButton, openAudioDeviceManager;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
+	// OSC test component
+	OscTestComponent otc;
+
+	//void browseForConfigFile();
+	// MUSHRA COMPONENT
+	//MushraComponent mc;
+	//void configureMushra();
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
