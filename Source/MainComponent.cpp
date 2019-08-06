@@ -10,6 +10,8 @@ MainComponent::MainComponent()
 
 	// setup binaural renderer
 	br.init();
+	br.addChangeListener(this);
+
 	br.setOrder(1);
 
 	std::vector<float> azimuths = { 45.0f, 135.0f, 225.0f, 315.0 };
@@ -261,6 +263,11 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
         logWindowMessage += sp.currentMessage;
         sp.currentMessage.clear();
     }
+	else if (source == &br)
+	{
+		logWindowMessage += br.m_currentLogMessage;
+		br.m_currentLogMessage.clear();
+	}
     
     logWindow.setText(logWindowMessage);
     logWindow.moveCaretToEnd();

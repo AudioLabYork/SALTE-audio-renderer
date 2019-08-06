@@ -191,6 +191,12 @@ void BinauralRenderer::releaseResources()
 {
 }
 
+void BinauralRenderer::sendMsgToLogWindow(const String& message)
+{
+	m_currentLogMessage += message + "\n";
+	sendChangeMessage(); // broadcast change message to inform and update the editor
+}
+
 void BinauralRenderer::browseForAmbixConfigFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
@@ -361,6 +367,8 @@ void BinauralRenderer::loadAmbixConfigFile(const File& file)
 	updateMatrices();
 	convertResponsesToSHD();
 
+	sendMsgToLogWindow("Ambix Config file " + file.getFileName() + " was loaded");
+
 	m_isConfigChanging = false;
 }
 
@@ -379,17 +387,24 @@ void BinauralRenderer::loadSofaFile(const File& file)
 
 	for (int i = 0; i < m_numLsChans; ++i)
 	{
-		reader.getResponseForSpeakerPosition(HRIRData, m_azimuths[i], m_elevations[i]);
+		if (reader.getResponseForSpeakerPosition(HRIRData, m_azimuths[i], m_elevations[i]))
+		{
+			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
 
-		AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
-		
-		for (int c = 0; c < channels; ++c)
-			inputBuffer.copyFrom(c, 0, HRIRData.data(), samples);
+			for (int c = 0; c < channels; ++c)
+				inputBuffer.copyFrom(c, 0, HRIRData.data(), samples);
 
-		loadHRIRToEngine(inputBuffer, reader.getSampleRate());
+			loadHRIRToEngine(inputBuffer, reader.getSampleRate());
+		}
+		else
+		{
+			Logger::outputDebugString("this HRIR could not be found in the SOFA file");
+		}
 	}
 
 	convertResponsesToSHD();
+
+	sendMsgToLogWindow("SOFA file " + file.getFileName() + " was loaded");
 
 	m_isConfigChanging = false;
 }
@@ -460,6 +475,9 @@ void BinauralRenderer::updateMatrices()
 
 void BinauralRenderer::convertResponsesToSHD()
 {
+	if (m_hrirBuffers.size() <= 0)
+		return;
+
 	int numSamps = m_hrirBuffers[0].getNumSamples();
 
 	m_hrirShdBuffers.resize(m_numAmbiChans);

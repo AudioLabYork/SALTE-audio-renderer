@@ -13,6 +13,7 @@ class BinauralRenderer
 	: public Component
 	, public Button::Listener
 	, public Timer
+	, public ChangeBroadcaster
 {
 public:
 	BinauralRenderer();
@@ -35,11 +36,15 @@ public:
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
 	
+	void sendMsgToLogWindow(const String& message);
+
 	void browseForAmbixConfigFile();
 	void browseForSofaFile();
 	
 	void loadAmbixConfigFile(const File& file);
 	void loadSofaFile(const File& file);
+
+	String m_currentLogMessage;
 
 private:
 	void loadHRIRFileToEngine(const File& file);

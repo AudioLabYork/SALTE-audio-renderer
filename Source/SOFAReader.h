@@ -11,7 +11,7 @@ public:
 	SOFAReader(const std::string& filename);
 
 	void displayInformation();
-	void getResponseForSpeakerPosition(std::vector<float>& response, float theta, float phi);
+	bool getResponseForSpeakerPosition(std::vector<float>& response, float theta, float phi);
 
 	void getImpulseData(std::vector<float>& impulses);
 	void getSourcePositions(std::vector<float>& azimuths, std::vector<float>& elevations);
