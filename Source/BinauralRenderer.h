@@ -69,7 +69,7 @@ public:
 
 private:
 	void updateHRIRs();
-	void loadHRIRFileToEngine(const File& file);
+	bool loadHRIRFileToEngine(const File& file);
 	void loadHRIRToEngine(const AudioBuffer<float>& buffer, const double sampleRate);
 	void updateMatrices();
 	void convertResponsesToSHD();
@@ -83,6 +83,8 @@ private:
 
 	ComboBox m_orderSelect;
 	TextButton m_sofaFileBrowse;
+
+	String m_sofaFilePath;
 
 	int m_order;
 	int m_numAmbiChans;

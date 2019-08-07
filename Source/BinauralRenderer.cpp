@@ -116,6 +116,7 @@ void BinauralRenderer::buttonClicked(Button* buttonClicked)
 	else if (buttonClicked == &m_useSofa)
 	{
 		m_sofaFileBrowse.setEnabled(m_useSofa.getToggleState());
+		updateHRIRs();
 	}
 	else if (buttonClicked == &m_sofaFileBrowse)
 	{
@@ -128,7 +129,7 @@ void BinauralRenderer::comboBoxChanged(ComboBox* comboBoxChanged)
 	if (comboBoxChanged == &m_orderSelect)
 	{
 		resetConvolution();
-
+		sendMsgToLogWindow("Changed to Ambisonic order " + String(m_orderSelect.getSelectedItemIndex() + 1));
 		setOrder(m_orderSelect.getSelectedItemIndex() + 1);
 
 		m_decodeMatrix.clear();
@@ -195,7 +196,6 @@ void BinauralRenderer::comboBoxChanged(ComboBox* comboBoxChanged)
 		
 		updateMatrices();
 		updateHRIRs();
-		convertResponsesToSHD();
 	}
 }
 
@@ -450,35 +450,10 @@ void BinauralRenderer::loadAmbixConfigFile(const File& file)
 void BinauralRenderer::loadSofaFile(const File& file)
 {
 	m_isConfigChanging = true;
-
+	m_sofaFilePath = file.getFullPathName();
+	
 	resetConvolution();
-
-	SOFAReader reader(file.getFullPathName().toStdString());
-
-	std::vector<float> HRIRData;
-
-	std::size_t channels = reader.getNumImpulseChannels();
-	std::size_t samples = reader.getNumImpulseSamples();
-
-	for (int i = 0; i < m_numLsChans; ++i)
-	{
-		if (reader.getResponseForSpeakerPosition(HRIRData, m_azi[i], m_ele[i]))
-		{
-			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
-
-			for (int c = 0; c < channels; ++c)
-				inputBuffer.copyFrom(c, 0, HRIRData.data(), samples);
-
-			loadHRIRToEngine(inputBuffer, reader.getSampleRate());
-		}
-		else
-		{
-			Logger::outputDebugString("this HRIR could not be found in the SOFA file");
-		}
-	}
-
-	convertResponsesToSHD();
-
+	updateHRIRs();
 	sendMsgToLogWindow("SOFA file " + file.getFileName() + " was loaded");
 
 	m_isConfigChanging = false;
@@ -488,7 +463,33 @@ void BinauralRenderer::updateHRIRs()
 {
 	if (m_useSofa.getToggleState())
 	{
+		if (m_sofaFilePath.isNotEmpty())
+		{
+			SOFAReader reader(m_sofaFilePath.toStdString());
 
+			std::vector<float> HRIRData;
+
+			std::size_t channels = reader.getNumImpulseChannels();
+			std::size_t samples = reader.getNumImpulseSamples();
+
+			for (int i = 0; i < m_numLsChans; ++i)
+			{
+				if (reader.getResponseForSpeakerPosition(HRIRData, m_azi[i], m_ele[i]))
+				{
+					AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
+					
+					for (int c = 0; c < channels; ++c)
+						inputBuffer.copyFrom(c, 0, HRIRData.data(), samples);
+					
+					loadHRIRToEngine(inputBuffer, reader.getSampleRate());
+					sendMsgToLogWindow(String(m_azi[i]) + ", " + String(m_ele[i]) + " loaded to the engine");
+				}
+				else
+				{
+					sendMsgToLogWindow(String(m_azi[i]) + ", " + String(m_ele[i]) + " could not be loaded to the engine");
+				}
+			}
+		}
 	}
 	else
 	{
@@ -498,12 +499,22 @@ void BinauralRenderer::updateHRIRs()
 		for (int i = 0; i < m_numLsChans; ++i)
 		{
 			filename = "azi_" + String(m_azi[i], 1).replaceCharacter('.', ',') + "_ele_" + String(m_ele[i], 1).replaceCharacter('.', ',') + ".wav";
-			loadHRIRFileToEngine(sourcePath.getChildFile(filename));
+			
+			if (loadHRIRFileToEngine(sourcePath.getChildFile(filename)))
+			{
+				sendMsgToLogWindow(filename + " loaded to the engine");
+			}
+			else
+			{
+				sendMsgToLogWindow(filename + " could not be loaded to the engine");
+			}
 		}
 	}
+
+	convertResponsesToSHD();
 }
 
-void BinauralRenderer::loadHRIRFileToEngine(const File& file)
+bool BinauralRenderer::loadHRIRFileToEngine(const File& file)
 {
 	if (file.exists())
 	{
@@ -516,6 +527,11 @@ void BinauralRenderer::loadHRIRFileToEngine(const File& file)
 		reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
 
 		loadHRIRToEngine(inputBuffer, reader->sampleRate);
+		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
