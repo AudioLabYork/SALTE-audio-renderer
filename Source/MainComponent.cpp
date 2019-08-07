@@ -2,8 +2,8 @@
 
 MainComponent::MainComponent()
 	: as(deviceManager)
+	, m_maxSamplesPerBlock(0)
 {
-
     // add and make visible the stimulus player object
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
@@ -12,32 +12,16 @@ MainComponent::MainComponent()
 	br.init();
 	br.addChangeListener(this);
 
-	br.setOrder(1);
-
-	std::vector<float> azimuths = { 45.0f, 135.0f, 225.0f, 315.0 };
-	std::vector<float> elevations = { 0.0f, 0.0f, 0.0f, 0.0f };
-	
-	for (int i = 0; i < 4; ++i)
-	{
-		azimuths[i] = degreesToRadians(azimuths[i]);
-		elevations[i] = degreesToRadians(elevations[i]);
-	}
-
-	br.setLoudspeakerChannels(azimuths, elevations, 4);
-
-	std::vector<float> decodeMatrix = { 0.316227766016838, 0.316227766016838, 0, 0.316227766016838,
-						0.316227766016838, 0.316227766016838, 0, -0.316227766016838,
-						0.316227766016838, -0.316227766016838, 0, -0.316227766016838,
-						0.316227766016838, -0.316227766016838, 0, 0.316227766016838 };
-
-	br.setDecodingMatrix(decodeMatrix);
-
 	addAndMakeVisible(br);
 
 	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
 	
-	sourcePath.createDirectory();
-	
+	Result res = sourcePath.createDirectory();
+	if (res.wasOk())
+	{
+		Logger::outputDebugString("application directory created successfully");
+	}
+
 	// set size of the main app window
     setSize (1400, 800);
 
@@ -107,12 +91,17 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 	// prepare stimulus player object
 	sp.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	br.prepareToPlay(samplesPerBlockExpected, sampleRate);
+
+	if(samplesPerBlockExpected > m_maxSamplesPerBlock)
+	{
+		m_maxSamplesPerBlock = samplesPerBlockExpected;
+		processBuffer.setSize(64, samplesPerBlockExpected);
+	}
 }
 
 void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
 {
-	AudioBuffer<float> newbuffer(4, bufferToFill.buffer->getNumSamples());
-	AudioSourceChannelInfo newinfo(newbuffer);
+	AudioSourceChannelInfo newinfo(processBuffer);
 
 	// pass the buffer into the stimulus player to be filled with required audio
 	sp.getNextAudioBlock(newinfo);

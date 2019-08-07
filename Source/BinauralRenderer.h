@@ -9,9 +9,29 @@
 #include "ConvolutionEngine.h"
 #include "AmbisonicRotation.h"
 
+enum eOrders
+{
+	k1stOrder,
+	k2ndOrder,
+	k3rdOrder,
+	k4thOrder,
+	k5thOrder,
+	k6thOrder,
+	k7thOrder
+};
+
+static StringArray orderChoices = { "1st Order",
+									"2nd Order",
+									"3rd Order",
+									"4th Order",
+									"5th Order",
+									"6th Order",
+									"7th Order" };
+
 class BinauralRenderer
 	: public Component
 	, public Button::Listener
+	, public ComboBox::Listener
 	, public Timer
 	, public ChangeBroadcaster
 {
@@ -22,7 +42,7 @@ public:
 	void reset();
 	void deinit();
 
-	void setOrder(std::size_t order);
+	void setOrder(const int order);
 	void setLoudspeakerChannels(std::vector<float>& azimuths, std::vector<float>& elevations, std::size_t channels);
 	void setDecodingMatrix(std::vector<float>& decodeMatrix);
 	void setHeadTrackingData(float yaw, float pitch, float roll);
@@ -31,6 +51,7 @@ public:
 	void resized() override;
 
 	void buttonClicked(Button* buttonClicked) override;
+	void comboBoxChanged(ComboBox* comboBoxChanged);
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
@@ -47,6 +68,7 @@ public:
 	String m_currentLogMessage;
 
 private:
+	void updateHRIRs();
 	void loadHRIRFileToEngine(const File& file);
 	void loadHRIRToEngine(const AudioBuffer<float>& buffer, const double sampleRate);
 	void updateMatrices();
@@ -56,16 +78,18 @@ private:
 
 	virtual void timerCallback() override;
 
-	TextButton ambixFileBrowse;
-	TextButton sofaFileBrowse;
-	TextButton triggerDebug;
+	TextButton m_ambixFileBrowse;
+	ToggleButton m_useSofa;
 
-	std::size_t m_order;
-	std::size_t m_numAmbiChans;
-	std::size_t m_numLsChans;
-	std::size_t m_numHrirLoaded;
+	ComboBox m_orderSelect;
+	TextButton m_sofaFileBrowse;
 
-	std::size_t m_blockSize;
+	int m_order;
+	int m_numAmbiChans;
+	int m_numLsChans;
+	int m_numHrirLoaded;
+
+	int m_blockSize;
 	double m_sampleRate;
 
 	std::vector<AudioBuffer<float>> m_hrirBuffers;
@@ -74,8 +98,8 @@ private:
 	std::vector<float> m_decodeMatrix;
 	std::vector<float> m_encodeMatrix;
 
-	std::vector<float> m_azimuths;
-	std::vector<float> m_elevations;
+	std::vector<float> m_azi;
+	std::vector<float> m_ele;
 
 	AmbisonicRotation m_headTrackRotator;
 

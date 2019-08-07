@@ -44,6 +44,9 @@ private:
     StimulusPlayer sp;
 	BinauralRenderer br;
 
+	AudioBuffer<float> processBuffer;
+	int m_maxSamplesPerBlock;
+
     String logWindowMessage;
     TextEditor logWindow;
     

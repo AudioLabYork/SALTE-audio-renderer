@@ -39,6 +39,8 @@
             file="Source/OscTransceiver.cpp"/>
       <FILE id="NFM0r4" name="OscTransceiver.h" compile="0" resource="0"
             file="Source/OscTransceiver.h"/>
+      <FILE id="EimFep" name="ROM.cpp" compile="1" resource="0" file="Source/ROM.cpp"/>
+      <FILE id="AAshmS" name="ROM.h" compile="0" resource="0" file="Source/ROM.h"/>
       <FILE id="RMzaUA" name="SOFAReader.cpp" compile="1" resource="0" file="Source/SOFAReader.cpp"/>
       <FILE id="E0ADir" name="SOFAReader.h" compile="0" resource="0" file="Source/SOFAReader.h"/>
       <FILE id="tW1uaz" name="StimulusPlayer.cpp" compile="1" resource="0"

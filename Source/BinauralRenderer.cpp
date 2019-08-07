@@ -1,4 +1,5 @@
 #include "BinauralRenderer.h"
+#include "ROM.h"
 
 BinauralRenderer::BinauralRenderer()
 	: m_order(1)
@@ -18,17 +19,23 @@ void BinauralRenderer::init()
 {
 	startTimer(100);
 
-	ambixFileBrowse.setButtonText("Select Ambix Config file...");
-	ambixFileBrowse.addListener(this);
-	addAndMakeVisible(&ambixFileBrowse);
+	m_ambixFileBrowse.setButtonText("Select Ambix Config file...");
+	m_ambixFileBrowse.addListener(this);
+	addAndMakeVisible(&m_ambixFileBrowse);
 
-	sofaFileBrowse.setButtonText("Select SOFA file...");
-	sofaFileBrowse.addListener(this);
-	addAndMakeVisible(&sofaFileBrowse);
+	m_useSofa.setButtonText("Should use SOFA file");
+	m_useSofa.addListener(this);
+	addAndMakeVisible(&m_useSofa);
 
-	triggerDebug.setButtonText("Trigger debug");
-	triggerDebug.addListener(this);
-	addAndMakeVisible(&triggerDebug);
+	m_orderSelect.addItemList(orderChoices, 1);
+	m_orderSelect.setSelectedItemIndex(0, false);
+	m_orderSelect.addListener(this);
+	addAndMakeVisible(&m_orderSelect);
+
+	m_sofaFileBrowse.setButtonText("Select SOFA file...");
+	m_sofaFileBrowse.setEnabled(false);
+	m_sofaFileBrowse.addListener(this);
+	addAndMakeVisible(&m_sofaFileBrowse);
 
 	m_enableRotation.setButtonText("Enable rotation");
 	addAndMakeVisible(&m_enableRotation);
@@ -55,7 +62,7 @@ void BinauralRenderer::deinit()
 	stopTimer();
 }
 
-void BinauralRenderer::setOrder(std::size_t order)
+void BinauralRenderer::setOrder(const int order)
 {
 	m_order = order;
 	m_numAmbiChans = (order + 1) * (order + 1);
@@ -63,8 +70,8 @@ void BinauralRenderer::setOrder(std::size_t order)
 
 void BinauralRenderer::setLoudspeakerChannels(std::vector<float>& azimuths, std::vector<float>& elevations, std::size_t channels)
 {
-	m_azimuths = azimuths;
-	m_elevations = elevations;
+	m_azi = azimuths;
+	m_ele = elevations;
 	m_numLsChans = channels;
 }
 
@@ -88,9 +95,12 @@ void BinauralRenderer::paint(Graphics& g)
 
 void BinauralRenderer::resized()
 {
-	ambixFileBrowse.setBounds(10, 10, 150, 30);
-	sofaFileBrowse.setBounds(10, 45, 150, 30);
-	triggerDebug.setBounds(10, 80, 150, 30);
+	m_ambixFileBrowse.setBounds(10, 10, 150, 30);
+	m_useSofa.setBounds(10, 45, 150, 30);
+	
+	m_orderSelect.setBounds(170, 10, 150, 30);
+	m_sofaFileBrowse.setBounds(170, 45, 150, 30);
+
 	m_enableRotation.setBounds(10, 115, 150, 30);
 	m_yAxisVal.setBounds(10, 145, 150, 20);
 	m_xAxisVal.setBounds(10, 165, 150, 20);
@@ -99,16 +109,93 @@ void BinauralRenderer::resized()
 
 void BinauralRenderer::buttonClicked(Button* buttonClicked)
 {
-	if (buttonClicked == &ambixFileBrowse)
+	if (buttonClicked == &m_ambixFileBrowse)
 	{
 		browseForAmbixConfigFile();
 	}
-	else if (buttonClicked == &sofaFileBrowse)
+	else if (buttonClicked == &m_useSofa)
+	{
+		m_sofaFileBrowse.setEnabled(m_useSofa.getToggleState());
+	}
+	else if (buttonClicked == &m_sofaFileBrowse)
 	{
 		browseForSofaFile();
 	}
-	else if (buttonClicked == &triggerDebug)
+}
+
+void BinauralRenderer::comboBoxChanged(ComboBox* comboBoxChanged)
+{
+	if (comboBoxChanged == &m_orderSelect)
 	{
+		resetConvolution();
+
+		setOrder(m_orderSelect.getSelectedItemIndex() + 1);
+
+		m_decodeMatrix.clear();
+		m_azi.clear();
+		m_ele.clear();
+
+		switch (m_orderSelect.getSelectedItemIndex() + 1)
+		{
+		case 0:
+			break;
+		case 1:
+			for (int i = 0; i < 6; ++i)
+			{
+				for (int j = 0; j < 4; ++j)
+				{
+					m_decodeMatrix.push_back(mtx1order[i][j]);
+				}
+
+				m_azi.push_back(az1order[i]);
+				m_ele.push_back(el1order[i]);
+			}
+
+			m_numLsChans = 6;
+			break;
+		case 2:
+			break;
+		case 3:
+			for (int i = 0; i < 26; ++i)
+			{
+				for (int j = 0; j < 16; ++j)
+				{
+					m_decodeMatrix.push_back(mtx3order[i][j]);
+				}
+
+				m_azi.push_back(az3order[i]);
+				m_ele.push_back(el3order[i]);
+			}
+
+			m_numLsChans = 26;
+			break;
+		case 4:
+			break;
+		case 5:
+			for (int i = 0; i < 50; ++i)
+			{
+				for (int j = 0; j < 36; ++j)
+				{
+					m_decodeMatrix.push_back(mtx5order[i][j]);
+				}
+
+				m_azi.push_back(az5order[i]);
+				m_ele.push_back(el5order[i]);
+			}
+
+			m_numLsChans = 50;
+			break;
+		case 6:
+			break;
+		case 7:
+			break;
+		default:
+			break;
+		}
+		
+		updateMatrices();
+		updateHRIRs();
+		convertResponsesToSHD();
 	}
 }
 
@@ -127,20 +214,11 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 
 	AudioBuffer<float>* buffer = bufferToFill.buffer;
 
-	if (m_decodeMatrix.size() < m_numAmbiChans * m_numLsChans)
-	{
-		// not enough decode coefficients to do this process
-		jassertfalse;
-		return;
-	}
-
 	// rotating the ambisonic scene
-
 	if (m_enableRotation.getToggleState())
 		m_headTrackRotator.process(*buffer);
 
 	// convolving SHD ambisonic input with SHD HRIRs
-
 	AudioBuffer<float> workingBuffer(buffer->getNumChannels(), buffer->getNumSamples());
 	workingBuffer.clear();
 
@@ -154,13 +232,13 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 		return;
 
 	buffer->clear();
+	
+	AudioBuffer<float> convBuffer(2, numSamps);
+	int numConvChans = convBuffer.getNumChannels();
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
-		AudioBuffer<float> convBuffer(2, numSamps);
 		convBuffer.clear();
-
-		int numConvChans = convBuffer.getNumChannels();
 
 		for (int j = 0; j < numConvChans; ++j)
 			convBuffer.copyFrom(j, 0, workingBuffer.getReadPointer(i), numSamps, 0.5f);
@@ -176,14 +254,11 @@ void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToF
 			for (int k = 0; k < numConvChans; ++k)
 			{
 				convo = m_shdConvEngines[i]->Get()[k];
-				convBuffer.copyFrom(k, 0, convo, availSamples);
+				buffer->addFrom(k, 0, convo, numSamps);
 			}
 
 			m_shdConvEngines[i]->Advance(availSamples);
 		}
-
-		for (int c = 0; c < numConvChans; ++c)
-			buffer->addFrom(c, 0, convBuffer.getReadPointer(c), numSamps);
 	}
 }
 
@@ -387,7 +462,7 @@ void BinauralRenderer::loadSofaFile(const File& file)
 
 	for (int i = 0; i < m_numLsChans; ++i)
 	{
-		if (reader.getResponseForSpeakerPosition(HRIRData, m_azimuths[i], m_elevations[i]))
+		if (reader.getResponseForSpeakerPosition(HRIRData, m_azi[i], m_ele[i]))
 		{
 			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
 
@@ -407,6 +482,25 @@ void BinauralRenderer::loadSofaFile(const File& file)
 	sendMsgToLogWindow("SOFA file " + file.getFileName() + " was loaded");
 
 	m_isConfigChanging = false;
+}
+
+void BinauralRenderer::updateHRIRs()
+{
+	if (m_useSofa.getToggleState())
+	{
+
+	}
+	else
+	{
+		String filename;
+		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE").getChildFile("48K_24bit");
+
+		for (int i = 0; i < m_numLsChans; ++i)
+		{
+			filename = "azi_" + String(m_azi[i], 1).replaceCharacter('.', ',') + "_ele_" + String(m_ele[i], 1).replaceCharacter('.', ',') + ".wav";
+			loadHRIRFileToEngine(sourcePath.getChildFile(filename));
+		}
+	}
 }
 
 void BinauralRenderer::loadHRIRFileToEngine(const File& file)
