@@ -61,5 +61,10 @@ private:
 	MushraComponent mc;
 	void configureMushra();
 
+	// save and load settings
+	File settingsFile;
+	void loadSettings();
+	void saveSettings();
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

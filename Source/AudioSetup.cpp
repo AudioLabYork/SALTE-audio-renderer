@@ -39,7 +39,6 @@ AudioSetup::AudioSetup(AudioDeviceManager& deviceManager)
 
 	setSize(760, 360);
 
-	//setAudioChannels(2, 2);
 	admPointer->addChangeListener(this);
 
 	startTimer(50);

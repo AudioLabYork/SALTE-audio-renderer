@@ -71,6 +71,14 @@ MainComponent::MainComponent()
 	loadLocTestBtn.setButtonText("Localisation Test");
 	loadLocTestBtn.addListener(this);
 
+	// load settings file if available
+	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
+	settingsFile = File(filePath + "/" + "AudioSettings.conf");
+	if (settingsFile.existsAsFile())
+	{
+		loadSettings();
+	}
+
 	// log window
     addAndMakeVisible(logWindow);
     logWindow.setMultiLine(true);
@@ -81,6 +89,7 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
+	saveSettings();
 	br.deinit();
     shutdownAudio();
 }
@@ -155,7 +164,7 @@ void MainComponent::resized()
 	as.setCentrePosition(getWidth()/2, getHeight()/2);
     sp.setBounds(590, 10, 800, 385);
 	br.setBounds(590, 405, 800, 385);
-	openAudioDeviceManager.setBounds(10, 40, 230, 25);
+	openAudioDeviceManager.setBounds(10, 10, 230, 25);
 
 	clientTxIpLabel.setBounds(310, 35, 80, 25);
 	clientTxPortLabel.setBounds(410, 35, 60, 25);
@@ -206,7 +215,7 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 {
     // DIRECT OSC CONTROL OF STIMULUS PLAYER
 
-	// load file from the list (index received by osc)
+	// load file from the list (index received by osc) (this is not used right now, probably will be removed)
     if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isInt32())
     {
         sp.loadFileIntoTransport(File(sp.filePathList[message[0].getInt32()]));
@@ -256,6 +265,22 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 				Logger::outputDebugString("SOFA file could not be located, please check that it exists");
 			}
 		}
+	}
+}
+
+void MainComponent::loadSettings()
+{
+	XmlDocument asxmldoc(settingsFile);
+	std::unique_ptr<XmlElement> audioDeviceSettings (asxmldoc.getDocumentElement());
+	deviceManager.initialise(0, 2, audioDeviceSettings.get(), true);
+}
+
+void MainComponent::saveSettings()
+{
+	std::unique_ptr<XmlElement> audioDeviceSettings(deviceManager.createStateXml());
+	if (audioDeviceSettings.get())
+	{
+		audioDeviceSettings->writeToFile(settingsFile, String::empty);
 	}
 }
 
