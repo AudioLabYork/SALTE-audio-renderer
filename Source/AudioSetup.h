@@ -31,6 +31,7 @@ private:
 	Label cpuUsageLabel;
 	Label cpuUsageText;
 	TextEditor diagnosticsBox;
+	TextButton closeWindowBtn;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioSetup)
 };

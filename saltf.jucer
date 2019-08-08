@@ -75,9 +75,9 @@
     </XCODE_MAC>
     <VS2019 targetFolder="Builds/VisualStudio2019" externalLibraries="libfftw3f-3.lib&#10;libsofa_debug_x64.lib&#10;libcurl_imp_x64.lib&#10;libhdf5_hl_x64.lib&#10;libhdf5_x64.lib&#10;netcdf_x64.lib&#10;zlib_x64.lib">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/Eigen"
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/Eigen&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
                        libraryPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"/>
-        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/Eigen"
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/Eigen&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
                        libraryPath="../../../../Libraries/fftw-3.3.5&#10;../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
@@ -120,5 +120,5 @@
     <OSX/>
     <WINDOWS/>
   </LIVE_SETTINGS>
-  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_ASIO="1"/>
 </JUCERPROJECT>

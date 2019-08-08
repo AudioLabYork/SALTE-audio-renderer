@@ -33,6 +33,10 @@ AudioSetup::AudioSetup(AudioDeviceManager& deviceManager)
 	addAndMakeVisible(&cpuUsageLabel);
 	addAndMakeVisible(&cpuUsageText);
 
+	closeWindowBtn.setButtonText("Close");
+	closeWindowBtn.onClick = [this] { setVisible(false); };
+	addAndMakeVisible(closeWindowBtn);
+
 	setSize(760, 360);
 
 	//setAudioChannels(2, 2);
@@ -69,6 +73,7 @@ void AudioSetup::resized()
 
 	diagnosticsBox.setBounds(rect);
 
+	closeWindowBtn.setBounds(20, getHeight() - 45, 100, 25);
 }
 
 void AudioSetup::changeListenerCallback(ChangeBroadcaster*)

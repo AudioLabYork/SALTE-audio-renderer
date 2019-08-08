@@ -178,9 +178,6 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &openAudioDeviceManager)
 	{
-		if (as.isVisible())
-			as.setVisible(false);
-		else
 			addAndMakeVisible(as);
 	}
 
