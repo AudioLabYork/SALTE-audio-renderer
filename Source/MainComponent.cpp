@@ -34,7 +34,7 @@ MainComponent::MainComponent()
 	clientRxPortLabel.setEditable(false, true, false);
 	clientTxIpLabel.setText("127.0.0.1", dontSendNotification);
 	clientTxPortLabel.setText("6000", dontSendNotification);
-	clientRxPortLabel.setText("9001", dontSendNotification);
+	clientRxPortLabel.setText("9000", dontSendNotification);
 	clientTxIpLabel.setColour(Label::outlineColourId,Colours::black);
 	clientTxPortLabel.setColour(Label::outlineColourId, Colours::black);
 	clientRxPortLabel.setColour(Label::outlineColourId, Colours::black);
@@ -242,9 +242,37 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
     }
 
 	// HEAD TRACKING DATA
-	if (message.size() == 3 && message.getAddressPattern() == "/rpy")
+	if (message.size() == 4 && message.getAddressPattern() == "/rendering/quaternions")
 	{
-		br.setHeadTrackingData(message[0].getFloat32(), message[1].getFloat32(), message[2].getFloat32());
+		float qW = message[0].getFloat32();
+		float qX = message[1].getFloat32();
+		float qY = message[2].getFloat32();
+		float qZ = message[3].getFloat32();
+
+		float Roll, Pitch, Yaw;
+
+		// roll (y-axis rotation)
+		double sinr_cosp = +2.0 * (qW * qX + qY * qZ);
+		double cosr_cosp = +1.0 - 2.0 * (qX * qX + qY * qY);
+		Pitch = atan2(sinr_cosp, cosr_cosp) * (180 / double_Pi);
+
+		// pitch (x-axis rotation)
+		double sinp = +2.0 * (qW * qY - qZ * qX);
+		if (fabs(sinp) >= 1)
+			Roll = copysign(double_Pi / 2, sinp) * (180 / double_Pi); // use 90 degrees if out of range
+		else
+			Roll = asin(sinp) * (180 / double_Pi);
+
+		// yaw (z-axis rotation)
+		double siny_cosp = +2.0 * (qW * qZ + qX * qY);
+		double cosy_cosp = +1.0 - 2.0 * (qY * qY + qZ * qZ);
+		Yaw = atan2(siny_cosp, cosy_cosp) * (180 / double_Pi);
+
+		// Sign change
+		Roll = Roll * -1;
+		Pitch = Pitch * -1;
+		
+		br.setHeadTrackingData(Roll, Pitch, Yaw);
 	}
 
 	if (message.size() == 1 && message.getAddressPattern() == "/sofaload" && message[0].isString())
