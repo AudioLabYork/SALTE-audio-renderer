@@ -46,6 +46,7 @@ public:
 	void setLoudspeakerChannels(std::vector<float>& azimuths, std::vector<float>& elevations, std::size_t channels);
 	void setDecodingMatrix(std::vector<float>& decodeMatrix);
 	void setHeadTrackingData(float yaw, float pitch, float roll);
+	void setUseSHDConv(bool use);
 
 	void paint(Graphics& g) override;
 	void resized() override;
@@ -54,6 +55,7 @@ public:
 	void comboBoxChanged(ComboBox* comboBoxChanged);
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
+	void processBlock(AudioBuffer<float>& buffer);
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
 	
@@ -69,15 +71,20 @@ public:
 
 private:
 	void updateHRIRs();
+	void updateSHDHRIRSizes();
 	bool loadHRIRFileToEngine(const File& file);
 	void loadHRIRToEngine(const AudioBuffer<float>& buffer, const double sampleRate);
 	void updateMatrices();
-	void convertResponsesToSHD();
-	
-	void resetConvolution();
+	void convertHRIRToSHDHRIR();
+	void preprocessTranslation(AudioBuffer<float>& buffer, int speakerIndex);
+	void uploadSHDHRIRToEngine();
+	void uploadHRIRToEngine();
 
 	virtual void timerCallback() override;
-
+	
+	AudioBuffer<float> workingBuffer;
+	AudioBuffer<float> convBuffer;
+	
 	TextButton m_ambixFileBrowse;
 	ToggleButton m_useSofa;
 
@@ -90,7 +97,6 @@ private:
 	int m_numAmbiChans;
 	int m_numLsChans;
 	int m_numHrirLoaded;
-
 	int m_blockSize;
 	double m_sampleRate;
 
@@ -105,7 +111,6 @@ private:
 
 	AmbisonicRotation m_headTrackRotator;
 
-	std::vector<std::unique_ptr<ConvolutionEngine>> m_engines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_shdConvEngines;
 
@@ -119,6 +124,7 @@ private:
 	Label m_zAxisVal;
 
 	bool m_isConfigChanging;
+	bool m_useSHDConv;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BinauralRenderer)
 };
