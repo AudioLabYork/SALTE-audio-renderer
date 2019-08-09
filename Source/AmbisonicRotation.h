@@ -17,8 +17,8 @@ public:
 
 	void process(AudioSampleBuffer& buffer);
 	void calcRotationMatrix(const int order);
-	void updateEuler(float y, float p, float r);
-
+	void updateEulerRPY(float r, float p, float y);
+	void updateEulerYPR(float y, float p, float r);
 
 
 private:
@@ -27,20 +27,8 @@ private:
 	float pitch = 0.0f;
 	float roll = 0.0f;
 
-
-	//float* qw;
-	//float* qx;
-	//float* qy;
-	//float* qz;
-	//float* invertYaw;
-	//float* invertPitch;
-	//float* invertRoll;
-	//float* invertQuaternion;
-	//float* rotationSequence;
-
 	bool rotationSequence = true;
 
-	//Atomic<bool> updatingParams{ false };
 	Atomic<bool> rotationParamsHaveChanged{ true };
 
 	AudioSampleBuffer copyBuffer;

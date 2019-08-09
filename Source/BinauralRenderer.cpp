@@ -91,13 +91,15 @@ void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
 
 void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
 {
-	m_roll = roll;
-	m_pitch = pitch;
-	m_yaw = yaw;
+	// swap the rotation direction
+	
+	m_roll = roll * -1;
+	m_pitch = pitch * -1;
+	m_yaw = yaw * -1;
 
-	m_headTrackRotator.updateEuler(m_roll, m_pitch, m_yaw);
+	m_headTrackRotator.updateEulerRPY(m_roll, m_pitch, m_yaw);
 
-	convertHRIRToSHDHRIR();
+	//convertHRIRToSHDHRIR();
 }
 
 void BinauralRenderer::setUseSHDConv(bool use)

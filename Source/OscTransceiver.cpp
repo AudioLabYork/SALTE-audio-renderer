@@ -6,6 +6,7 @@ oscTransceiver::oscTransceiver()
 
 oscTransceiver::~oscTransceiver()
 {
+	disconnectReceiver();
 }
 
 void oscTransceiver::connectSender(String ipToSendTo, int portToSendTo)

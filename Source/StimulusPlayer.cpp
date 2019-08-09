@@ -223,7 +223,7 @@ void StimulusPlayer::sliderValueChanged(Slider* slider)
 	float pitch = pitchSlider.getValue();
 	float yaw = yawSlider.getValue();
 
-	ar.updateEuler(roll, pitch, yaw);
+	ar.updateEulerRPY(roll, pitch, yaw);
 }
 
 void StimulusPlayer::timerCallback()

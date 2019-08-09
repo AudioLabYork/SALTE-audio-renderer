@@ -235,16 +235,26 @@ void AmbisonicRotation::calcRotationMatrix(const int order)
 	rotationParamsHaveChanged = false;
 }
 
-void AmbisonicRotation::updateEuler(float r, float p, float y)
+void AmbisonicRotation::updateEulerRPY(float r, float p, float y)
 {
-	//updatingParams = true;
 	if (roll != r || pitch != p || yaw != y)
 	{
+		rotationSequence = true;
 		roll = r;
 		pitch = p;
 		yaw = y;
-
 		rotationParamsHaveChanged = true;
 	}
-	//updatingParams = false;
+}
+
+void AmbisonicRotation::updateEulerYPR(float y, float p, float r)
+{
+	if (yaw != y || pitch != p || roll != r)
+	{
+		rotationSequence = false;
+		yaw = y;
+		pitch = p;
+		roll = r;
+		rotationParamsHaveChanged = true;
+	}
 }
