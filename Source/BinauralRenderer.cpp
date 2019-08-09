@@ -672,7 +672,6 @@ void BinauralRenderer::preprocessTranslation(AudioBuffer<float>& buffer, int spe
 	case 1:
 		break;
 	case 2:
-		weight = 1.5f;
 		break;
 	case 3:
 		break;
