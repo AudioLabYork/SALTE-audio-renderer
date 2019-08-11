@@ -242,17 +242,14 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
         }
     }
 
-	// HEAD TRACKING DATA
+	// HEAD TRACKING DATA - QUATERNIONS
 	if (message.size() == 4 && message.getAddressPattern() == "/rendering/quaternions")
 	{
-		
 		// change message index order from 0,1,2,3 to match unity coordinates
 		float qW = message[0].getFloat32();
 		float qX = message[1].getFloat32();
 		float qY = message[3].getFloat32();
 		float qZ = message[2].getFloat32();
-
-
 
 		float Roll, Pitch, Yaw;
 
@@ -277,11 +274,17 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 		Roll = Roll * -1;
 		Pitch = Pitch * -1;
 		
-		sp.rollSlider.setValue(Roll);
-		sp.pitchSlider.setValue(Pitch);
-		sp.yawSlider.setValue(Yaw);
-		
-		// br.setHeadTrackingData(Yaw, Pitch, Roll);
+		br.setHeadTrackingData(Roll, Pitch, Yaw);
+	}
+
+	// HEAD TRACKING DATA - ROLL PITCH YAW
+	if (message.size() == 3 && message.getAddressPattern() == "/rendering/htrpy")
+	{
+		float Roll = message[0].getFloat32();
+		float Pitch = message[1].getFloat32();
+		float Yaw = message[2].getFloat32();
+
+		br.setHeadTrackingData(Roll, Pitch, Yaw);
 	}
 
 	if (message.size() == 1 && message.getAddressPattern() == "/sofaload" && message[0].isString())

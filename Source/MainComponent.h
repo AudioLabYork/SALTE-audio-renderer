@@ -14,8 +14,8 @@
 class MainComponent   :     public AudioAppComponent,
                             private Button::Listener,
                             public OSCReceiver,
-                            // public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>,
-							public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>, // only for ypr debugging
+                            public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>,
+							// public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>, // only for ypr debugging
                             public ChangeListener
 {
 public:
