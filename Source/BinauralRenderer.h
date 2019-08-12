@@ -36,6 +36,10 @@ public:
 	void preprocessHRIRs();
 	void uploadHRIRsToEngine();
 
+	float m_yaw;
+	float m_pitch;
+	float m_roll;
+
 private:
 	void convertHRIRToSHDHRIR();
 
@@ -62,10 +66,6 @@ private:
 
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_shdConvEngines;
-
-	float m_yaw;
-	float m_pitch;
-	float m_roll;
 
 	bool m_enableRotation;
 	bool m_useSHDConv;

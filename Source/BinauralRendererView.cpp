@@ -11,7 +11,7 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 {
 	m_renderer = renderer;
 	
-	startTimer(100);
+	startTimer(50);
 
 	m_ambixFileBrowse.setButtonText("Select Ambix Config file...");
 	m_ambixFileBrowse.addListener(this);
@@ -429,8 +429,8 @@ void BinauralRendererView::timerCallback()
 {
 	if (m_enableRotation.getToggleState())
 	{
-		m_rollLabel.setText("Roll: deg", dontSendNotification);
-		m_pitchLabel.setText("Pitch: deg", dontSendNotification);
-		m_yawLabel.setText("Yaw: deg", dontSendNotification);
+		m_rollLabel.setText("Roll: " + String(m_renderer->m_roll,2) + " deg", dontSendNotification);
+		m_pitchLabel.setText("Pitch: " + String(m_renderer->m_pitch, 2) + " deg", dontSendNotification);
+		m_yawLabel.setText("Yaw: " + String(m_renderer->m_yaw, 2) + " deg", dontSendNotification);
 	}
 }
