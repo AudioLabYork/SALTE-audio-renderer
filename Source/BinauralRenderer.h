@@ -43,6 +43,7 @@ public:
 private:
 	void convertHRIRToSHDHRIR();
 
+	CriticalSection procLock;
 	AudioBuffer<float> workingBuffer;
 	AudioBuffer<float> convBuffer;
 

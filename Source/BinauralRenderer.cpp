@@ -62,6 +62,7 @@ void BinauralRenderer::setLoudspeakerChannels(std::vector<float>& azi, std::vect
 
 void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
 {
+	ScopedLock lock(procLock);
 	m_decodeMatrix = decodeMatrix;
 }
 
@@ -85,6 +86,7 @@ void transpose(std::vector<float>& outmtx, std::vector<float>& inmtx, int rows, 
 
 void BinauralRenderer::updateMatrices()
 {
+	ScopedLock lock(procLock);
 	m_encodeMatrix.resize(m_numLsChans * m_numAmbiChans);
 	transpose(m_encodeMatrix, m_decodeMatrix, m_numLsChans, m_numAmbiChans);
 }
@@ -124,6 +126,8 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 
 void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 {
+	ScopedLock lock(procLock);
+
 	workingBuffer.clear();
 
 	int numSamps = buffer.getNumSamples();
