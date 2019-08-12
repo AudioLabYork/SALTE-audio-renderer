@@ -320,7 +320,7 @@ void MainComponent::saveSettings()
 	std::unique_ptr<XmlElement> audioDeviceSettings(deviceManager.createStateXml());
 	if (audioDeviceSettings.get())
 	{
-		audioDeviceSettings->writeToFile(settingsFile, String::empty);
+		audioDeviceSettings->writeTo(settingsFile);
 	}
 }
 
