@@ -33,6 +33,7 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	addAndMakeVisible(&m_sofaFileBrowse);
 
 	m_enableRotation.setButtonText("Enable rotation");
+	m_enableRotation.setToggleState(true, dontSendNotification);
 	addAndMakeVisible(&m_enableRotation);
 
 	m_rollLabel.setText("Roll: " + String(0.0f, 2) + " deg", dontSendNotification);
@@ -79,6 +80,10 @@ void BinauralRendererView::buttonClicked(Button* buttonClicked)
 	else if (buttonClicked == &m_sofaFileBrowse)
 	{
 		browseForSofaFile();
+	}
+	else if (buttonClicked == &m_enableRotation)
+	{
+		m_renderer->enableRotation(m_enableRotation.getToggleState());
 	}
 }
 

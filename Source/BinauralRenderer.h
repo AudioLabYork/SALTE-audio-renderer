@@ -24,6 +24,8 @@ public:
 	void setHeadTrackingData(float yaw, float pitch, float roll);
 	void setUseSHDConv(bool use);
 
+	void enableRotation(bool enable);
+
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void processBlock(AudioBuffer<float>& buffer);
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
@@ -65,6 +67,7 @@ private:
 	float m_pitch;
 	float m_roll;
 
+	bool m_enableRotation;
 	bool m_useSHDConv;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BinauralRenderer)

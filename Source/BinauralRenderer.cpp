@@ -11,6 +11,7 @@ BinauralRenderer::BinauralRenderer()
 	, m_pitch(0.0f)
 	, m_roll(0.0f)
 	, m_useSHDConv(false)
+	, m_enableRotation(true)
 {
 }
 
@@ -103,6 +104,11 @@ void BinauralRenderer::setUseSHDConv(bool use)
 	m_useSHDConv = use;
 }
 
+void BinauralRenderer::enableRotation(bool enable)
+{
+	m_enableRotation = enable;
+}
+
 void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
 	m_sampleRate = sampleRate;
@@ -121,6 +127,9 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	workingBuffer.clear();
 
 	int numSamps = buffer.getNumSamples();
+
+	if (m_enableRotation)
+		m_headTrackRotator.process(buffer);
 
 	if (m_useSHDConv)
 	{
