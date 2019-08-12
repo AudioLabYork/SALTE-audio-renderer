@@ -98,6 +98,8 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 		std::vector<float> ele;
 		int numChans = 0;
 
+		bool isValidChoice = false;
+
 		switch (m_orderSelect.getSelectedItemIndex() + 1)
 		{
 		case 0:
@@ -115,6 +117,8 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 			}
 
 			numChans = 6;
+
+			isValidChoice = true;
 			break;
 		case 2:
 			break;
@@ -131,6 +135,8 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 			}
 
 			numChans = 26;
+
+			isValidChoice = true;
 			break;
 		case 4:
 			break;
@@ -147,6 +153,8 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 			}
 
 			numChans = 50;
+
+			isValidChoice = true;
 			break;
 		case 6:
 			break;
@@ -156,26 +164,29 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 			break;
 		}
 
-		m_renderer->setDecodingMatrix(decodeMatrix);
-		m_renderer->setOrder(m_orderSelect.getSelectedItemIndex() + 1);
-		m_renderer->setLoudspeakerChannels(azi, ele, numChans);
-		m_renderer->updateMatrices();
+		if (isValidChoice)
+		{
+			m_renderer->setDecodingMatrix(decodeMatrix);
+			m_renderer->setOrder(m_orderSelect.getSelectedItemIndex() + 1);
+			m_renderer->setLoudspeakerChannels(azi, ele, numChans);
+			m_renderer->updateMatrices();
 
-		if (m_useSofa.getToggleState())
-		{
-			// use from sofa file that is currently selected
-			File sofaFile(m_sofaFilePath);
-			
-			// check the file exists, otherwise just use the standard HRTFs
-			if (sofaFile.existsAsFile())
-				loadSofaFile(sofaFile);
+			if (m_useSofa.getToggleState())
+			{
+				// use from sofa file that is currently selected
+				File sofaFile(m_sofaFilePath);
+
+				// check the file exists, otherwise just use the standard HRTFs
+				if (sofaFile.existsAsFile())
+					loadSofaFile(sofaFile);
+				else
+					loadStandardHRTF();
+			}
 			else
+			{
+				// use from standard HRTFs
 				loadStandardHRTF();
-		}
-		else
-		{
-			// use from standard HRTFs
-			loadStandardHRTF();
+			}
 		}
 	}
 }
