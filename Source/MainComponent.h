@@ -5,11 +5,11 @@
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
 #include "BinauralRenderer.h"
+#include "BinauralRendererView.h"
 
 // additional test modules
 #include "MushraComponent.h"
 #include "OscTestComponent.h"
-
 
 class MainComponent   :     public AudioAppComponent,
                             private Button::Listener,
@@ -47,6 +47,8 @@ private:
 
 	AudioBuffer<float> processBuffer;
 	int m_maxSamplesPerBlock;
+
+	BinauralRendererView brv;
 
     String logWindowMessage;
     TextEditor logWindow;

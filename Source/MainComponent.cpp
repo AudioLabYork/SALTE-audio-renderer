@@ -11,9 +11,10 @@ MainComponent::MainComponent()
 	// setup binaural renderer
 	br.init();
 	br.setUseSHDConv(false);
-	br.addChangeListener(this);
-
-	addAndMakeVisible(br);
+	
+	brv.init(&br);
+	brv.addChangeListener(this);
+	addAndMakeVisible(brv);
 
 	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
 	
@@ -92,6 +93,7 @@ MainComponent::~MainComponent()
 {
 	saveSettings();
 	br.deinit();
+	brv.deinit();
     shutdownAudio();
 }
 
@@ -164,7 +166,7 @@ void MainComponent::resized()
 
 	as.setCentrePosition(getWidth()/2, getHeight()/2);
     sp.setBounds(590, 10, 800, 385);
-	br.setBounds(590, 405, 800, 385);
+	brv.setBounds(590, 405, 800, 385);
 	openAudioDeviceManager.setBounds(10, 10, 230, 25);
 
 	clientTxIpLabel.setBounds(310, 35, 80, 25);
@@ -298,7 +300,7 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 
 			if (sourcePath.existsAsFile())
 			{
-				br.loadSofaFile(sourcePath);
+				brv.loadSofaFile(sourcePath);
 			}
 			else
 			{
@@ -333,10 +335,10 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
         logWindowMessage += sp.currentMessage;
         sp.currentMessage.clear();
     }
-	else if (source == &br)
+	else if (source == &brv)
 	{
-		logWindowMessage += br.m_currentLogMessage;
-		br.m_currentLogMessage.clear();
+		logWindowMessage += brv.m_currentLogMessage;
+		brv.m_currentLogMessage.clear();
 	}
     
     logWindow.setText(logWindowMessage);
