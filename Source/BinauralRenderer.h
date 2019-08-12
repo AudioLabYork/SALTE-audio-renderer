@@ -65,8 +65,10 @@ private:
 
 	AmbisonicRotation m_headTrackRotator;
 
-	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_convEngines;
-	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_shdConvEngines;
+	//std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_convEngines;
+	//std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_shdConvEngines;
+	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
+	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_shdConvEngines;
 
 	bool m_enableRotation;
 	bool m_useSHDConv;

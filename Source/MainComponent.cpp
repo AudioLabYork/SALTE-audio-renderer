@@ -10,7 +10,7 @@ MainComponent::MainComponent()
 
 	// setup binaural renderer
 	br.init();
-	br.setUseSHDConv(false);
+	br.setUseSHDConv(true);
 	
 	brv.init(&br);
 	brv.addChangeListener(this);
