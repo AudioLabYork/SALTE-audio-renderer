@@ -293,12 +293,12 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 
 	if (reader != nullptr)
 	{
-		currentAudioFileSource = new AudioFormatReaderSource(reader, true);
+		currentAudioFileSource = std::make_unique<AudioFormatReaderSource>(reader, true);
 
 		// loading into transport source using a separate thread comes from https://github.com/jonathonracz/AudioFilePlayerPlugin
 		// ..and plug it into our transport source
 		transportSource.setSource(
-			currentAudioFileSource,
+			currentAudioFileSource.get(),
 			32768,                  // tells it to buffer this many samples ahead
 			&readAheadThread,       // this is the background thread to use for reading-ahead
 			reader->sampleRate,     // allows for sample rate correction

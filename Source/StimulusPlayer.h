@@ -64,7 +64,7 @@ public:
 
 
 private:
-    ScopedPointer<AudioFormatReaderSource> currentAudioFileSource;
+    std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
     TimeSliceThread readAheadThread;
     
 	AudioThumbnailCache thumbnailCache;

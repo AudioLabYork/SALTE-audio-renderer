@@ -62,18 +62,6 @@ void SOFAReader::displayInformation()
 
 		std::cout << "\n";
 	}
-
-	//std::vector<double> delay; // broadband delay in units of N (ie. time axis of FIR)
-	//std::vector<double> impulseResponse; // impulse response along the time axis
-	//std::vector<double> sampleRate; // sample rate of the impulse response and delay
-	//
-	//file->GetValues(delay, "Data.Delay");
-	//file->GetValues(impulseResponse, "Data.IR");
-	//file->GetValues(sampleRate, "Data.SamplingRate");
-	//
-	//std::vector<double> sourcePosition;
-	//
-	//file->GetValues(sourcePosition, "SourcePosition");
 }
 
 bool SOFAReader::getResponseForSpeakerPosition(std::vector<float>& response, float theta, float phi)
@@ -95,12 +83,12 @@ bool SOFAReader::getResponseForSpeakerPosition(std::vector<float>& response, flo
 	{
 		if (theta == sourcePositions[j] && phi == sourcePositions[j + 1])
 		{
-			//std::cout << "[" << index << "] " << "theta: " << sourcePositions[j] << "\tphi: " << sourcePositions[j + 1] << "\tdis: " << sourcePositions[j + 2] << "\n";
-
 			std::vector<double>::const_iterator first = impulseResponse.begin() + (index * N * R);
 			std::vector<double>::const_iterator last = impulseResponse.begin() + (index * N * R) + (N * R);
-			
-			response.insert(response.begin(), first, last);
+
+			for (std::vector<double>::const_iterator itt = first; itt != last; ++itt)
+				response.push_back(static_cast<float>(*itt));
+
 			return true;
 		}
 
@@ -118,9 +106,7 @@ void SOFAReader::getImpulseData(std::vector<float>& impulses)
 	impulses.clear();
 
 	for (auto& v : vals)
-	{
 		impulses.push_back(static_cast<float>(v));
-	}
 }
 
 void SOFAReader::getSourcePositions(std::vector<float>& azimuths, std::vector<float>& elevations)

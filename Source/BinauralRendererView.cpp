@@ -23,7 +23,7 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	addAndMakeVisible(&m_useSofa);
 
 	m_orderSelect.addItemList(orderChoices, 1);
-	m_orderSelect.setSelectedItemIndex(0, false);
+	m_orderSelect.setSelectedItemIndex(0);
 	m_orderSelect.addListener(this);
 	addAndMakeVisible(&m_orderSelect);
 
@@ -48,7 +48,7 @@ void BinauralRendererView::deinit()
 	stopTimer();
 }
 
-void BinauralRendererView::paint(Graphics& g)
+void BinauralRendererView::paint(Graphics& /*g*/)
 {
 }
 
@@ -368,7 +368,7 @@ void BinauralRendererView::loadSofaFile(const File& file)
 			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
 	
 			for (int c = 0; c < channels; ++c)
-				inputBuffer.copyFrom(c, 0, HRIRData.data(), samples);
+				inputBuffer.copyFrom(c, 0, HRIRData.data(), static_cast<int>(samples));
 
 			m_renderer->addHRIR(inputBuffer);
 			sendMsgToLogWindow("Adding HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
