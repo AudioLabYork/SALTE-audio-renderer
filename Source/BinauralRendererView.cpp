@@ -34,6 +34,7 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 
 	m_enableRotation.setButtonText("Enable rotation");
 	m_enableRotation.setToggleState(true, dontSendNotification);
+	m_enableRotation.addListener(this);
 	addAndMakeVisible(&m_enableRotation);
 
 	m_rollLabel.setText("Roll: " + String(0.0f, 2) + " deg", dontSendNotification);
