@@ -73,6 +73,10 @@ MainComponent::MainComponent()
 	loadLocTestBtn.setButtonText("Localisation Test");
 	loadLocTestBtn.addListener(this);
 
+	addAndMakeVisible(&loadTS126259TestBtn);
+	loadTS126259TestBtn.setButtonText("TS 26.259");
+	loadTS126259TestBtn.addListener(this);
+
 	// load settings file if available
 	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
 	settingsFile = File(filePath + "/" + "AudioSettings.conf");
@@ -143,9 +147,9 @@ void MainComponent::paint (Graphics& g)
 	// RECTANGULAR OUTLINE
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
-    juce::Rectangle<int> oscRect(250, 10, 330, 150);        // osc status / vr interface status
-    juce::Rectangle<int> tstlogicRect(10, 170, 570, 480);   // test logic component
-    juce::Rectangle<int> renderRect(590, 405, 800, 385);    // rendering component
+    juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
+    juce::Rectangle<int> tstlogicRect(10, 170, 640, 480);   // test logic component
+    juce::Rectangle<int> renderRect(660, 405, 730, 385);    // rendering component
     g.drawRect(oscRect, 1);
     g.drawRect(tstlogicRect, 1);
     g.drawRect(renderRect, 1);
@@ -165,8 +169,8 @@ void MainComponent::resized()
 {
 
 	as.setCentrePosition(getWidth()/2, getHeight()/2);
-    sp.setBounds(590, 10, 800, 385);
-	brv.setBounds(590, 405, 800, 385);
+    sp.setBounds(660, 10, 730, 385);
+	brv.setBounds(660, 405, 730, 385);
 	openAudioDeviceManager.setBounds(10, 10, 230, 25);
 
 	clientTxIpLabel.setBounds(310, 35, 80, 25);
@@ -176,14 +180,15 @@ void MainComponent::resized()
 	loadOSCTestButton.setBounds(40, 200, 250, 25);
 	loadMushraBtn.setBounds(40, 250, 250, 25);
 	loadLocTestBtn.setBounds(40, 300, 250, 25);
+	loadTS126259TestBtn.setBounds(40, 350, 250, 25);
 
 
-    logWindow.setBounds(10, 660, 570, 130);
+    logWindow.setBounds(10, 660, 640, 130);
 
-	// fit OSC test component
-	otc.setBounds(10, 170, 570, 480);
-    // fit mushra interface
-    mc.setBounds(10, 170, 570, 480);
+	// fit test components
+	otc.setBounds(10, 170, 640, 480);
+	tsc.setBounds(10, 170, 640, 480);
+    mc.setBounds(10, 170, 640, 480);
 }
 
 void MainComponent::buttonClicked(Button* buttonThatWasClicked)
@@ -193,22 +198,26 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 			addAndMakeVisible(as);
 	}
 
-	if (buttonThatWasClicked == &loadOSCTestButton)
+	else if (buttonThatWasClicked == &loadOSCTestButton)
 	{
 		// add OSC test component
 		addAndMakeVisible(otc);
 	}
 
-	if (buttonThatWasClicked == &loadMushraBtn)
+	else if (buttonThatWasClicked == &loadMushraBtn)
 	{
 		configureMushra();
 	}
 
-	if (buttonThatWasClicked == &loadLocTestBtn)
+	else if (buttonThatWasClicked == &loadLocTestBtn)
 	{
 
 	}
 
+	else if (buttonThatWasClicked == &loadTS126259TestBtn)
+	{
+		addAndMakeVisible(tsc);
+	}
 
     repaint();
 }

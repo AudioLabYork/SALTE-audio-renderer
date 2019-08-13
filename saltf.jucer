@@ -9,6 +9,8 @@
         <FILE id="A9l0hz" name="fft.c" compile="1" resource="0" file="../../Libraries/WDL/fft.c"/>
         <FILE id="ufAhKz" name="fft.h" compile="0" resource="0" file="../../Libraries/WDL/fft.h"/>
       </GROUP>
+      <FILE id="o7AVE2" name="TC_TS26259.cpp" compile="1" resource="0" file="Source/TC_TS26259.cpp"/>
+      <FILE id="rAGD4X" name="TC_TS26259.h" compile="0" resource="0" file="Source/TC_TS26259.h"/>
       <FILE id="ARAEsH" name="AmbisonicRotation.cpp" compile="1" resource="0"
             file="Source/AmbisonicRotation.cpp"/>
       <FILE id="g3TxyX" name="AmbisonicRotation.h" compile="0" resource="0"
@@ -27,14 +29,10 @@
       <FILE id="hrTOiU" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="mi7Esd" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
-      <FILE id="eVWJjz" name="MushraComponent.cpp" compile="1" resource="0"
-            file="Source/MushraComponent.cpp"/>
-      <FILE id="GF936q" name="MushraComponent.h" compile="0" resource="0"
-            file="Source/MushraComponent.h"/>
-      <FILE id="GkwJ6t" name="OscTestComponent.cpp" compile="1" resource="0"
-            file="Source/OscTestComponent.cpp"/>
-      <FILE id="vYC25w" name="OscTestComponent.h" compile="0" resource="0"
-            file="Source/OscTestComponent.h"/>
+      <FILE id="eVWJjz" name="TC_MUSHRA.cpp" compile="1" resource="0" file="Source/TC_MUSHRA.cpp"/>
+      <FILE id="GF936q" name="TC_MUSHRA.h" compile="0" resource="0" file="Source/TC_MUSHRA.h"/>
+      <FILE id="GkwJ6t" name="TC_OSC.cpp" compile="1" resource="0" file="Source/TC_OSC.cpp"/>
+      <FILE id="vYC25w" name="TC_OSC.h" compile="0" resource="0" file="Source/TC_OSC.h"/>
       <FILE id="pcfrcV" name="OscTransceiver.cpp" compile="1" resource="0"
             file="Source/OscTransceiver.cpp"/>
       <FILE id="NFM0r4" name="OscTransceiver.h" compile="0" resource="0"

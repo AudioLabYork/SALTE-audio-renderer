@@ -8,8 +8,9 @@
 #include "BinauralRendererView.h"
 
 // additional test modules
-#include "MushraComponent.h"
-#include "OscTestComponent.h"
+#include "TC_MUSHRA.h"
+#include "TC_OSC.h"
+#include "TC_TS26259.h"
 
 class MainComponent   :     public AudioAppComponent,
                             private Button::Listener,
@@ -54,11 +55,14 @@ private:
     TextEditor logWindow;
     
     TextButton openAudioDeviceManager;
-	TextButton loadOSCTestButton, loadMushraBtn, loadLocTestBtn;
+	TextButton loadOSCTestButton, loadMushraBtn, loadLocTestBtn, loadTS126259TestBtn;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
 	// OSC test component
 	OscTestComponent otc;
+
+	// 3GPP TS 26.259 component
+	TC_TS26259 tsc;
 
 	// MUSHRA COMPONENT
 	MushraComponent mc;

@@ -1,4 +1,4 @@
-#include "MushraComponent.h"
+#include "TC_MUSHRA.h"
 
 //==============================================================================
 MushraComponent::MushraComponent()

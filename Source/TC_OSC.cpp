@@ -1,9 +1,8 @@
-#include "../JuceLibraryCode/JuceHeader.h"
-#include "OscTestComponent.h"
+#include "TC_OSC.h"
 
 OscTestComponent::OscTestComponent()
 {
-	sender.connect("127.0.0.1", 9001);
+	sender.connect("127.0.0.1", 9000);
 
 	btnA.setButtonText("A");
 	btnA.addListener(this);

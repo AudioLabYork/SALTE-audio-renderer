@@ -111,9 +111,9 @@ void StimulusPlayer::paint (Graphics& g)
     
     // INNER RECTANGLES
     Rectangle<int> tcRect(10, 10, 250, 150);        // manual transport control
-    Rectangle<int> dispRect(270, 10, 520, 150);        // display state
-    Rectangle<int> wfRect(10, 170, 780, 80);        // waveform
-    Rectangle<int> trgRect(10, 260, 780, 115);        // triggers
+    Rectangle<int> dispRect(270, 10, 450, 150);        // display state
+    Rectangle<int> wfRect(10, 170, 710, 80);        // waveform
+    Rectangle<int> trgRect(10, 260, 710, 115);        // triggers
     
     // DRAW RECTANGLES
     g.setColour(Colours::black);
@@ -126,7 +126,7 @@ void StimulusPlayer::paint (Graphics& g)
     g.setFont(Font(14.0f));
     g.setColour(Colours::white);
 
-	// PAINT WAVEFORm
+	// PAINT WAVEFORM
 	if (thumbnail.getNumChannels() == 0)
 		paintIfNoFileLoaded(g, wfRect);
 	else
