@@ -289,8 +289,6 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 	currentAudioFileSource = nullptr;
 
 	AudioFormatReader* reader = formatManager.createReaderFor(audioFile);
-	currentlyLoadedFile = audioFile;
-
 	if (reader != nullptr)
 	{
 		currentAudioFileSource = std::make_unique<AudioFormatReaderSource>(reader, true);
@@ -304,6 +302,8 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 			reader->sampleRate,     // allows for sample rate correction
 			reader->numChannels);    // the maximum number of channels that may need to be played
 		
+		currentlyLoadedFile = audioFile;
+
 		// create thumbnail
 		thumbnail.setSource(new FileInputSource(currentlyLoadedFile));
 		
@@ -318,11 +318,12 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 			String(reader->lengthInSamples) + "," +
 			String(reader->lengthInSamples / reader->sampleRate));
 	}
+
+	// repaint();
 }
 
 void StimulusPlayer::sendMsgToLogWindow(String message)
 {
-	// is it safe? (1/2)
 	currentMessage += message + "\n";
 	sendChangeMessage();  // broadcast change message to inform and update the editor
 }

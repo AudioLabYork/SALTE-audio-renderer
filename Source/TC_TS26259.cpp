@@ -2,7 +2,7 @@
 
 TC_TS26259::TC_TS26259()
 {
-	//sender.connect("127.0.0.1", 9000);
+	// sender.connect("127.0.0.1", 9000);
 
 	playButton.setButtonText("Play");
 	playButton.addListener(this);
@@ -47,12 +47,19 @@ TC_TS26259::TC_TS26259()
 		addAndMakeVisible(ratingSliderArray[i]);
 	}
 
+	// CONFIGURE THE TEST TRIAL ARRAY
+	testTrialArray.add(new TestTrial);
+	testTrialArray[0]->setFilepath(0, "D:/ASP_TEST/5OA_RENDER_03.wav");
+	testTrialArray[0]->setFilepath(1, "D:/ASP_TEST/5OA_ComplexScene_03_576kbps.wav");
 
+	testTrialArray.add(new TestTrial);
+	testTrialArray[1]->setFilepath(0, "D:/ASP_TEST/5OA_RENDER_04.wav");
+	testTrialArray[1]->setFilepath(1, "D:/ASP_TEST/5OA_ComplexScene_04_576kbps.wav");
 }
 
 TC_TS26259::~TC_TS26259()
 {
-	//sender.disconnect();
+	// sender.disconnect();
 }
 
 void TC_TS26259::paint(Graphics& g)
@@ -136,7 +143,7 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &playButton)
 	{
-		//sender.send("/transport/", (String) "play");
+		// add control of the player........
 	}
 
 	else if (buttonThatWasClicked == &stopButton)
@@ -151,7 +158,8 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &selectAButton)
 	{
-
+		// sender.send("/player/loadstimulus/", (String) "D:/TR_FILES/SALTE/Reaper/pink_0az0el_5OA.wav");
+		// sender.send("/player/transport/", (String) "play");
 	}
 
 	else if (buttonThatWasClicked == &selectBButton)

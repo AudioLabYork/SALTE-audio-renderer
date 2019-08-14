@@ -227,19 +227,19 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 {
     // DIRECT OSC CONTROL OF STIMULUS PLAYER
 
-	// load file from the list (index received by osc) (this is not used right now, probably will be removed)
-    if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isInt32())
-    {
-        sp.loadFileIntoTransport(File(sp.filePathList[message[0].getInt32()]));
-    }
+	//// load file from the list (index received by osc) (this is not used right now, probably will be removed)
+ //   if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isInt32())
+ //   {
+ //       sp.loadFileIntoTransport(File(sp.filePathList[message[0].getInt32()]));
+ //   }
 
 	// load file from path (file path received by osc)
-	if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isString())
+	if (message.size() == 1 && message.getAddressPattern() == "/player/loadstimulus" && message[0].isString())
 	{
 		sp.loadFileIntoTransport(File(message[0].getString()));
 	}
     
-    if (message.size() == 1 && message.getAddressPattern() == "/transport" && message[0].isString())
+    if (message.size() == 1 && message.getAddressPattern() == "/player/transport" && message[0].isString())
     {
         if (message[0].getString() == "play")
         {
@@ -298,7 +298,7 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 		br.setHeadTrackingData(Roll, Pitch, Yaw);
 	}
 
-	if (message.size() == 1 && message.getAddressPattern() == "/sofaload" && message[0].isString())
+	if (message.size() == 1 && message.getAddressPattern() == "rendering/loadsofa" && message[0].isString())
 	{
 		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
 
@@ -340,7 +340,6 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
     if(source == &sp)
     {
-        // is it safe? (2/2)
         logWindowMessage += sp.currentMessage;
         sp.currentMessage.clear();
     }
