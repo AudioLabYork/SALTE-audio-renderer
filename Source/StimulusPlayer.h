@@ -33,8 +33,10 @@ public:
 	void play();
 	void pause();
 	void stop();
-	void loop();
+	void loop(bool looping);
 	void loadFile(String filepath);
+	double getPlaybackHeadPosition();
+	void setPlaybackHeadPosition(double time);
     
 	// log window message
     String currentMessage;
@@ -46,6 +48,8 @@ private:
 	File currentlyLoadedFile;
 
 	AmbisonicRotation ar;
+
+	bool loopingEnabled = false;
 
 	StringArray filePathList; // wave file paths
 	StringArray fileIdList; // file-ids

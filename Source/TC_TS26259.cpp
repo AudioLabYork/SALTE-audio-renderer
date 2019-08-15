@@ -1,6 +1,7 @@
 #include "TC_TS26259.h"
 
 TC_TS26259::TC_TS26259()
+	: m_player(nullptr)
 {
 	// sender.connect("127.0.0.1", 9000);
 
@@ -65,6 +66,9 @@ TC_TS26259::~TC_TS26259()
 void TC_TS26259::init(StimulusPlayer* player)
 {
 	m_player = player;
+
+	// LOAD THE FIRST TRIAL
+	loadTrial(0);
 }
 
 void TC_TS26259::paint(Graphics& g)
@@ -151,6 +155,7 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &playButton)
 	{
+		m_player->setPlaybackHeadPosition(0);
 		m_player->play();
 	}
 
@@ -161,18 +166,35 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &loopButton)
 	{
-		m_player->loop();
+		if (!testTrialArray[currentTrialIndex]->getLoopingState())
+		{
+			testTrialArray[currentTrialIndex]->setLooping(true);
+			loopButton.setColour(TextButton::buttonColourId, Colours::red);
+		}
+		else
+		{
+			testTrialArray[currentTrialIndex]->setLooping(false);
+			loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		}
+
+		m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
 	}
 
 	else if (buttonThatWasClicked == &selectAButton)
 	{
+		// m_player->stop();
+		// testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+		// m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
 		m_player->play();
 	}
 
 	else if (buttonThatWasClicked == &selectBButton)
 	{
+		// m_player->stop();
+		// testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
+		// m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
 		m_player->play();
 	}
 	
@@ -209,5 +231,16 @@ void TC_TS26259::sliderValueChanged(Slider* sliderThatWasChanged)
 
 void TC_TS26259::loadTrial(int trialIndex)
 {
+	if (m_player == nullptr)
+	{
+		// m_player needs to be initialized
+		jassertfalse;
+		return;
+	}
 
+	currentTrialIndex = trialIndex;
+	m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+	
+	loopButton.setColour(TextButton::buttonColourId, Colours::red);
+	m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
 }

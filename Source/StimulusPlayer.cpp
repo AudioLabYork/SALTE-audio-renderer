@@ -165,7 +165,15 @@ void StimulusPlayer::resized()
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 {
-	//if (source == &transportSource) transportSourceChanged();
+	if (source == &transportSource)
+	{
+		if (transportSource.hasStreamFinished() && loopingEnabled)
+		{
+			transportSource.setPosition(0);
+			transportSource.start();
+		}
+	}
+
 	if (source == &thumbnail)       repaint();
 }
 
@@ -298,6 +306,7 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 	transportSource.setSource(nullptr);
 	currentAudioFileSource = nullptr;
 
+
 	AudioFormatReader* reader = formatManager.createReaderFor(audioFile);
 	if (reader != nullptr)
 	{
@@ -307,6 +316,7 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 		// ..and plug it into our transport source
 		transportSource.setSource(
 			currentAudioFileSource.get(),
+			// 2 * 48000,                  // tells it to buffer this many samples ahead
 			32768,                  // tells it to buffer this many samples ahead
 			&readAheadThread,       // this is the background thread to use for reading-ahead
 			reader->sampleRate,     // allows for sample rate correction
@@ -354,7 +364,6 @@ String StimulusPlayer::returnHHMMSS(double lengthInSeconds)
 
 void StimulusPlayer::play()
 {
-	transportSource.setPosition(0);
 	transportSource.start();
 }
 
@@ -367,8 +376,19 @@ void StimulusPlayer::stop()
 	transportSource.stop();
 }
 
-void StimulusPlayer::loop()
+void StimulusPlayer::loop(bool looping)
 {
+	loopingEnabled = looping;
+}
+
+double StimulusPlayer::getPlaybackHeadPosition()
+{
+	return transportSource.getCurrentPosition();
+}
+
+void StimulusPlayer::setPlaybackHeadPosition(double time)
+{
+	transportSource.setPosition(time);
 }
 
 //void StimulusPlayer::createStimuliTriggerButtons()
