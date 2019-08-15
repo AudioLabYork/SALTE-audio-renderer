@@ -62,6 +62,11 @@ TC_TS26259::~TC_TS26259()
 	// sender.disconnect();
 }
 
+void TC_TS26259::init(StimulusPlayer* player)
+{
+	m_player = player;
+}
+
 void TC_TS26259::paint(Graphics& g)
 {
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));   // clear the background
@@ -146,17 +151,17 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &playButton)
 	{
-		// add control of the player........
+		m_player->play();
 	}
 
 	else if (buttonThatWasClicked == &stopButton)
 	{
-
+		m_player->stop();
 	}
 
 	else if (buttonThatWasClicked == &loopButton)
 	{
-
+		m_player->loop();
 	}
 
 	else if (buttonThatWasClicked == &selectAButton)

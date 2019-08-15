@@ -8,6 +8,9 @@ MainComponent::MainComponent()
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
 
+	// pass the player into the test component so that it can use it for triggering play, pause stop etc
+	tsc.init(&sp);
+
 	// setup binaural renderer
 	br.init();
 	br.setUseSHDConv(true);

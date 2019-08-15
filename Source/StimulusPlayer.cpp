@@ -200,12 +200,11 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
     }
     else if (buttonThatWasClicked == &playButton)
     {
-        transportSource.setPosition(0);
-        transportSource.start();
+		play();
     }
     else if (buttonThatWasClicked == &stopButton)
     {
-        transportSource.stop();
+		stop();
     }
     else if (buttonThatWasClicked->getProperties()["triggerStimuliButton"])
     {
@@ -214,6 +213,7 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
         transportSource.setPosition(0);
         transportSource.start();
     }
+
     repaint();
 }
 
@@ -340,6 +340,25 @@ String StimulusPlayer::returnHHMMSS(double lengthInSeconds)
     String(seconds).paddedLeft('0', 2) + "." +
     String(millis).paddedLeft('0', 2);
     return output;
+}
+
+void StimulusPlayer::play()
+{
+	transportSource.setPosition(0);
+	transportSource.start();
+}
+
+void StimulusPlayer::pause()
+{
+}
+
+void StimulusPlayer::stop()
+{
+	transportSource.stop();
+}
+
+void StimulusPlayer::loop()
+{
 }
 
 void StimulusPlayer::createStimuliTriggerButtons()

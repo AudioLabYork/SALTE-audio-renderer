@@ -4,6 +4,8 @@
 #include <vector>
 #include <random>
 
+#include "StimulusPlayer.h"
+
 using std::vector;
 
 class TestTrial
@@ -43,6 +45,8 @@ public:
 	TC_TS26259();
 	~TC_TS26259();
 
+	void init(StimulusPlayer* player);
+
 	void paint(Graphics&) override;
 	void resized() override;
 	void buttonClicked(Button* buttonThatWasClicked) override;
@@ -50,6 +54,9 @@ public:
 
 
 private:
+
+	StimulusPlayer* m_player;
+
 	// OSCSender sender;
 	TextButton playButton, stopButton, loopButton;
 	TextButton selectAButton, selectBButton;
