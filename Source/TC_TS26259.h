@@ -56,6 +56,9 @@ private:
 	TextButton prevTrialButton, nextTrialButton;
 	OwnedArray<Slider> ratingSliderArray;
 	OwnedArray<TestTrial> testTrialArray;
+	int currentTrialIndex = 0;
+
+	void loadTrial(int trialIndex);
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TC_TS26259)
 };

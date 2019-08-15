@@ -113,6 +113,9 @@ void TC_TS26259::paint(Graphics& g)
 	g.drawText("Artifacts", 310, 40, 100, 25, Justification::centred, true);
 	g.drawText("Timbral Quality", 410, 40, 100, 25, Justification::centred, true);
 	g.drawText("BAQ", 510, 40, 100, 25, Justification::centred, true);
+
+	// TEST INFO
+	g.drawText("Trial " + String(currentTrialIndex + 1) + " of: " + String(testTrialArray.size()), 20, 20, 100, 25, Justification::centred, true);
 }
 
 void TC_TS26259::resized()
@@ -169,13 +172,23 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 	
 	else if (buttonThatWasClicked == &prevTrialButton)
 	{
-
+		if (currentTrialIndex > 0)
+		{
+			currentTrialIndex--;
+			loadTrial(currentTrialIndex);
+		}
 	}
 
 	else if (buttonThatWasClicked == &nextTrialButton)
 	{
-
+		if (currentTrialIndex < testTrialArray.size() - 1)
+		{
+			currentTrialIndex++;
+			loadTrial(currentTrialIndex);
+		}
 	}
+
+	repaint();
 }
 
 void TC_TS26259::sliderValueChanged(Slider* sliderThatWasChanged)
@@ -186,4 +199,9 @@ void TC_TS26259::sliderValueChanged(Slider* sliderThatWasChanged)
 	{
 		int sliderIndex = sliderThatWasChanged->getProperties()["sliderIndex"];
 	}
+}
+
+void TC_TS26259::loadTrial(int trialIndex)
+{
+
 }
