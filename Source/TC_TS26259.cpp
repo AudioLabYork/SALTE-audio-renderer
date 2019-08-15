@@ -166,13 +166,14 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &selectAButton)
 	{
-		// sender.send("/player/loadstimulus/", (String) "D:/TR_FILES/SALTE/Reaper/pink_0az0el_5OA.wav");
-		// sender.send("/player/transport/", (String) "play");
+		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+		m_player->play();
 	}
 
 	else if (buttonThatWasClicked == &selectBButton)
 	{
-
+		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
+		m_player->play();
 	}
 	
 	else if (buttonThatWasClicked == &prevTrialButton)

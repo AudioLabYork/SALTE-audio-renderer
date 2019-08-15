@@ -239,20 +239,19 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 	// load file from path (file path received by osc)
 	if (message.size() == 1 && message.getAddressPattern() == "/player/loadstimulus" && message[0].isString())
 	{
-		sp.loadFileIntoTransport(File(message[0].getString()));
+		sp.loadFile(message[0].getString());
 	}
     
     if (message.size() == 1 && message.getAddressPattern() == "/player/transport" && message[0].isString())
     {
         if (message[0].getString() == "play")
         {
-            sp.transportSource.setPosition(0);
-            sp.transportSource.start();
+			sp.play();
         }
         
         if (message[0].getString() == "stop")
         {
-            sp.transportSource.stop();
+            sp.stop();
         }
     }
 
@@ -275,13 +274,13 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 			Roll = asin(sinp) * (180 / double_Pi);
 
 		// pitch (y-axis rotation)
-		double sinr_cosp = +2.0 * (qW * qX + qY * qZ);
-		double cosr_cosp = +1.0 - 2.0 * (qX * qX + qY * qY);
+		double sinr_cosp = + 2.0 * (qW * qX + qY * qZ);
+		double cosr_cosp = + 1.0 - 2.0 * (qX * qX + qY * qY);
 		Pitch = atan2(sinr_cosp, cosr_cosp) * (180 / double_Pi);
 
 		// yaw (z-axis rotation)
-		double siny_cosp = +2.0 * (qW * qZ + qX * qY);
-		double cosy_cosp = +1.0 - 2.0 * (qY * qY + qZ * qZ);
+		double siny_cosp = + 2.0 * (qW * qZ + qX * qY);
+		double cosy_cosp = + 1.0 - 2.0 * (qY * qY + qZ * qZ);
 		Yaw = atan2(siny_cosp, cosy_cosp) * (180 / double_Pi);
 
 		// Sign change

@@ -235,38 +235,38 @@ void StimulusPlayer::timerCallback()
     playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
 }
 
-void StimulusPlayer::createFilePathList(String configFilePath)
-{
-	File fileToLoad = File(configFilePath);
-	StringArray loadedData;
-	loadedData.clear();
-	loadedData.addLines(fileToLoad.loadFileAsString());
-	if (loadedData[0].startsWith("#ASP#Config#File#"))
-	{
-		filePathList.clear();
-		int header = 10; // number of header lines
-		for (int i = header; i < loadedData.size(); ++i)
-		{
-			StringArray tokens;
-			tokens.addTokens(loadedData[i], ",", "\"");
-			if (tokens[3].length() != 0)
-			{
-				filePathList.set(i, tokens[2] + "/" + tokens[3]); // concatenate file path + file name and add the full path to the file path list
-				fileIdList.set(i, tokens[0] + tokens[1]); // add the file-id to the file-id list
-
-				// output log
-				sendMsgToLogWindow(tokens[0] + tokens[1] + ": " + tokens[3] + " added.");
-			}
-		}
-
-		// load the first file from the list
-		loadFileIntoTransport(File(filePathList[0]));
-	}
-	else
-	{
-		AlertWindow::showMessageBoxAsync(AlertWindow::InfoIcon, "Invalid config file.", fileToLoad.getFullPathName());
-	}
-}
+//void StimulusPlayer::createFilePathList(String configFilePath)
+//{
+//	File fileToLoad = File(configFilePath);
+//	StringArray loadedData;
+//	loadedData.clear();
+//	loadedData.addLines(fileToLoad.loadFileAsString());
+//	if (loadedData[0].startsWith("#ASP#Config#File#"))
+//	{
+//		filePathList.clear();
+//		int header = 10; // number of header lines
+//		for (int i = header; i < loadedData.size(); ++i)
+//		{
+//			StringArray tokens;
+//			tokens.addTokens(loadedData[i], ",", "\"");
+//			if (tokens[3].length() != 0)
+//			{
+//				filePathList.set(i, tokens[2] + "/" + tokens[3]); // concatenate file path + file name and add the full path to the file path list
+//				fileIdList.set(i, tokens[0] + tokens[1]); // add the file-id to the file-id list
+//
+//				// output log
+//				sendMsgToLogWindow(tokens[0] + tokens[1] + ": " + tokens[3] + " added.");
+//			}
+//		}
+//
+//		// load the first file from the list
+//		loadFileIntoTransport(File(filePathList[0]));
+//	}
+//	else
+//	{
+//		AlertWindow::showMessageBoxAsync(AlertWindow::InfoIcon, "Invalid config file.", fileToLoad.getFullPathName());
+//	}
+//}
 
 void StimulusPlayer::browseForFile()
 {
@@ -279,6 +279,16 @@ void StimulusPlayer::browseForFile()
 		auto file = chooser.getResult();
 		loadFileIntoTransport(file);
 	}
+}
+
+void StimulusPlayer::loadFile(String filepath)
+{
+	File audiofile(filepath);
+
+	if (audiofile.existsAsFile())
+		loadFileIntoTransport(audiofile);
+	else
+		sendMsgToLogWindow("Can't load file: " + filepath);
 }
 
 void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
@@ -361,19 +371,19 @@ void StimulusPlayer::loop()
 {
 }
 
-void StimulusPlayer::createStimuliTriggerButtons()
-{
-        for (int i = 0; i < numberOfStimuli; ++i)
-    {
-        triggerStimuliButtonArray.add(new TextButton());
-        triggerStimuliButtonArray[i]->getProperties().set("triggerStimuliButton", true);
-        triggerStimuliButtonArray[i]->getProperties().set("buttonIndex", i);
-        triggerStimuliButtonArray[i]->setButtonText(fileIdList[i]);
-        triggerStimuliButtonArray[i]->addListener(this);
-        addAndMakeVisible(triggerStimuliButtonArray[i]);
-    }
-    resized();
-}
+//void StimulusPlayer::createStimuliTriggerButtons()
+//{
+//        for (int i = 0; i < numberOfStimuli; ++i)
+//    {
+//        triggerStimuliButtonArray.add(new TextButton());
+//        triggerStimuliButtonArray[i]->getProperties().set("triggerStimuliButton", true);
+//        triggerStimuliButtonArray[i]->getProperties().set("buttonIndex", i);
+//        triggerStimuliButtonArray[i]->setButtonText(fileIdList[i]);
+//        triggerStimuliButtonArray[i]->addListener(this);
+//        addAndMakeVisible(triggerStimuliButtonArray[i]);
+//    }
+//    resized();
+//}
 
 // load config file
 //void StimulusPlayer::browseForConfigFile()
