@@ -67,6 +67,8 @@ private:
 
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine_Div>> m_shdConvEngines;
+	
+	std::vector<std::unique_ptr<dsp::Convolution>> m_juceConvEngines;
 
 	bool m_enableRotation;
 	bool m_useSHDConv;

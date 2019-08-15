@@ -30,6 +30,9 @@ void BinauralRenderer::reset()
 
 	m_azi.clear();
 	m_ele.clear();
+
+	for (auto& engine : m_juceConvEngines)
+		engine->reset();
 }
 
 void BinauralRenderer::deinit()
@@ -182,21 +185,24 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 			for (int j = 0; j < 2; ++j)
 				convBuffer.copyFrom(j, 0, workingBuffer.getReadPointer(i), numSamps);
 
-			m_shdConvEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), 2);
-			int availSamples = jmin((int)m_shdConvEngines[i]->Avail(numSamps), numSamps);
+			dsp::AudioBlock<float> dspBuffer(convBuffer);
+			m_juceConvEngines[i]->process(dsp::ProcessContextReplacing<float>(dspBuffer));
 
-			if (availSamples > 0)
-			{
-				float* convo = nullptr;
-
-				for (int k = 0; k < 2; ++k)
-				{
-					convo = m_shdConvEngines[i]->Get()[k];
-					buffer.addFrom(k, 0, convo, numSamps);
-				}
-
-				m_shdConvEngines[i]->Advance(availSamples);
-			}
+			//m_shdConvEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), 2);
+			//int availSamples = jmin((int)m_shdConvEngines[i]->Avail(numSamps), numSamps);
+			//
+			//if (availSamples > 0)
+			//{
+			//	float* convo = nullptr;
+			//
+			//	for (int k = 0; k < 2; ++k)
+			//	{
+			//		convo = m_shdConvEngines[i]->Get()[k];
+			//		buffer.addFrom(k, 0, convo, numSamps);
+			//	}
+			//
+			//	m_shdConvEngines[i]->Advance(availSamples);
+			//}
 		}
 	}
 	else
@@ -206,21 +212,27 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 			for (int j = 0; j < 2; ++j)
 				convBuffer.copyFrom(j, 0, workingBuffer.getReadPointer(i), numSamps);
 
-			m_convEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), 2);
-			int availSamples = jmin((int)m_convEngines[i]->Avail(numSamps), numSamps);
+			dsp::AudioBlock<float> dspBuffer(convBuffer);
+			m_juceConvEngines[i]->process(dsp::ProcessContextReplacing<float>(dspBuffer));
 
-			if (availSamples > 0)
-			{
-				float* convo = nullptr;
+			//m_convEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), 2);
+			//int availSamples = jmin((int)m_convEngines[i]->Avail(numSamps), numSamps);
+			//
+			//if (availSamples > 0)
+			//{
+			//	float* convo = nullptr;
+			//
+			//	for (int k = 0; k < 2; ++k)
+			//	{
+			//		convo = m_convEngines[i]->Get()[k];
+			//		buffer.addFrom(k, 0, convo, numSamps);
+			//	}
+			//
+			//	m_convEngines[i]->Advance(availSamples);
+			//}
 
-				for (int k = 0; k < 2; ++k)
-				{
-					convo = m_convEngines[i]->Get()[k];
-					buffer.addFrom(k, 0, convo, numSamps);
-				}
-
-				m_convEngines[i]->Advance(availSamples);
-			}
+			for (int k = 0; k < 2; ++k)
+				buffer.copyFrom(k, 0, convBuffer.getReadPointer(k), numSamps);
 		}
 	}
 }
@@ -305,6 +317,7 @@ void BinauralRenderer::uploadHRIRsToEngine()
 	else
 	{
 		m_convEngines.clear();
+		m_juceConvEngines.clear();
 
 		for (int i = 0; i < m_numLsChans; ++i)
 		{
@@ -321,6 +334,17 @@ void BinauralRenderer::uploadHRIRsToEngine()
 			convEngine->Reset();
 
 			m_convEngines.push_back(std::move(convEngine));
+		}
+
+		for (auto& buffer : m_hrirBuffers)
+		{
+			std::unique_ptr<dsp::Convolution> newEngine = std::make_unique<dsp::Convolution>();
+
+			dsp::ProcessSpec spec{ m_sampleRate, static_cast<uint32> (m_blockSize), 2 };
+
+			newEngine->prepare(spec);
+			newEngine->copyAndLoadImpulseResponseFromBuffer(buffer, m_sampleRate, true, false, false, 0);
+			m_juceConvEngines.push_back(std::move(newEngine));
 		}
 	}
 }

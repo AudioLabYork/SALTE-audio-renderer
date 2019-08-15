@@ -74,7 +74,7 @@
 #endif
 
 #ifndef    JUCE_ASIO
- #define   JUCE_ASIO 1
+ //#define JUCE_ASIO 0
 #endif
 
 #ifndef    JUCE_WASAPI
@@ -221,7 +221,7 @@
 #endif
 
 #ifndef    JUCE_DSP_USE_SHARED_FFTW
- //#define JUCE_DSP_USE_SHARED_FFTW 0
+ #define   JUCE_DSP_USE_SHARED_FFTW 1
 #endif
 
 #ifndef    JUCE_DSP_USE_STATIC_FFTW
