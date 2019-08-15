@@ -43,6 +43,11 @@ public:
     void sendMsgToLogWindow(String message);
     String returnHHMMSS(double lengthInSeconds);
 
+	// exposing some playback transport functionality
+	void play();
+	void pause();
+	void stop();
+	void loop();
 
     //EDITOR
     void buttonClicked(Button* buttonThatWasClicked) override;
