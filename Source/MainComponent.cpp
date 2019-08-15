@@ -300,7 +300,7 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 		br.setHeadTrackingData(Roll, Pitch, Yaw);
 	}
 
-	if (message.size() == 1 && message.getAddressPattern() == "rendering/loadsofa" && message[0].isString())
+	if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
 	{
 		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
 
