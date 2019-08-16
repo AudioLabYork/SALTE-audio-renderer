@@ -64,17 +64,17 @@ void BinauralRenderer::setLoudspeakerChannels(std::vector<float>& azi, std::vect
 	m_hrirBuffers.resize(m_numLsChans);
 }
 
-void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
-{
-	ScopedLock lock(procLock);
-	m_decodeMatrix = decodeMatrix;
-}
-
 void BinauralRenderer::getLoudspeakerChannels(std::vector<float>& azi, std::vector<float>& ele, int& chans)
 {
 	azi = m_azi;
 	ele = m_ele;
 	chans = m_numLsChans;
+}
+
+void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
+{
+	ScopedLock lock(m_procLock);
+	m_decodeMatrix = decodeMatrix;
 }
 
 void transpose(std::vector<float>& outmtx, std::vector<float>& inmtx, int rows, int cols)
@@ -90,7 +90,7 @@ void transpose(std::vector<float>& outmtx, std::vector<float>& inmtx, int rows, 
 
 void BinauralRenderer::updateMatrices()
 {
-	ScopedLock lock(procLock);
+	ScopedLock lock(m_procLock);
 	m_encodeMatrix.resize(m_numLsChans * m_numAmbiChans);
 	transpose(m_encodeMatrix, m_decodeMatrix, m_numLsChans, m_numAmbiChans);
 }
@@ -128,16 +128,16 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 	{
 		m_blockSize = samplesPerBlockExpected;
 
-		workingBuffer.setSize(64, m_blockSize);
-		convBuffer.setSize(2, m_blockSize);
+		m_workingBuffer.setSize(64, m_blockSize);
+		m_convBuffer.setSize(2, m_blockSize);
 	}
 }
 
 void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 {
-	ScopedLock lock(procLock);
+	ScopedLock lock(m_procLock);
 
-	workingBuffer.clear();
+	m_workingBuffer.clear();
 
 	int numSamps = buffer.getNumSamples();
 
@@ -147,7 +147,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	if (m_useSHDConv)
 	{
 		for (int c = 0; c < buffer.getNumChannels(); ++c)
-			workingBuffer.copyFrom(c, 0, buffer.getReadPointer(c), buffer.getNumSamples());
+			m_workingBuffer.copyFrom(c, 0, buffer.getReadPointer(c), buffer.getNumSamples());
 
 		buffer.clear();
 
@@ -166,32 +166,29 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 		}
 
 		const float** in = buffer.getArrayOfReadPointers();
-		float** out = workingBuffer.getArrayOfWritePointers();
+		float** out = m_workingBuffer.getArrayOfWritePointers();
 
 		for (int i = 0; i < m_numLsChans; ++i)
 		{
 			for (int j = 0; j < m_numAmbiChans; ++j)
 			{
-				for (int k = 0; k < numSamps; ++k)
-				{
-					out[i][k] += in[j][k] * m_decodeMatrix[(i * m_numAmbiChans) + j];
-				}
+				m_workingBuffer.addFrom(i, 0, in[j], numSamps, m_decodeMatrix[(i * m_numAmbiChans) + j]);
 			}
 		}
 
 		buffer.clear();
 	}
 
-	convBuffer.clear();
+	m_convBuffer.clear();
 
 	if (m_useSHDConv)
 	{
 		for (int i = 0; i < m_numAmbiChans; ++i)
 		{
 			for (int j = 0; j < 2; ++j)
-				convBuffer.copyFrom(j, 0, workingBuffer.getReadPointer(i), numSamps);
+				m_convBuffer.copyFrom(j, 0, m_workingBuffer.getReadPointer(i), numSamps);
 
-			m_shdConvEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), 2);
+			m_shdConvEngines[i]->Add(m_convBuffer.getArrayOfWritePointers(), m_convBuffer.getNumSamples(), 2);
 			int availSamples = jmin((int)m_shdConvEngines[i]->Avail(numSamps), numSamps);
 
 			if (availSamples > 0)
@@ -213,9 +210,9 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 		for (int i = 0; i < m_numLsChans; ++i)
 		{
 			for (int j = 0; j < 2; ++j)
-				convBuffer.copyFrom(j, 0, workingBuffer.getReadPointer(i), numSamps);
+				m_convBuffer.copyFrom(j, 0, m_workingBuffer.getReadPointer(i), numSamps);
 
-			m_convEngines[i]->Add(convBuffer.getArrayOfWritePointers(), convBuffer.getNumSamples(), 2);
+			m_convEngines[i]->Add(m_convBuffer.getArrayOfWritePointers(), m_convBuffer.getNumSamples(), 2);
 			int availSamples = jmin((int)m_convEngines[i]->Avail(numSamps), numSamps);
 
 			if (availSamples > 0)

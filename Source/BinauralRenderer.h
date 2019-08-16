@@ -47,9 +47,10 @@ public:
 private:
 	void convertHRIRToSHDHRIR();
 
-	CriticalSection procLock;
-	AudioBuffer<float> workingBuffer;
-	AudioBuffer<float> convBuffer;
+	CriticalSection m_procLock;
+
+	AudioBuffer<float> m_workingBuffer;
+	AudioBuffer<float> m_convBuffer;
 
 	int m_order;
 	int m_numAmbiChans;
