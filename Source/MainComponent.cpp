@@ -290,6 +290,12 @@ void MainComponent::oscMessageReceived(const OSCMessage& message)
 		br.setHeadTrackingData(Roll, Pitch, Yaw);
 	}
 
+	if (message.size() == 1 && message.getAddressPattern() == "/rendering/setorder" && message[0].isInt32())
+	{
+		int order = message[0].getInt32();
+		br.setOrder(order);
+	}
+
 	// HEAD TRACKING DATA - ROLL PITCH YAW
 	if (message.size() == 3 && message.getAddressPattern() == "/rendering/htrpy")
 	{
