@@ -1,6 +1,7 @@
 #include "TC_TS26259.h"
 
 TC_TS26259::TC_TS26259()
+	: m_player(nullptr)
 {
 	// sender.connect("127.0.0.1", 9000);
 
@@ -48,13 +49,17 @@ TC_TS26259::TC_TS26259()
 	}
 
 	// CONFIGURE THE TEST TRIAL ARRAY
-	testTrialArray.add(new TestTrial);
-	testTrialArray[0]->setFilepath(0, "D:/ASP_TEST/5OA_RENDER_03.wav");
-	testTrialArray[0]->setFilepath(1, "D:/ASP_TEST/5OA_ComplexScene_03_576kbps.wav");
+	File rootFolder = File::getCurrentWorkingDirectory().getParentDirectory().getParentDirectory().getParentDirectory().getParentDirectory();
+	String ambisonicScenesFolder = rootFolder.getFullPathName() + File::getSeparatorString() + "AmbisonicTestScenes" + File::getSeparatorString();
 
 	testTrialArray.add(new TestTrial);
-	testTrialArray[1]->setFilepath(0, "D:/ASP_TEST/5OA_RENDER_04.wav");
-	testTrialArray[1]->setFilepath(1, "D:/ASP_TEST/5OA_ComplexScene_04_576kbps.wav");
+	testTrialArray[0]->setFilepath(0, ambisonicScenesFolder + "5OA_RENDER_03.wav");
+	testTrialArray[0]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
+
+	testTrialArray.add(new TestTrial);
+	testTrialArray[1]->setFilepath(0, ambisonicScenesFolder + "5OA_RENDER_04.wav");
+	testTrialArray[1]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_04_576kbps.wav");
+
 }
 
 TC_TS26259::~TC_TS26259()
@@ -62,9 +67,16 @@ TC_TS26259::~TC_TS26259()
 	// sender.disconnect();
 }
 
-void TC_TS26259::init(StimulusPlayer* player)
+void TC_TS26259::init(StimulusPlayer* player, BinauralRendererView* rendererView)
 {
 	m_player = player;
+	m_rendererView = rendererView;
+
+	// LOAD THE FIRST TRIAL
+	loadTrial(0);
+
+	m_rendererView->changeComboBox(5);
+
 }
 
 void TC_TS26259::paint(Graphics& g)
@@ -151,6 +163,7 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &playButton)
 	{
+		m_player->setPlaybackHeadPosition(0);
 		m_player->play();
 	}
 
@@ -161,19 +174,42 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &loopButton)
 	{
-		m_player->loop();
+		if (!testTrialArray[currentTrialIndex]->getLoopingState())
+		{
+			testTrialArray[currentTrialIndex]->setLooping(true);
+			loopButton.setColour(TextButton::buttonColourId, Colours::blue);
+		}
+		else
+		{
+			testTrialArray[currentTrialIndex]->setLooping(false);
+			loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		}
+
+		m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
 	}
 
 	else if (buttonThatWasClicked == &selectAButton)
 	{
+		// m_player->stop();
+		// testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+		// m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
 		m_player->play();
+
+		selectAButton.setColour(TextButton::buttonColourId, Colours::green);
+		selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	}
 
 	else if (buttonThatWasClicked == &selectBButton)
 	{
+		// m_player->stop();
+		// testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
+		// m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
 		m_player->play();
+
+		selectAButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		selectBButton.setColour(TextButton::buttonColourId, Colours::green);
 	}
 	
 	else if (buttonThatWasClicked == &prevTrialButton)
@@ -209,5 +245,26 @@ void TC_TS26259::sliderValueChanged(Slider* sliderThatWasChanged)
 
 void TC_TS26259::loadTrial(int trialIndex)
 {
+	if (m_player == nullptr)
+	{
+		// m_player needs to be initialized
+		jassertfalse;
+		return;
+	}
 
+	currentTrialIndex = trialIndex;
+	m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+	selectAButton.setColour(TextButton::buttonColourId, Colours::green);
+	selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	
+	if (testTrialArray[currentTrialIndex]->getLoopingState())
+	{
+		m_player->loop(true);
+		loopButton.setColour(TextButton::buttonColourId, Colours::blue);
+	}
+	else
+	{
+		m_player->loop(false);
+		loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	}
 }
