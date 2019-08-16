@@ -10,8 +10,12 @@ BinauralRenderer::BinauralRenderer()
 	, m_yaw(0.0f)
 	, m_pitch(0.0f)
 	, m_roll(0.0f)
+	, m_xTrans(0.0f)
+	, m_yTrans(0.0f)
+	, m_zTrans(0.0f)
 	, m_useSHDConv(false)
 	, m_enableRotation(true)
+	, m_enableTranslation(true)
 {
 }
 
@@ -109,6 +113,11 @@ void BinauralRenderer::setUseSHDConv(bool use)
 void BinauralRenderer::enableRotation(bool enable)
 {
 	m_enableRotation = enable;
+}
+
+void BinauralRenderer::enableTranslation(bool enable)
+{
+	m_enableTranslation = enable;
 }
 
 void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleRate)

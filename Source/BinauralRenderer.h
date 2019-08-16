@@ -25,6 +25,7 @@ public:
 	void setUseSHDConv(bool use);
 
 	void enableRotation(bool enable);
+	void enableTranslation(bool enable);
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void processBlock(AudioBuffer<float>& buffer);
@@ -39,6 +40,9 @@ public:
 	float m_yaw;
 	float m_pitch;
 	float m_roll;
+	float m_xTrans;
+	float m_yTrans;
+	float m_zTrans;
 
 private:
 	void convertHRIRToSHDHRIR();
@@ -70,8 +74,9 @@ private:
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_shdConvEngines;
 
-	bool m_enableRotation;
 	bool m_useSHDConv;
+	bool m_enableRotation;
+	bool m_enableTranslation;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BinauralRenderer)
 };
