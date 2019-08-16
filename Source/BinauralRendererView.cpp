@@ -192,6 +192,11 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 	}
 }
 
+void BinauralRendererView::changeComboBox(int order)
+{
+	m_orderSelect.setSelectedItemIndex(order - 1);
+}
+
 void BinauralRendererView::sendMsgToLogWindow(const String& message)
 {
 	m_currentLogMessage += message + "\n";

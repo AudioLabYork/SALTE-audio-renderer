@@ -5,6 +5,7 @@
 #include <random>
 
 #include "StimulusPlayer.h"
+#include "BinauralRendererView.h"
 
 using std::vector;
 
@@ -48,7 +49,7 @@ public:
 	TC_TS26259();
 	~TC_TS26259();
 
-	void init(StimulusPlayer* player);
+	void init(StimulusPlayer* player, BinauralRendererView* rendererView);
 
 	void paint(Graphics&) override;
 	void resized() override;
@@ -59,6 +60,7 @@ public:
 private:
 
 	StimulusPlayer* m_player;
+	BinauralRendererView* m_rendererView;
 
 	// OSCSender sender;
 	TextButton playButton, stopButton, loopButton;

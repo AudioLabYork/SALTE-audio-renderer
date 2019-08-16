@@ -40,6 +40,8 @@ public:
 	
 	void buttonClicked(Button* buttonClicked) override;
 	void comboBoxChanged(ComboBox* comboBoxChanged);
+
+	void changeComboBox(int order);
 	
 	void sendMsgToLogWindow(const String& message);
 	
