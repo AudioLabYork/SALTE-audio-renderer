@@ -41,7 +41,9 @@ private:
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestTrial)
 };
 
-class TC_TS26259 : public Component,
+class TC_TS26259 :	public Component,
+					public OSCReceiver,
+					public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
 					private Button::Listener,
 					private Slider::Listener
 {
@@ -56,17 +58,20 @@ public:
 	void buttonClicked(Button* buttonThatWasClicked) override;
 	void sliderValueChanged(Slider* sliderThatWasChanged) override;
 
+	void oscMessageReceived(const OSCMessage& message) override;
 
 private:
-
-	StimulusPlayer* m_player;
-	BinauralRendererView* m_rendererView;
-
-	// OSCSender sender;
 	TextButton playButton, stopButton, loopButton;
 	TextButton selectAButton, selectBButton;
 	TextButton prevTrialButton, nextTrialButton;
 	OwnedArray<Slider> ratingSliderArray;
+	bool timeSyncPlayback = true;
+
+	StimulusPlayer* m_player;
+	BinauralRendererView* m_rendererView;
+
+	OSCSender sender;
+
 	OwnedArray<TestTrial> testTrialArray;
 	int currentTrialIndex;
 	

@@ -3,8 +3,6 @@
 TC_TS26259::TC_TS26259()
 	: m_player(nullptr)
 {
-	// sender.connect("127.0.0.1", 9000);
-
 	playButton.setButtonText("Play");
 	playButton.addListener(this);
 	addAndMakeVisible(playButton);
@@ -64,13 +62,18 @@ TC_TS26259::TC_TS26259()
 
 TC_TS26259::~TC_TS26259()
 {
-	// sender.disconnect();
+	sender.disconnect();
 }
 
 void TC_TS26259::init(StimulusPlayer* player, BinauralRendererView* rendererView)
 {
 	m_player = player;
 	m_rendererView = rendererView;
+
+	// connect OSC
+	sender.connect("127.0.0.1", 6000);
+	connect(9000);
+	addListener(this);
 
 	// LOAD THE FIRST TRIAL
 	loadTrial(0);
@@ -178,11 +181,13 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 		{
 			testTrialArray[currentTrialIndex]->setLooping(true);
 			loopButton.setColour(TextButton::buttonColourId, Colours::blue);
+			sender.send("/ts26259/button", (String) "loop", (int)1);
 		}
 		else
 		{
 			testTrialArray[currentTrialIndex]->setLooping(false);
 			loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+			sender.send("/ts26259/button", (String) "loop", (int)0);
 		}
 
 		m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
@@ -190,26 +195,46 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &selectAButton)
 	{
-		// m_player->stop();
-		// testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
-		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
-		// m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
-		m_player->play();
+		if (timeSyncPlayback)
+		{
+			m_player->stop();
+			testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+			m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
+			m_player->play();
+		}
+		else
+		{
+			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+			m_player->play();
+		}
 
 		selectAButton.setColour(TextButton::buttonColourId, Colours::green);
 		selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		sender.send("/ts26259/button", (String) "A", (int)1);
+		sender.send("/ts26259/button", (String) "B", (int)0);
 	}
 
 	else if (buttonThatWasClicked == &selectBButton)
 	{
-		// m_player->stop();
-		// testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
-		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
-		// m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
-		m_player->play();
+		if (timeSyncPlayback)
+		{
+			m_player->stop();
+			testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
+			m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
+			m_player->play();
+		}
+		else
+		{
+			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
+			m_player->play();
+		}
 
 		selectAButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 		selectBButton.setColour(TextButton::buttonColourId, Colours::green);
+		sender.send("/ts26259/button", (String) "A", (int)0);
+		sender.send("/ts26259/button", (String) "B", (int)1);
 	}
 	
 	else if (buttonThatWasClicked == &prevTrialButton)
@@ -256,15 +281,68 @@ void TC_TS26259::loadTrial(int trialIndex)
 	m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
 	selectAButton.setColour(TextButton::buttonColourId, Colours::green);
 	selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	sender.send("/ts26259/button", (String) "A", (int)1);
+	sender.send("/ts26259/button", (String) "B", (int)0);
 	
 	if (testTrialArray[currentTrialIndex]->getLoopingState())
 	{
 		m_player->loop(true);
 		loopButton.setColour(TextButton::buttonColourId, Colours::blue);
+		sender.send("/ts26259/button", (String) "loop", (int) 1);
 	}
 	else
 	{
 		m_player->loop(false);
 		loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		sender.send("/ts26259/button", (String) "loop", (int) 0);
+	}
+
+	// update sliders
+	for (int i = 0; i < ratingSliderArray.size(); ++i)
+	{
+		ratingSliderArray[i]->setValue((float) i * 0.5);
+		sender.send("/ts26259/slider", (int) i, (float) 0.5f * i);
+	}
+}
+
+void TC_TS26259::oscMessageReceived(const OSCMessage& message)
+{
+	// CONTROL TS26.258 BUTTONS
+	if (message.size() == 1 && message.getAddressPattern() == "/ts26259/button" && message[0].isString())
+	{
+		if (message[0].getString() == "play")
+		{
+			playButton.triggerClick();
+		}
+		else if (message[0].getString() == "stop")
+		{
+			stopButton.triggerClick();
+		}
+		else if (message[0].getString() == "loop")
+		{
+			loopButton.triggerClick();
+		}
+		else if (message[0].getString() == "A")
+		{
+			selectAButton.triggerClick();
+		}
+		else if (message[0].getString() == "B")
+		{
+			selectBButton.triggerClick();
+		}
+		else if (message[0].getString() == "prev_trial")
+		{
+			prevTrialButton.triggerClick();
+		}
+		else if (message[0].getString() == "next_trial")
+		{
+			nextTrialButton.triggerClick();
+		}
+	}
+
+	// CONTROL TS26.258 SLIDERS
+	if (message.size() == 2 && message.getAddressPattern() == "/ts26259/slider" && message[0].isFloat32() && message[1].isFloat32())
+	{
+		ratingSliderArray[(int)message[0].getFloat32()]->setValue(message[1].getFloat32());
 	}
 }

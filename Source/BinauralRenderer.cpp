@@ -21,6 +21,9 @@ BinauralRenderer::BinauralRenderer()
 
 void BinauralRenderer::init()
 {
+	// connect OSC receiver
+	connect(9001);
+	addListener(this);
 }
 
 void BinauralRenderer::reset()
@@ -38,6 +41,80 @@ void BinauralRenderer::reset()
 
 void BinauralRenderer::deinit()
 {
+}
+
+void BinauralRenderer::oscMessageReceived(const OSCMessage& message)
+{
+	// HEAD TRACKING DATA - QUATERNIONS
+	if (message.size() == 4 && message.getAddressPattern() == "/rendering/quaternions")
+	{
+		// change message index order from 0,1,2,3 to match unity coordinates
+		float qW = message[0].getFloat32();
+		float qX = message[1].getFloat32();
+		float qY = message[3].getFloat32();
+		float qZ = message[2].getFloat32();
+
+		float Roll, Pitch, Yaw;
+
+		// roll (x-axis rotation)
+		double sinp = +2.0 * (qW * qY - qZ * qX);
+		if (fabs(sinp) >= 1)
+			Roll = copysign(double_Pi / 2, sinp) * (180 / double_Pi); // use 90 degrees if out of range
+		else
+			Roll = asin(sinp) * (180 / double_Pi);
+
+		// pitch (y-axis rotation)
+		double sinr_cosp = +2.0 * (qW * qX + qY * qZ);
+		double cosr_cosp = +1.0 - 2.0 * (qX * qX + qY * qY);
+		Pitch = atan2(sinr_cosp, cosr_cosp) * (180 / double_Pi);
+
+		// yaw (z-axis rotation)
+		double siny_cosp = +2.0 * (qW * qZ + qX * qY);
+		double cosy_cosp = +1.0 - 2.0 * (qY * qY + qZ * qZ);
+		Yaw = atan2(siny_cosp, cosy_cosp) * (180 / double_Pi);
+
+		// Sign change
+		Roll = Roll * -1;
+		Pitch = Pitch * -1;
+
+		setHeadTrackingData(Roll, Pitch, Yaw);
+	}
+
+	if (message.size() == 1 && message.getAddressPattern() == "/rendering/setorder" && message[0].isInt32())
+	{
+		int order = message[0].getInt32();
+		setOrder(order);
+	}
+
+	// HEAD TRACKING DATA - ROLL PITCH YAW
+	if (message.size() == 3 && message.getAddressPattern() == "/rendering/htrpy")
+	{
+		float Roll = message[0].getFloat32();
+		float Pitch = message[1].getFloat32();
+		float Yaw = message[2].getFloat32();
+
+		setHeadTrackingData(Roll, Pitch, Yaw);
+	}
+
+	//if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
+	//{
+	//	File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
+
+	//	if (sourcePath.exists())
+	//	{
+	//		String filename = message[0].getString();
+	//		sourcePath = sourcePath.getChildFile(filename);
+
+	//		if (sourcePath.existsAsFile())
+	//		{
+	//			brv.loadSofaFile(sourcePath);
+	//		}
+	//		else
+	//		{
+	//			Logger::outputDebugString("SOFA file could not be located, please check that it exists");
+	//		}
+	//	}
+	//}
 }
 
 void BinauralRenderer::setOrder(const int order)

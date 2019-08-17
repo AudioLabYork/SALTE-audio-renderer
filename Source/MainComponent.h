@@ -14,9 +14,6 @@
 
 class MainComponent   :     public AudioAppComponent,
                             private Button::Listener,
-                            public OSCReceiver,
-                            public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>,
-							// public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>, // only for ypr debugging
                             public ChangeListener
 {
 public:
@@ -33,10 +30,6 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
     void buttonClicked(Button* buttonThatWasClicked) override;
-
-    // OSC
-    oscTransceiver remoteInterfaceTxRx; // osc object to communicate with the user interface (Unity, iPad, ...)
-    void oscMessageReceived(const OSCMessage& message) override;
 
     // LOG WINDOW UPDATE
     void changeListenerCallback(ChangeBroadcaster* source) override;

@@ -4,7 +4,8 @@
 #include <convoengine.h>
 #include "AmbisonicRotation.h"
 
-class BinauralRenderer
+class BinauralRenderer :	public OSCReceiver,
+							public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
 {
 public:
 	BinauralRenderer();
@@ -12,6 +13,8 @@ public:
 	void init();
 	void reset();
 	void deinit();
+
+	void oscMessageReceived(const OSCMessage& message) override;
 
 	void setOrder(const int order);
 	void clearLoudspeakerChannels();

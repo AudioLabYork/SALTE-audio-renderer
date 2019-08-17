@@ -8,6 +8,8 @@ class StimulusPlayer    :   public Component,
                             public AudioSource,
                             public ChangeBroadcaster,
 							private ChangeListener,
+							public OSCReceiver,
+							public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
                             private Button::Listener,
 							private Slider::Listener,
                             private Timer
@@ -28,6 +30,8 @@ public:
 	void buttonClicked(Button* buttonThatWasClicked) override;
 	void sliderValueChanged(Slider* slider) override;
 	void timerCallback() override;
+
+	void oscMessageReceived(const OSCMessage& message) override;
 
 	// exposing some playback transport functionality
 	void play();
@@ -73,16 +77,14 @@ private:
 	Slider yawSlider, pitchSlider, rollSlider;
 	Label yawSliderLabel, pitchSliderLabel, rollSliderLabel;
 
-	OwnedArray<TextButton> triggerStimuliButtonArray;
-	int numberOfStimuli = 0;
+	// OwnedArray<TextButton> triggerStimuliButtonArray;
+	// int numberOfStimuli = 0;
 
     std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
     TimeSliceThread readAheadThread;
     
 	AudioThumbnailCache thumbnailCache;
 	AudioThumbnail thumbnail;
-
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StimulusPlayer)
 };

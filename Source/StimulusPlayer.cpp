@@ -147,20 +147,20 @@ void StimulusPlayer::resized()
 	yawSlider.setBounds(320, 125, 300, 25);
 
         
-    if (numberOfStimuli > 0)
-    {
-        int buttonWidth = 57;
-        int buttonHeight = 22;
-        int buttonListPositionX = 20 + buttonWidth / 2;
-        int buttonListPositionY = 270 + buttonHeight / 2;
-        
-        for (int i = 0; i < triggerStimuliButtonArray.size(); ++i)
-        {
-            triggerStimuliButtonArray[i]->setSize(buttonWidth, buttonHeight);
-            triggerStimuliButtonArray[i]->setCentrePosition(buttonListPositionX + i % 12 * (buttonWidth + 5),
-                                                            buttonListPositionY + floor(i / 12) * (buttonHeight + 5));
-        }
-    }
+    //if (numberOfStimuli > 0)
+    //{
+    //    int buttonWidth = 57;
+    //    int buttonHeight = 22;
+    //    int buttonListPositionX = 20 + buttonWidth / 2;
+    //    int buttonListPositionY = 270 + buttonHeight / 2;
+    //    
+    //    for (int i = 0; i < triggerStimuliButtonArray.size(); ++i)
+    //    {
+    //        triggerStimuliButtonArray[i]->setSize(buttonWidth, buttonHeight);
+    //        triggerStimuliButtonArray[i]->setCentrePosition(buttonListPositionX + i % 12 * (buttonWidth + 5),
+    //                                                        buttonListPositionY + floor(i / 12) * (buttonHeight + 5));
+    //    }
+    //}
 }
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
@@ -241,6 +241,28 @@ void StimulusPlayer::timerCallback()
     
     // update diplayed times in GUI
     playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
+}
+
+void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
+{
+	// load file from path (file path received by osc)
+	if (message.size() == 1 && message.getAddressPattern() == "/player/loadstimulus" && message[0].isString())
+	{
+		loadFile(message[0].getString());
+	}
+
+	if (message.size() == 1 && message.getAddressPattern() == "/player/transport" && message[0].isString())
+	{
+		if (message[0].getString() == "play")
+		{
+			play();
+		}
+
+		if (message[0].getString() == "stop")
+		{
+			stop();
+		}
+	}
 }
 
 //void StimulusPlayer::createFilePathList(String configFilePath)

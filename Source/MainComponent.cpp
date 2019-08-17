@@ -52,9 +52,9 @@ MainComponent::MainComponent()
 	int clientSendToPort = clientTxPortLabel.getText().getIntValue();
 	int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
 
-    remoteInterfaceTxRx.connectSender(clientIp, clientSendToPort);
-    remoteInterfaceTxRx.connectReceiver(clientReceiveAtPort);
-    remoteInterfaceTxRx.addListener(this);
+    // remoteInterfaceTxRx.connectSender(clientIp, clientSendToPort);
+    // remoteInterfaceTxRx.connectReceiver(clientReceiveAtPort);
+    // remoteInterfaceTxRx.addListener(this);
 
 	addAndMakeVisible(&openAudioDeviceManager);
 	openAudioDeviceManager.setButtonText("Audio device setup");
@@ -225,108 +225,6 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
     repaint();
 }
 
-// OSC
-void MainComponent::oscMessageReceived(const OSCMessage& message)
-{
-    // DIRECT OSC CONTROL OF STIMULUS PLAYER
-
-	//// load file from the list (index received by osc) (this is not used right now, probably will be removed)
- //   if (message.size() == 1 && message.getAddressPattern() == "/stimulus" && message[0].isInt32())
- //   {
- //       sp.loadFileIntoTransport(File(sp.filePathList[message[0].getInt32()]));
- //   }
-
-	// load file from path (file path received by osc)
-	if (message.size() == 1 && message.getAddressPattern() == "/player/loadstimulus" && message[0].isString())
-	{
-		sp.loadFile(message[0].getString());
-	}
-    
-    if (message.size() == 1 && message.getAddressPattern() == "/player/transport" && message[0].isString())
-    {
-        if (message[0].getString() == "play")
-        {
-			sp.play();
-        }
-        
-        if (message[0].getString() == "stop")
-        {
-            sp.stop();
-        }
-    }
-
-	// HEAD TRACKING DATA - QUATERNIONS
-	if (message.size() == 4 && message.getAddressPattern() == "/rendering/quaternions")
-	{
-		// change message index order from 0,1,2,3 to match unity coordinates
-		float qW = message[0].getFloat32();
-		float qX = message[1].getFloat32();
-		float qY = message[3].getFloat32();
-		float qZ = message[2].getFloat32();
-
-		float Roll, Pitch, Yaw;
-
-		// roll (x-axis rotation)
-		double sinp = +2.0 * (qW * qY - qZ * qX);
-		if (fabs(sinp) >= 1)
-			Roll = copysign(double_Pi / 2, sinp) * (180 / double_Pi); // use 90 degrees if out of range
-		else
-			Roll = asin(sinp) * (180 / double_Pi);
-
-		// pitch (y-axis rotation)
-		double sinr_cosp = + 2.0 * (qW * qX + qY * qZ);
-		double cosr_cosp = + 1.0 - 2.0 * (qX * qX + qY * qY);
-		Pitch = atan2(sinr_cosp, cosr_cosp) * (180 / double_Pi);
-
-		// yaw (z-axis rotation)
-		double siny_cosp = + 2.0 * (qW * qZ + qX * qY);
-		double cosy_cosp = + 1.0 - 2.0 * (qY * qY + qZ * qZ);
-		Yaw = atan2(siny_cosp, cosy_cosp) * (180 / double_Pi);
-
-		// Sign change
-		Roll = Roll * -1;
-		Pitch = Pitch * -1;
-		
-		br.setHeadTrackingData(Roll, Pitch, Yaw);
-	}
-
-	if (message.size() == 1 && message.getAddressPattern() == "/rendering/setorder" && message[0].isInt32())
-	{
-		int order = message[0].getInt32();
-		br.setOrder(order);
-	}
-
-	// HEAD TRACKING DATA - ROLL PITCH YAW
-	if (message.size() == 3 && message.getAddressPattern() == "/rendering/htrpy")
-	{
-		float Roll = message[0].getFloat32();
-		float Pitch = message[1].getFloat32();
-		float Yaw = message[2].getFloat32();
-
-		br.setHeadTrackingData(Roll, Pitch, Yaw);
-	}
-
-	if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
-	{
-		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
-
-		if (sourcePath.exists())
-		{
-			String filename = message[0].getString();
-			sourcePath = sourcePath.getChildFile(filename);
-
-			if (sourcePath.existsAsFile())
-			{
-				brv.loadSofaFile(sourcePath);
-			}
-			else
-			{
-				Logger::outputDebugString("SOFA file could not be located, please check that it exists");
-			}
-		}
-	}
-}
-
 void MainComponent::loadSettings()
 {
 	XmlDocument asxmldoc(settingsFile);
@@ -374,9 +272,6 @@ void MainComponent::configureMushra()
     
     int numberOfSamplesPerRegion = 8;
     mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
-    
-
-//    mc.connectOsc(dawIp, clientIp, dawTxPort, dawRxPort, clientTxPort, clientRxPort);
     mc.createGui();
     addAndMakeVisible(mc);
     repaint();
