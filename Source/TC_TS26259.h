@@ -76,6 +76,8 @@ private:
 
 	OwnedArray<TestTrial> testTrialArray;
 	int currentTrialIndex;
+
+	vector<vector<float>> scoresMatrix; // maybe moving this to testTrialArray would be neater
 	
 	void loadTrial(int trialIndex);
 

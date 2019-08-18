@@ -32,7 +32,7 @@ TC_TS26259::TC_TS26259()
 	addAndMakeVisible(nextTrialButton);
 
 	// SLIDERS
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < 4; ++i) // 4 because 4 sliders
 	{
 		ratingSliderArray.add(new Slider());
 		ratingSliderArray[i]->getProperties().set("ratingSlider", true);
@@ -57,6 +57,14 @@ TC_TS26259::TC_TS26259()
 	testTrialArray.add(new TestTrial);
 	testTrialArray[1]->setFilepath(0, ambisonicScenesFolder + "5OA_RENDER_04.wav");
 	testTrialArray[1]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_04_576kbps.wav");
+
+	// scores matrix initialization
+	scoresMatrix.resize(testTrialArray.size());
+	for (int i = 0; i < testTrialArray.size(); ++i) scoresMatrix[i].resize(ratingSliderArray.size());
+
+	// Put some values in like this:
+	//scoresMatrix[1][2] = 6.0;
+	//scoresMatrix[3][1] = 5.5;
 
 }
 
@@ -267,6 +275,7 @@ void TC_TS26259::sliderValueChanged(Slider* sliderThatWasChanged)
 	if (rateSampleSliderChanged)
 	{
 		int sliderIndex = sliderThatWasChanged->getProperties()["sliderIndex"];
+		scoresMatrix[currentTrialIndex][sliderIndex] = sliderThatWasChanged->getValue();
 	}
 }
 
@@ -307,8 +316,8 @@ void TC_TS26259::loadTrial(int trialIndex)
 	// update sliders
 	for (int i = 0; i < ratingSliderArray.size(); ++i)
 	{
-		ratingSliderArray[i]->setValue((float) i * 0.5);
-		sender.send("/ts26259/slider", (int) i, (float) 0.5f * i);
+		ratingSliderArray[i]->setValue((float) scoresMatrix[currentTrialIndex][i]);
+		sender.send("/ts26259/slider", (int) i, (float) scoresMatrix[currentTrialIndex][i]);
 	}
 }
 
