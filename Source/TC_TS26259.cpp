@@ -70,6 +70,8 @@ void TC_TS26259::init(StimulusPlayer* player, BinauralRendererView* rendererView
 	m_player = player;
 	m_rendererView = rendererView;
 
+	m_player->addChangeListener(this);
+
 	// connect OSC
 	sender.connect("127.0.0.1", 6000);
 	connect(9000);
@@ -283,6 +285,11 @@ void TC_TS26259::loadTrial(int trialIndex)
 	selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	sender.send("/ts26259/button", (String) "A", (int)1);
 	sender.send("/ts26259/button", (String) "B", (int)0);
+
+	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	stopButton.setColour(TextButton::buttonColourId, Colours::blue);
+	sender.send("/ts26259/button", (String) "play", (int)1);
+	sender.send("/ts26259/button", (String) "stop", (int)0);
 	
 	if (testTrialArray[currentTrialIndex]->getLoopingState())
 	{
@@ -345,4 +352,27 @@ void TC_TS26259::oscMessageReceived(const OSCMessage& message)
 	{
 		ratingSliderArray[(int)message[0].getFloat32()]->setValue(message[1].getFloat32());
 	}
+}
+
+void TC_TS26259::changeListenerCallback(ChangeBroadcaster* source)
+{
+	if (source == m_player)
+	{
+		if (m_player->checkPlaybackStatus())
+		{
+			playButton.setColour(TextButton::buttonColourId, Colours::blue);
+			stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+			sender.send("/ts26259/button", (String) "play", (int)1);
+			sender.send("/ts26259/button", (String) "stop", (int)0);
+		}
+		else
+		{
+			playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+			stopButton.setColour(TextButton::buttonColourId, Colours::blue);
+			sender.send("/ts26259/button", (String) "play", (int)0);
+			sender.send("/ts26259/button", (String) "stop", (int)1);
+		}
+
+	}
+	
 }

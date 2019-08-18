@@ -45,7 +45,8 @@ class TC_TS26259 :	public Component,
 					public OSCReceiver,
 					public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
 					private Button::Listener,
-					private Slider::Listener
+					private Slider::Listener,
+					private ChangeListener
 {
 public:
 	TC_TS26259();
@@ -59,6 +60,7 @@ public:
 	void sliderValueChanged(Slider* sliderThatWasChanged) override;
 
 	void oscMessageReceived(const OSCMessage& message) override;
+	void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
 	TextButton playButton, stopButton, loopButton;

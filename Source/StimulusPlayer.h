@@ -38,6 +38,7 @@ public:
 	void pause();
 	void stop();
 	void loop(bool looping);
+	bool checkPlaybackStatus();
 	void loadFile(String filepath);
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
@@ -54,6 +55,7 @@ private:
 	AmbisonicRotation ar;
 
 	bool loopingEnabled = false;
+	bool isPlaying = false;
 
 	StringArray filePathList; // wave file paths
 	StringArray fileIdList; // file-ids

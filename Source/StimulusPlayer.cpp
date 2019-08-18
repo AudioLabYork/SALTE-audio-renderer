@@ -18,7 +18,6 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
     
     addAndMakeVisible(&playButton);
     playButton.setButtonText("Play");
-    playButton.setColour(TextButton::buttonColourId, Colours::green);
     playButton.addListener(this);
     
     addAndMakeVisible(&stopButton);
@@ -82,6 +81,8 @@ StimulusPlayer::~StimulusPlayer()
 void StimulusPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
+
+	transportSource.setGain(16); // quick gain boost for rift s built in speakers
 }
 void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
@@ -171,6 +172,21 @@ void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 		{
 			transportSource.setPosition(0);
 			transportSource.start();
+		}
+
+		if (transportSource.isPlaying() && isPlaying == false)
+		{
+			isPlaying = true;
+			sendChangeMessage();
+			playButton.setColour(TextButton::buttonColourId, Colours::red);
+			stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		}
+		else if (!transportSource.isPlaying() && isPlaying == true)
+		{
+			isPlaying = false;
+			sendChangeMessage();
+			playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+			stopButton.setColour(TextButton::buttonColourId, Colours::red);
 		}
 	}
 
@@ -401,6 +417,11 @@ void StimulusPlayer::stop()
 void StimulusPlayer::loop(bool looping)
 {
 	loopingEnabled = looping;
+}
+
+bool StimulusPlayer::checkPlaybackStatus()
+{
+	return isPlaying;
 }
 
 double StimulusPlayer::getPlaybackHeadPosition()
