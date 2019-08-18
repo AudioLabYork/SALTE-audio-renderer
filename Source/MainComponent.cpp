@@ -121,8 +121,9 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 
 	// pass the buffer into the stimulus player to be filled with required audio
 	sp.getNextAudioBlock(newinfo);
+
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
-	br.getNextAudioBlock(newinfo);
+	if (sp.getNumberOfChannels() > 3) br.getNextAudioBlock(newinfo);
 
 	AudioBuffer<float>* sourceBuffer = bufferToFill.buffer;
 

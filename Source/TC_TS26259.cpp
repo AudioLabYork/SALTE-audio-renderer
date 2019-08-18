@@ -52,15 +52,36 @@ TC_TS26259::TC_TS26259()
 
 	testTrialArray.add(new TestTrial);
 	testTrialArray[0]->setFilepath(0, ambisonicScenesFolder + "5OA_RENDER_03.wav");
+	testTrialArray[0]->setGain(0, 10);
 	testTrialArray[0]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
+	testTrialArray[0]->setGain(1, 10);
+	testTrialArray[0]->setScreenMessage("Low Bitrate Spatial Audio Coding");
 
 	testTrialArray.add(new TestTrial);
 	testTrialArray[1]->setFilepath(0, ambisonicScenesFolder + "5OA_RENDER_04.wav");
+	testTrialArray[1]->setGain(0, 10);
 	testTrialArray[1]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_04_576kbps.wav");
+	testTrialArray[1]->setGain(1, 10);
+	testTrialArray[1]->setScreenMessage("Low Bitrate Spatial Audio Coding");
+
+	testTrialArray.add(new TestTrial);
+	testTrialArray[2]->setFilepath(0, ambisonicScenesFolder + "under_the_bridge_mix3_STEREO.wav");
+	testTrialArray[2]->setGain(0, 0);
+	testTrialArray[2]->setFilepath(1, ambisonicScenesFolder + "under_the_bridge_mix3_5OA.wav");
+	testTrialArray[2]->setGain(1, 0);
+	testTrialArray[2]->setScreenMessage("Stereo vs Ambisonics");
 
 	// scores matrix initialization
 	scoresMatrix.resize(testTrialArray.size());
 	for (int i = 0; i < testTrialArray.size(); ++i) scoresMatrix[i].resize(ratingSliderArray.size());
+
+	for (int i = 0; i < testTrialArray.size(); ++i)
+	{
+		for (int j = 0; j < ratingSliderArray.size(); ++j)
+		{
+			scoresMatrix[i][j] = 0.0f;
+		}
+	}
 
 	// Put some values in like this:
 	//scoresMatrix[1][2] = 6.0;
@@ -210,12 +231,14 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 			m_player->stop();
 			testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+			m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
 			m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
 			m_player->play();
 		}
 		else
 		{
 			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+			m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
 			m_player->play();
 		}
 
@@ -232,12 +255,14 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 			m_player->stop();
 			testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
+			m_player->setGain(testTrialArray[currentTrialIndex]->getGain(1));
 			m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
 			m_player->play();
 		}
 		else
 		{
 			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
+			m_player->setGain(testTrialArray[currentTrialIndex]->getGain(1));
 			m_player->play();
 		}
 
@@ -290,6 +315,7 @@ void TC_TS26259::loadTrial(int trialIndex)
 
 	currentTrialIndex = trialIndex;
 	m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+	m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
 	selectAButton.setColour(TextButton::buttonColourId, Colours::green);
 	selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	sender.send("/ts26259/button", (String) "A", (int)1);
@@ -297,8 +323,8 @@ void TC_TS26259::loadTrial(int trialIndex)
 
 	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	stopButton.setColour(TextButton::buttonColourId, Colours::blue);
-	sender.send("/ts26259/button", (String) "play", (int)1);
-	sender.send("/ts26259/button", (String) "stop", (int)0);
+	sender.send("/ts26259/button", (String) "play", (int)0);
+	sender.send("/ts26259/button", (String) "stop", (int)1);
 	
 	if (testTrialArray[currentTrialIndex]->getLoopingState())
 	{
@@ -319,6 +345,10 @@ void TC_TS26259::loadTrial(int trialIndex)
 		ratingSliderArray[i]->setValue((float) scoresMatrix[currentTrialIndex][i]);
 		sender.send("/ts26259/slider", (int) i, (float) scoresMatrix[currentTrialIndex][i]);
 	}
+
+	// send string to display on the screen
+	String screenMessage1 = "Trial " + String(currentTrialIndex + 1) + " of: " + String(testTrialArray.size());
+	sender.send("/ts26259/screen", (String) screenMessage1, (String) testTrialArray[currentTrialIndex]->getScreenMessage());
 }
 
 void TC_TS26259::oscMessageReceived(const OSCMessage& message)
@@ -359,6 +389,7 @@ void TC_TS26259::oscMessageReceived(const OSCMessage& message)
 	// CONTROL TS26.258 SLIDERS
 	if (message.size() == 2 && message.getAddressPattern() == "/ts26259/slider" && message[0].isFloat32() && message[1].isFloat32())
 	{
+		//scoresMatrix[currentTrialIndex][(int)message[0].getFloat32()] = message[1].getFloat32();
 		ratingSliderArray[(int)message[0].getFloat32()]->setValue(message[1].getFloat32());
 	}
 }

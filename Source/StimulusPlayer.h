@@ -37,6 +37,8 @@ public:
 	void play();
 	void pause();
 	void stop();
+	int getNumberOfChannels();
+	void setGain(float gainInDB);
 	void loop(bool looping);
 	bool checkPlaybackStatus();
 	void loadFile(String filepath);
@@ -56,6 +58,7 @@ private:
 
 	bool loopingEnabled = false;
 	bool isPlaying = false;
+	int loadedFileChannelCount = 0;
 
 	StringArray filePathList; // wave file paths
 	StringArray fileIdList; // file-ids
@@ -78,6 +81,7 @@ private:
 
 	Slider yawSlider, pitchSlider, rollSlider;
 	Label yawSliderLabel, pitchSliderLabel, rollSliderLabel;
+	Slider transportSlider;
 
 	// OwnedArray<TextButton> triggerStimuliButtonArray;
 	// int numberOfStimuli = 0;

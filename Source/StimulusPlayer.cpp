@@ -69,6 +69,15 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 	yawSliderLabel.setText("Yaw", dontSendNotification);
 	yawSliderLabel.attachToComponent(&yawSlider, true);
 	addAndMakeVisible(yawSliderLabel);
+
+	transportSlider.setSliderStyle(Slider::LinearHorizontal);
+	transportSlider.setRange(0, 1);
+	transportSlider.setValue(0);
+	//transportSlider.setDoubleClickReturnValue(true, 0);
+	transportSlider.setTextBoxStyle(Slider::NoTextBox, false, 100, 25);
+	transportSlider.addListener(this);
+	addAndMakeVisible(transportSlider);
+
     
     startTimer(30);
 }
@@ -81,8 +90,6 @@ StimulusPlayer::~StimulusPlayer()
 void StimulusPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
-
-	transportSource.setGain(16); // quick gain boost for rift s built in speakers
 }
 void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
@@ -146,6 +153,8 @@ void StimulusPlayer::resized()
 	rollSlider.setBounds(320, 75, 300, 25);
 	pitchSlider.setBounds(320, 100, 300, 25);
 	yawSlider.setBounds(320, 125, 300, 25);
+
+	transportSlider.setBounds(10, 260, 710, 115);
 
         
     //if (numberOfStimuli > 0)
@@ -243,11 +252,20 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
 
 void StimulusPlayer::sliderValueChanged(Slider* slider)
 {
-	float roll = rollSlider.getValue();
-	float pitch = pitchSlider.getValue();
-	float yaw = yawSlider.getValue();
+	if (slider == &rollSlider || slider == &pitchSlider || slider == &yawSlider)
+	{
+		float roll = rollSlider.getValue();
+		float pitch = pitchSlider.getValue();
+		float yaw = yawSlider.getValue();
+		ar.updateEulerRPY(roll, pitch, yaw);
+	}
+	else if (slider == &transportSlider)
+	{
+		double value = transportSlider.getValue();
+		double newTime = transportSource.getLengthInSeconds() * value;
+		transportSource.setPosition(newTime);
+	}
 
-	ar.updateEulerRPY(roll, pitch, yaw);
 }
 
 void StimulusPlayer::timerCallback()
@@ -257,6 +275,7 @@ void StimulusPlayer::timerCallback()
     
     // update diplayed times in GUI
     playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
+	if(transportSource.isPlaying()) transportSlider.setValue(currentPosition / lengthInSeconds, juce::dontSendNotification);
 }
 
 void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
@@ -354,13 +373,13 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 		// ..and plug it into our transport source
 		transportSource.setSource(
 			currentAudioFileSource.get(),
-			// 2 * 48000,                  // tells it to buffer this many samples ahead
 			32768,                  // tells it to buffer this many samples ahead
 			&readAheadThread,       // this is the background thread to use for reading-ahead
 			reader->sampleRate,     // allows for sample rate correction
 			reader->numChannels);    // the maximum number of channels that may need to be played
 		
 		currentlyLoadedFile = audioFile;
+		loadedFileChannelCount = reader->numChannels;
 
 		// create thumbnail
 		thumbnail.setSource(new FileInputSource(currentlyLoadedFile));
@@ -412,6 +431,17 @@ void StimulusPlayer::pause()
 void StimulusPlayer::stop()
 {
 	transportSource.stop();
+}
+
+int StimulusPlayer::getNumberOfChannels()
+{
+	return loadedFileChannelCount;
+}
+
+void StimulusPlayer::setGain(float gainInDB)
+{
+	float gain = Decibels::decibelsToGain(gainInDB);
+	transportSource.setGain(gain);
 }
 
 void StimulusPlayer::loop(bool looping)
