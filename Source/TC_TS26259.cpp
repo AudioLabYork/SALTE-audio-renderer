@@ -65,9 +65,9 @@ TC_TS26259::TC_TS26259()
 	testTrialArray[1]->setScreenMessage("Low Bitrate Spatial Audio Coding");
 
 	testTrialArray.add(new TestTrial);
-	testTrialArray[2]->setFilepath(0, ambisonicScenesFolder + "under_the_bridge_mix3_STEREO.wav");
+	testTrialArray[2]->setFilepath(0, ambisonicScenesFolder + "under_the_bridge_mix5_STEREO.wav");
 	testTrialArray[2]->setGain(0, 0);
-	testTrialArray[2]->setFilepath(1, ambisonicScenesFolder + "under_the_bridge_mix3_5OA.wav");
+	testTrialArray[2]->setFilepath(1, ambisonicScenesFolder + "under_the_bridge_mix5_5OA.wav");
 	testTrialArray[2]->setGain(1, 0);
 	testTrialArray[2]->setScreenMessage("Stereo vs Ambisonics");
 
