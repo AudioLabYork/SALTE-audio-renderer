@@ -73,12 +73,10 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 	transportSlider.setSliderStyle(Slider::LinearHorizontal);
 	transportSlider.setRange(0, 1);
 	transportSlider.setValue(0);
-	//transportSlider.setDoubleClickReturnValue(true, 0);
 	transportSlider.setTextBoxStyle(Slider::NoTextBox, false, 100, 25);
 	transportSlider.addListener(this);
 	addAndMakeVisible(transportSlider);
 
-    
     startTimer(30);
 }
 
@@ -155,22 +153,6 @@ void StimulusPlayer::resized()
 	yawSlider.setBounds(320, 125, 300, 25);
 
 	transportSlider.setBounds(10, 260, 710, 115);
-
-        
-    //if (numberOfStimuli > 0)
-    //{
-    //    int buttonWidth = 57;
-    //    int buttonHeight = 22;
-    //    int buttonListPositionX = 20 + buttonWidth / 2;
-    //    int buttonListPositionY = 270 + buttonHeight / 2;
-    //    
-    //    for (int i = 0; i < triggerStimuliButtonArray.size(); ++i)
-    //    {
-    //        triggerStimuliButtonArray[i]->setSize(buttonWidth, buttonHeight);
-    //        triggerStimuliButtonArray[i]->setCentrePosition(buttonListPositionX + i % 12 * (buttonWidth + 5),
-    //                                                        buttonListPositionY + floor(i / 12) * (buttonHeight + 5));
-    //    }
-    //}
 }
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
@@ -300,39 +282,6 @@ void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
 	}
 }
 
-//void StimulusPlayer::createFilePathList(String configFilePath)
-//{
-//	File fileToLoad = File(configFilePath);
-//	StringArray loadedData;
-//	loadedData.clear();
-//	loadedData.addLines(fileToLoad.loadFileAsString());
-//	if (loadedData[0].startsWith("#ASP#Config#File#"))
-//	{
-//		filePathList.clear();
-//		int header = 10; // number of header lines
-//		for (int i = header; i < loadedData.size(); ++i)
-//		{
-//			StringArray tokens;
-//			tokens.addTokens(loadedData[i], ",", "\"");
-//			if (tokens[3].length() != 0)
-//			{
-//				filePathList.set(i, tokens[2] + "/" + tokens[3]); // concatenate file path + file name and add the full path to the file path list
-//				fileIdList.set(i, tokens[0] + tokens[1]); // add the file-id to the file-id list
-//
-//				// output log
-//				sendMsgToLogWindow(tokens[0] + tokens[1] + ": " + tokens[3] + " added.");
-//			}
-//		}
-//
-//		// load the first file from the list
-//		loadFileIntoTransport(File(filePathList[0]));
-//	}
-//	else
-//	{
-//		AlertWindow::showMessageBoxAsync(AlertWindow::InfoIcon, "Invalid config file.", fileToLoad.getFullPathName());
-//	}
-//}
-
 void StimulusPlayer::browseForFile()
 {
 	FileChooser chooser("Select a Wave file to play...",
@@ -395,8 +344,6 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 			String(reader->lengthInSamples) + "," +
 			String(reader->lengthInSamples / reader->sampleRate));
 	}
-
-	// repaint();
 }
 
 void StimulusPlayer::sendMsgToLogWindow(String message)
@@ -463,40 +410,3 @@ void StimulusPlayer::setPlaybackHeadPosition(double time)
 {
 	transportSource.setPosition(time);
 }
-
-//void StimulusPlayer::createStimuliTriggerButtons()
-//{
-//        for (int i = 0; i < numberOfStimuli; ++i)
-//    {
-//        triggerStimuliButtonArray.add(new TextButton());
-//        triggerStimuliButtonArray[i]->getProperties().set("triggerStimuliButton", true);
-//        triggerStimuliButtonArray[i]->getProperties().set("buttonIndex", i);
-//        triggerStimuliButtonArray[i]->setButtonText(fileIdList[i]);
-//        triggerStimuliButtonArray[i]->addListener(this);
-//        addAndMakeVisible(triggerStimuliButtonArray[i]);
-//    }
-//    resized();
-//}
-
-// load config file
-//void StimulusPlayer::browseForConfigFile()
-//{
-//    
-//#if JUCE_MODAL_LOOPS_PERMITTED
-//    const bool useNativeVersion = true;
-//    FileChooser fc("Choose a file to open...",
-//                   File::getCurrentWorkingDirectory(),
-//                   "*.csv",
-//                   useNativeVersion);
-//    
-//    if (fc.browseForFileToOpen())
-//    {
-//        File chosenFile = fc.getResult();
-//        
-//        // configure sample player
-//        createFilePathList(chosenFile.getFullPathName());
-//        numberOfStimuli = filePathList.size();
-//        createStimuliTriggerButtons(); // only for test
-//    }
-//#endif
-//}

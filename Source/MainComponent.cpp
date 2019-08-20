@@ -46,15 +46,11 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
-    
+ 
     // OSC sender and receiver connect
 	String clientIp = clientTxIpLabel.getText();
 	int clientSendToPort = clientTxPortLabel.getText().getIntValue();
 	int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
-
-    // remoteInterfaceTxRx.connectSender(clientIp, clientSendToPort);
-    // remoteInterfaceTxRx.connectReceiver(clientReceiveAtPort);
-    // remoteInterfaceTxRx.addListener(this);
 
 	addAndMakeVisible(&openAudioDeviceManager);
 	openAudioDeviceManager.setButtonText("Audio device setup");
@@ -163,7 +159,6 @@ void MainComponent::paint (Graphics& g)
 	g.drawText("Receive at", 490, 10, 75, 25, Justification::centredLeft, true);
 	g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
 
-    
 }
 
 void MainComponent::resized()
@@ -207,7 +202,8 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &loadMushraBtn)
 	{
-		configureMushra();
+		mc.createGui();
+		addAndMakeVisible(mc);
 	}
 
 	else if (buttonThatWasClicked == &loadLocTestBtn)
@@ -258,22 +254,4 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
     
     logWindow.setText(logWindowMessage);
     logWindow.moveCaretToEnd();
-}
-
-void MainComponent::configureMushra()
-{
-    int numberOfRegions = 4;
-    for(int i = 0; i < numberOfRegions; ++i)
-    {
-        mc.regionArray.add(new SampleRegion());
-        mc.regionArray[i]->dawStartTime = 0.0f; //markerTimeArray[i * 2];         // 0 2 4 6
-        mc.regionArray[i]->dawStopTime = 5.0f;  //markerTimeArray[(i * 2) + 1];    // 1 3 5 7
-        mc.regionArray[i]->calculateStartEndTimes();
-    }
-    
-    int numberOfSamplesPerRegion = 8;
-    mc.numberOfSamplesPerRegion = numberOfSamplesPerRegion;
-    mc.createGui();
-    addAndMakeVisible(mc);
-    repaint();
 }

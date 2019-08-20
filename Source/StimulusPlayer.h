@@ -69,10 +69,6 @@ private:
 	void sendMsgToLogWindow(String message);
 	String returnHHMMSS(double lengthInSeconds);
 
-	// void browseForConfigFile();
-	// void createFilePathList(String configFilePath);
-	// void createStimuliTriggerButtons();
-
 	void paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
 	void paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
 
@@ -82,9 +78,6 @@ private:
 	Slider yawSlider, pitchSlider, rollSlider;
 	Label yawSliderLabel, pitchSliderLabel, rollSliderLabel;
 	Slider transportSlider;
-
-	// OwnedArray<TextButton> triggerStimuliButtonArray;
-	// int numberOfStimuli = 0;
 
     std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
     TimeSliceThread readAheadThread;

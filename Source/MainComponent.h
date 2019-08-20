@@ -59,7 +59,6 @@ private:
 
 	// MUSHRA COMPONENT
 	MushraComponent mc;
-	void configureMushra();
 
 	// save and load settings
 	File settingsFile;

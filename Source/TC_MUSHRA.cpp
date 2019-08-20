@@ -68,6 +68,19 @@ void MushraComponent::paint (Graphics& g)
 
 void MushraComponent::createGui()
 {
+	int numberOfRegions = 4;
+	for (int i = 0; i < numberOfRegions; ++i)
+	{
+		regionArray.add(new SampleRegion());
+		regionArray[i]->dawStartTime = 0.0f; //markerTimeArray[i * 2];         // 0 2 4 6
+		regionArray[i]->dawStopTime = 5.0f;  //markerTimeArray[(i * 2) + 1];    // 1 3 5 7
+		regionArray[i]->calculateStartEndTimes();
+	}
+
+	int numberOfSamplesPerRegion = 8;
+	numberOfSamplesPerRegion = numberOfSamplesPerRegion;
+	
+	
 	// scores array
 	scoresArray.resize(regionArray.size());
 	for (int i = 0; i < regionArray.size(); ++i) scoresArray[i].resize(numberOfSamplesPerRegion);
