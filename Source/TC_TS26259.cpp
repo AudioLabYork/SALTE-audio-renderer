@@ -1,7 +1,9 @@
 #include "TC_TS26259.h"
 
 TC_TS26259::TC_TS26259()
-	: m_player(nullptr)
+	: m_oscTxRx(nullptr)
+	, m_player(nullptr)
+	, m_rendererView(nullptr)
 {
 	playButton.setButtonText("Play");
 	playButton.addListener(this);
@@ -91,20 +93,17 @@ TC_TS26259::TC_TS26259()
 
 TC_TS26259::~TC_TS26259()
 {
-	sender.disconnect();
 }
 
-void TC_TS26259::init(StimulusPlayer* player, BinauralRendererView* rendererView)
+void TC_TS26259::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRendererView* rendererView)
 {
+	m_oscTxRx = oscTxRx;
+	m_oscTxRx->addListener(this);
+
 	m_player = player;
 	m_rendererView = rendererView;
 
 	m_player->addChangeListener(this);
-
-	// connect OSC
-	sender.connect("127.0.0.1", 6000);
-	connect(9000);
-	addListener(this);
 
 	// LOAD THE FIRST TRIAL
 	loadTrial(0);
@@ -212,13 +211,13 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 		{
 			testTrialArray[currentTrialIndex]->setLooping(true);
 			loopButton.setColour(TextButton::buttonColourId, Colours::blue);
-			sender.send("/ts26259/button", (String) "loop", (int)1);
+			//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int)1);
 		}
 		else
 		{
 			testTrialArray[currentTrialIndex]->setLooping(false);
 			loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			sender.send("/ts26259/button", (String) "loop", (int)0);
+			//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int)0);
 		}
 
 		m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
@@ -244,8 +243,8 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 
 		selectAButton.setColour(TextButton::buttonColourId, Colours::green);
 		selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-		sender.send("/ts26259/button", (String) "A", (int)1);
-		sender.send("/ts26259/button", (String) "B", (int)0);
+		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)1);
+		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
 	}
 
 	else if (buttonThatWasClicked == &selectBButton)
@@ -268,8 +267,8 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 
 		selectAButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 		selectBButton.setColour(TextButton::buttonColourId, Colours::green);
-		sender.send("/ts26259/button", (String) "A", (int)0);
-		sender.send("/ts26259/button", (String) "B", (int)1);
+		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)0);
+		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)1);
 	}
 	
 	else if (buttonThatWasClicked == &prevTrialButton)
@@ -318,37 +317,37 @@ void TC_TS26259::loadTrial(int trialIndex)
 	m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
 	selectAButton.setColour(TextButton::buttonColourId, Colours::green);
 	selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	sender.send("/ts26259/button", (String) "A", (int)1);
-	sender.send("/ts26259/button", (String) "B", (int)0);
+	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)1);
+	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
 
 	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	stopButton.setColour(TextButton::buttonColourId, Colours::blue);
-	sender.send("/ts26259/button", (String) "play", (int)0);
-	sender.send("/ts26259/button", (String) "stop", (int)1);
+	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)0);
+	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)1);
 	
 	if (testTrialArray[currentTrialIndex]->getLoopingState())
 	{
 		m_player->loop(true);
 		loopButton.setColour(TextButton::buttonColourId, Colours::blue);
-		sender.send("/ts26259/button", (String) "loop", (int) 1);
+		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int) 1);
 	}
 	else
 	{
 		m_player->loop(false);
 		loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-		sender.send("/ts26259/button", (String) "loop", (int) 0);
+		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int) 0);
 	}
 
 	// update sliders
 	for (int i = 0; i < ratingSliderArray.size(); ++i)
 	{
 		ratingSliderArray[i]->setValue((float) scoresMatrix[currentTrialIndex][i]);
-		sender.send("/ts26259/slider", (int) i, (float) scoresMatrix[currentTrialIndex][i]);
+		//m_oscTxRx->sendOscMessage("/ts26259/slider", (int) i, (float) scoresMatrix[currentTrialIndex][i]);
 	}
 
 	// send string to display on the screen
 	String screenMessage1 = "Trial " + String(currentTrialIndex + 1) + " of: " + String(testTrialArray.size());
-	sender.send("/ts26259/screen", (String) screenMessage1, (String) testTrialArray[currentTrialIndex]->getScreenMessage());
+	//m_oscTxRx->sendOscMessage("/ts26259/screen", (String) screenMessage1, (String) testTrialArray[currentTrialIndex]->getScreenMessage());
 }
 
 void TC_TS26259::oscMessageReceived(const OSCMessage& message)
@@ -402,15 +401,15 @@ void TC_TS26259::changeListenerCallback(ChangeBroadcaster* source)
 		{
 			playButton.setColour(TextButton::buttonColourId, Colours::blue);
 			stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			sender.send("/ts26259/button", (String) "play", (int)1);
-			sender.send("/ts26259/button", (String) "stop", (int)0);
+			//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)1);
+			//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)0);
 		}
 		else
 		{
 			playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 			stopButton.setColour(TextButton::buttonColourId, Colours::blue);
-			sender.send("/ts26259/button", (String) "play", (int)0);
-			sender.send("/ts26259/button", (String) "stop", (int)1);
+			//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)0);
+			//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)1);
 		}
 
 	}

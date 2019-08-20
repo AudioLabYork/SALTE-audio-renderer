@@ -8,8 +8,8 @@ MainComponent::MainComponent()
     addAndMakeVisible(sp);
     sp.addChangeListener(this);
 
-	// setup binaural renderer
-	br.init();
+	// setup binaural renderer, pass the osc transceiver
+	br.init(&oscTxRx);
 	br.setUseSHDConv(true);
 	
 	brv.init(&br);
@@ -47,10 +47,10 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
  
-    // OSC sender and receiver connect
-	String clientIp = clientTxIpLabel.getText();
-	int clientSendToPort = clientTxPortLabel.getText().getIntValue();
-	int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
+	addAndMakeVisible(&connectOscButton);
+	connectOscButton.setButtonText("Connect OSC");
+	connectOscButton.addListener(this);
+	connectOscButton.triggerClick(); // connect on startup
 
 	addAndMakeVisible(&openAudioDeviceManager);
 	openAudioDeviceManager.setButtonText("Audio device setup");
@@ -92,6 +92,7 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
 	saveSettings();
+	oscTxRx.disconnectTxRx();
 	br.deinit();
 	brv.deinit();
     shutdownAudio();
@@ -163,11 +164,11 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
-
 	as.setCentrePosition(getWidth()/2, getHeight()/2);
     sp.setBounds(660, 10, 730, 385);
 	brv.setBounds(660, 405, 730, 385);
-	openAudioDeviceManager.setBounds(10, 10, 230, 25);
+	openAudioDeviceManager.setBounds(310, 105, 240, 25);
+	connectOscButton.setBounds(310, 70, 240, 25);
 
 	clientTxIpLabel.setBounds(310, 35, 80, 25);
 	clientTxPortLabel.setBounds(410, 35, 60, 25);
@@ -191,7 +192,34 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &openAudioDeviceManager)
 	{
-			addAndMakeVisible(as);
+		addAndMakeVisible(as);
+	}
+
+	else if (buttonThatWasClicked == &connectOscButton)
+	{
+		if (!oscTxRx.isConnected())
+		{
+			// OSC sender and receiver connect
+			String clientIp = clientTxIpLabel.getText();
+			int clientSendToPort = clientTxPortLabel.getText().getIntValue();
+			int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
+			oscTxRx.connectTxRx(clientIp, clientSendToPort, clientReceiveAtPort);
+		}
+		else
+		{
+			oscTxRx.disconnectTxRx();
+		}
+		
+		if (oscTxRx.isConnected())
+		{
+			connectOscButton.setColour(TextButton::buttonColourId, Colours::red);
+			connectOscButton.setButtonText("OSC connected");
+		}
+		else
+		{
+			connectOscButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+			connectOscButton.setButtonText("Connect OSC");
+		}
 	}
 
 	else if (buttonThatWasClicked == &loadOSCTestButton)
@@ -213,9 +241,10 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &loadTS126259TestBtn)
 	{
+		// pass the osc transceiver
 		// pass the player into the test component so that it can use it for triggering play, pause stop etc
 		// pass the renderer as well, so we can set the ambisonic order and hrtfs
-		tsc.init(&sp, &brv);
+		tsc.init(&oscTxRx, &sp, &brv);
 		addAndMakeVisible(tsc);
 	}
 

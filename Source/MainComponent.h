@@ -35,30 +35,27 @@ public:
     void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
+
+	// COMPONENTS
 	AudioSetup as;
+	OscTransceiver oscTxRx;
     StimulusPlayer sp;
 	BinauralRenderer br;
+	BinauralRendererView brv;
+	OscTestComponent otc; 	// OSC test component
+	TC_TS26259 tsc; 	// 3GPP TS 26.259 component
+	MushraComponent mc; 	// MUSHRA COMPONENT
+
 
 	AudioBuffer<float> processBuffer;
 	int m_maxSamplesPerBlock;
 
-	BinauralRendererView brv;
+	String logWindowMessage;
+	TextEditor logWindow;
 
-    String logWindowMessage;
-    TextEditor logWindow;
-    
-    TextButton openAudioDeviceManager;
+	TextButton openAudioDeviceManager, connectOscButton;
 	TextButton loadOSCTestButton, loadMushraBtn, loadLocTestBtn, loadTS126259TestBtn;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
-
-	// OSC test component
-	OscTestComponent otc;
-
-	// 3GPP TS 26.259 component
-	TC_TS26259 tsc;
-
-	// MUSHRA COMPONENT
-	MushraComponent mc;
 
 	// save and load settings
 	File settingsFile;

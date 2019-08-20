@@ -3,7 +3,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <vector>
 #include <random>
-
+#include "OscTransceiver.h"
 #include "StimulusPlayer.h"
 #include "BinauralRendererView.h"
 
@@ -58,7 +58,7 @@ public:
 	TC_TS26259();
 	~TC_TS26259();
 
-	void init(StimulusPlayer* player, BinauralRendererView* rendererView);
+	void init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRendererView* rendererView);
 
 	void paint(Graphics&) override;
 	void resized() override;
@@ -75,10 +75,9 @@ private:
 	OwnedArray<Slider> ratingSliderArray;
 	bool timeSyncPlayback = true;
 
+	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;
 	BinauralRendererView* m_rendererView;
-
-	OSCSender sender;
 
 	OwnedArray<TestTrial> testTrialArray;
 	int currentTrialIndex = 0;

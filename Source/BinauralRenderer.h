@@ -3,6 +3,8 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <convoengine.h>
 #include "AmbisonicRotation.h"
+#include "OscTransceiver.h"
+
 
 class BinauralRenderer :	public OSCReceiver,
 							public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
@@ -10,7 +12,7 @@ class BinauralRenderer :	public OSCReceiver,
 public:
 	BinauralRenderer();
 
-	void init();
+	void init(OscTransceiver* oscTxRx);
 	void reset();
 	void deinit();
 
@@ -48,6 +50,8 @@ public:
 	float m_zTrans;
 
 private:
+	OscTransceiver* m_oscTxRx;
+
 	void convertHRIRToSHDHRIR();
 
 	CriticalSection m_procLock;

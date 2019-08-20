@@ -191,14 +191,14 @@ void MushraComponent::createGui()
 void MushraComponent::connectOsc(String dawIp, String clientIp, int dawTxPort, int dawRxPort, int clientTxPort, int clientRxPort)
 {
 	// DAW
-	dawTx.connectSender(dawIp, dawTxPort);
-	dawRx.connectReceiver(dawRxPort);
-	dawRx.addListener(this);
+	//dawTx.connectSender(dawIp, dawTxPort);
+	//dawRx.connectReceiver(dawRxPort);
+	//dawRx.addListener(this);
 
-	// CLIENT
-	clientTx.connectSender(clientIp, clientTxPort);
-	clientRx.connectReceiver(clientRxPort);
-	clientRx.addListener(this);
+	//// CLIENT
+	//clientTx.connectSender(clientIp, clientTxPort);
+	//clientRx.connectReceiver(clientRxPort);
+	//clientRx.addListener(this);
 
 	clientRxPortAtHost = clientRxPort;
 

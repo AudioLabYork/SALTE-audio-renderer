@@ -19,11 +19,10 @@ BinauralRenderer::BinauralRenderer()
 {
 }
 
-void BinauralRenderer::init()
+void BinauralRenderer::init(OscTransceiver* oscTxRx)
 {
-	// connect OSC receiver
-	connect(9001);
-	addListener(this);
+	m_oscTxRx = oscTxRx;
+	m_oscTxRx->addListener(this);
 }
 
 void BinauralRenderer::reset()

@@ -67,8 +67,8 @@ public:
 	void saveResults();
 
 private:
-	oscTransceiver dawTx, dawRx;
-	oscTransceiver clientTx, clientRx;
+	OscTransceiver dawTx, dawRx;
+	OscTransceiver clientTx, clientRx;
 
 	// APP CONFIG
 	bool isReferenceButtonVisible = true;
