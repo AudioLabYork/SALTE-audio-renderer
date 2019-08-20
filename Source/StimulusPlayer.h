@@ -15,6 +15,17 @@ class StimulusPlayer    :   public Component,
                             private Timer
 {
 public:
+
+	enum TransportState
+	{
+		Stopping,
+		Stopped,
+		Starting,
+		Playing,
+		Pausing,
+		Paused
+	};
+
     StimulusPlayer();
     ~StimulusPlayer();
     
@@ -27,6 +38,7 @@ public:
     void resized() override;
 
 	void changeListenerCallback(ChangeBroadcaster* source) override;
+	void changeState(TransportState newState);
 	void buttonClicked(Button* buttonThatWasClicked) override;
 	void sliderValueChanged(Slider* slider) override;
 	void timerCallback() override;
@@ -35,7 +47,6 @@ public:
 
 	// exposing some playback transport functionality
 	void play();
-	void pause();
 	void stop();
 	int getNumberOfChannels();
 	void setGain(float gainInDB);
@@ -48,9 +59,10 @@ public:
 	// log window message
     String currentMessage;
 
-
 private:
 	AudioTransportSource transportSource;
+	TransportState state;
+	
 	AudioFormatManager formatManager;
 	File currentlyLoadedFile;
 
@@ -72,7 +84,7 @@ private:
 	void paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
 	void paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
 
-	TextButton openButton, playButton, stopButton;
+	TextButton openButton, playButton, stopButton, loopButton;
 	Label loadedFileName, playbackHeadPosition;
 
 	Slider yawSlider, pitchSlider, rollSlider;

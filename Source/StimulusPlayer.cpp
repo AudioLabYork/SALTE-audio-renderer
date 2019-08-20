@@ -3,7 +3,8 @@
 
 StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 									thumbnailCache(10), // maxNumThumbsToStore parameter lets you specify how many previews should be kept in memory at once.
-									thumbnail(512, formatManager, thumbnailCache)
+									thumbnail(512, formatManager, thumbnailCache),
+									state(Stopped)
 						
 {
 	transportSource.addChangeListener(this);
@@ -18,13 +19,25 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
     
     addAndMakeVisible(&playButton);
     playButton.setButtonText("Play");
+	playButton.setToggleState(false, NotificationType::dontSendNotification);
+	playButton.setColour(TextButton::buttonColourId, Colours::darkgrey);
+	playButton.setColour(TextButton::buttonOnColourId, Colours::red);
     playButton.addListener(this);
     
     addAndMakeVisible(&stopButton);
     stopButton.setButtonText("Stop");
-    stopButton.setColour(TextButton::buttonColourId, Colours::red);
+	stopButton.setToggleState(true, NotificationType::dontSendNotification);
+    stopButton.setColour(TextButton::buttonColourId, Colours::darkgrey);
+	stopButton.setColour(TextButton::buttonOnColourId, Colours::red);
     stopButton.addListener(this);
-    
+
+	addAndMakeVisible(&loopButton);
+	loopButton.setButtonText("Loop");
+	loopButton.setColour(TextButton::buttonColourId, Colours::darkgrey);
+	loopButton.setColour(TextButton::buttonOnColourId, Colours::green);
+	loopButton.setClickingTogglesState(true);
+	loopButton.addListener(this);
+
     loadedFileName.setText("Loaded file:", dontSendNotification);
     addAndMakeVisible(loadedFileName);
     
@@ -144,7 +157,8 @@ void StimulusPlayer::resized()
     openButton.setBounds(20, 20, 230, 25);
     playButton.setBounds(20, 55, 230, 25);
     stopButton.setBounds(20, 90, 230, 25);
-    
+	loopButton.setBounds(20, 125, 230, 25);
+
     loadedFileName.setBounds(280, 20, 500, 25);
     playbackHeadPosition.setBounds(280, 45, 500, 25);
 
@@ -157,31 +171,32 @@ void StimulusPlayer::resized()
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 {
+	if (source == &thumbnail)
+		repaint();
+
 	if (source == &transportSource)
 	{
-		if (transportSource.hasStreamFinished() && loopingEnabled)
+		if (transportSource.isPlaying())
 		{
-			transportSource.setPosition(0);
-			transportSource.start();
+			changeState(Playing);
 		}
-
-		if (transportSource.isPlaying() && isPlaying == false)
+		else if ((state == Stopping) || (state == Playing))
 		{
-			isPlaying = true;
-			sendChangeMessage();
-			playButton.setColour(TextButton::buttonColourId, Colours::red);
-			stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+			if (transportSource.hasStreamFinished() && loopingEnabled)
+			{
+				transportSource.setPosition(0.0);
+				changeState(Starting);
+			}
+			else
+			{
+				changeState(Stopped);
+			}
 		}
-		else if (!transportSource.isPlaying() && isPlaying == true)
+		else if (state == Pausing)
 		{
-			isPlaying = false;
-			sendChangeMessage();
-			playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			stopButton.setColour(TextButton::buttonColourId, Colours::red);
+			changeState(Paused);
 		}
 	}
-
-	if (source == &thumbnail)       repaint();
 }
 
 void StimulusPlayer::paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
@@ -221,15 +236,56 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
     {
 		stop();
     }
+	else if (buttonThatWasClicked == &loopButton)
+	{
+		loop(loopButton.getToggleState());
+	}
     else if (buttonThatWasClicked->getProperties()["triggerStimuliButton"])
     {
         int buttonIndex = buttonThatWasClicked->getProperties()["buttonIndex"];
         loadFileIntoTransport(File(filePathList[buttonIndex]));
-        transportSource.setPosition(0);
-        transportSource.start();
+		stop();
+		play();
     }
 
     repaint();
+}
+
+void StimulusPlayer::changeState(TransportState newState)
+{
+	if (state != newState)
+	{
+		state = newState;
+		switch (state)
+		{
+		case Stopping:
+			transportSource.stop();
+			break;
+		case Stopped:
+			transportSource.setPosition(0.0);
+			transportSlider.setValue(0.0, juce::dontSendNotification);
+			playButton.setButtonText("Play");
+			playButton.setToggleState(false, NotificationType::dontSendNotification);
+			stopButton.setToggleState(true, NotificationType::dontSendNotification);
+			break;
+		case Starting:
+			transportSource.start();
+			break;
+		case Playing:
+			playButton.setButtonText("Pause");
+			playButton.setToggleState(true, NotificationType::dontSendNotification);
+			stopButton.setToggleState(false, NotificationType::dontSendNotification);
+			break;
+		case Pausing:
+			transportSource.stop();
+			break;
+		case Paused:
+			playButton.setButtonText("Play");
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 void StimulusPlayer::sliderValueChanged(Slider* slider)
@@ -257,7 +313,9 @@ void StimulusPlayer::timerCallback()
     
     // update diplayed times in GUI
     playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
-	if(transportSource.isPlaying()) transportSlider.setValue(currentPosition / lengthInSeconds, juce::dontSendNotification);
+	
+	if(transportSource.isPlaying())
+		transportSlider.setValue(currentPosition / lengthInSeconds, juce::dontSendNotification);
 }
 
 void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
@@ -368,16 +426,18 @@ String StimulusPlayer::returnHHMMSS(double lengthInSeconds)
 
 void StimulusPlayer::play()
 {
-	transportSource.start();
-}
-
-void StimulusPlayer::pause()
-{
+	if ((state == Stopped) || (state == Paused))
+		changeState(Starting);
+	else if (state == Playing)
+		changeState(Pausing);
 }
 
 void StimulusPlayer::stop()
 {
-	transportSource.stop();
+	if (state == Paused)
+		changeState(Stopped);
+	else if(state == Playing)
+		changeState(Stopping);
 }
 
 int StimulusPlayer::getNumberOfChannels()
