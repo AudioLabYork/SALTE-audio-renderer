@@ -72,9 +72,6 @@ private:
 	bool isPlaying = false;
 	int loadedFileChannelCount = 0;
 
-	StringArray filePathList; // wave file paths
-	StringArray fileIdList; // file-ids
-
 	// METHODS
 	void browseForFile();
 	void loadFileIntoTransport(const File& audioFile);

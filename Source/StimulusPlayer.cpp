@@ -240,13 +240,6 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
 	{
 		loop(loopButton.getToggleState());
 	}
-    else if (buttonThatWasClicked->getProperties()["triggerStimuliButton"])
-    {
-        int buttonIndex = buttonThatWasClicked->getProperties()["buttonIndex"];
-        loadFileIntoTransport(File(filePathList[buttonIndex]));
-		stop();
-		play();
-    }
 
     repaint();
 }
