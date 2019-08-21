@@ -426,13 +426,12 @@ void MushraComponent::updateTransportSlider(bool updateLoop)
 
 void MushraComponent::initClientGui()
 {
-	clientTx.sendOscMessage("/client/hostip", hostIp);
-	clientTx.sendOscMessage("/client/hostport", clientRxPortAtHost);
-	clientTx.sendOscMessage("/client/nofsamples", numberOfSamplesPerRegion);
-	clientTx.sendOscMessage("/client/currenttrial/", (int)currentTrialIndex, (int)regionArray.size());
-	clientTx.sendOscMessage("/client/isrefbutton", 1);
-	clientTx.sendOscMessage("/client/gui", "create");
-
+	clientTx.sendOscMessage(String("/client/hostip"), hostIp);
+	clientTx.sendOscMessage(String("/client/hostport"), clientRxPortAtHost);
+	clientTx.sendOscMessage(String("/client/nofsamples"), numberOfSamplesPerRegion);
+	clientTx.sendOscMessage(String("/client/currenttrial/"), (int)currentTrialIndex, (int)regionArray.size());
+	clientTx.sendOscMessage(String("/client/isrefbutton"), 1);
+	clientTx.sendOscMessage(String("/client/gui"), String("create"));
 }
 
 void MushraComponent::updateClientTransportSlider()
