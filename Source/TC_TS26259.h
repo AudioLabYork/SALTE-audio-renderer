@@ -21,6 +21,8 @@ public:
 
 	void setFilepath(int fileindex, String filepath) { filepathArray.set(fileindex, filepath); }
 	String getFilepath(int fileindex) { return filepathArray[fileindex]; }
+	void setScore(int fileindex, float score) { scoresArray.set(fileindex, score); }
+	float getScore(int fileindex) { return scoresArray[fileindex]; }
 	void setGain(int fileindex, float gainInDB) { stimulusGainArray.set(fileindex, gainInDB); }
 	float getGain(int fileindex) { return stimulusGainArray[fileindex]; }
 	void setScreenMessage(String msg) { screenMessage = msg; }
@@ -38,8 +40,10 @@ public:
 private:
 	Array<String> filepathArray;
 	Array<float> stimulusGainArray;
+	Array<float> scoresArray;
+
+
 	String screenMessage;
-	// results vector needs to be added
 	double lastPlaybackHeadPosition = 0.0f;
 	bool isLooping = true;
 	float loopStartTime = 0.0f, loopEndTime = 0.0f;
@@ -82,7 +86,7 @@ private:
 	OwnedArray<TestTrial> testTrialArray;
 	int currentTrialIndex = 0;
 
-	vector<vector<float>> scoresMatrix; // maybe moving this to testTrialArray would be neater
+	// vector<vector<float>> scoresMatrix;
 	
 	void loadTrial(int trialIndex);
 

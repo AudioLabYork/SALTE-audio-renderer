@@ -73,22 +73,14 @@ TC_TS26259::TC_TS26259()
 	testTrialArray[2]->setGain(1, 0);
 	testTrialArray[2]->setScreenMessage("Stereo vs Ambisonics");
 
-	// scores matrix initialization
-	scoresMatrix.resize(testTrialArray.size());
-	for (int i = 0; i < testTrialArray.size(); ++i) scoresMatrix[i].resize(ratingSliderArray.size());
 
 	for (int i = 0; i < testTrialArray.size(); ++i)
 	{
 		for (int j = 0; j < ratingSliderArray.size(); ++j)
 		{
-			scoresMatrix[i][j] = 0.0f;
+			testTrialArray[i]->setScore(j, 0.0f);
 		}
 	}
-
-	// Put some values in like this:
-	//scoresMatrix[1][2] = 6.0;
-	//scoresMatrix[3][1] = 5.5;
-
 }
 
 TC_TS26259::~TC_TS26259()
@@ -299,7 +291,7 @@ void TC_TS26259::sliderValueChanged(Slider* sliderThatWasChanged)
 	if (rateSampleSliderChanged)
 	{
 		int sliderIndex = sliderThatWasChanged->getProperties()["sliderIndex"];
-		scoresMatrix[currentTrialIndex][sliderIndex] = sliderThatWasChanged->getValue();
+		testTrialArray[currentTrialIndex]->setScore(sliderIndex, sliderThatWasChanged->getValue());
 	}
 }
 
@@ -341,7 +333,7 @@ void TC_TS26259::loadTrial(int trialIndex)
 	// update sliders
 	for (int i = 0; i < ratingSliderArray.size(); ++i)
 	{
-		ratingSliderArray[i]->setValue((float) scoresMatrix[currentTrialIndex][i]);
+		ratingSliderArray[i]->setValue((float) testTrialArray[currentTrialIndex]->getScore(i));
 		//m_oscTxRx->sendOscMessage("/ts26259/slider", (int) i, (float) scoresMatrix[currentTrialIndex][i]);
 	}
 
