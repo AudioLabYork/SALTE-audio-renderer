@@ -176,8 +176,8 @@ void MainComponent::resized()
 
 	loadOSCTestButton.setBounds(40, 200, 250, 25);
 	loadMushraBtn.setBounds(40, 250, 250, 25);
-	loadLocTestBtn.setBounds(40, 300, 250, 25);
-	loadTS126259TestBtn.setBounds(40, 350, 250, 25);
+	loadTS126259TestBtn.setBounds(40, 300, 250, 25);
+	loadLocTestBtn.setBounds(40, 350, 250, 25);
 
 
     logWindow.setBounds(10, 660, 640, 130);
@@ -230,13 +230,8 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 	else if (buttonThatWasClicked == &loadMushraBtn)
 	{
-		mc.createGui();
+		mc.init(&oscTxRx, &sp, &brv);
 		addAndMakeVisible(mc);
-	}
-
-	else if (buttonThatWasClicked == &loadLocTestBtn)
-	{
-
 	}
 
 	else if (buttonThatWasClicked == &loadTS126259TestBtn)
@@ -247,6 +242,13 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		tsc.init(&oscTxRx, &sp, &brv);
 		addAndMakeVisible(tsc);
 	}
+
+	else if (buttonThatWasClicked == &loadLocTestBtn)
+	{
+
+	}
+
+
 
     repaint();
 }
