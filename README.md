@@ -28,5 +28,5 @@ The WDL directory should be copied to the 'Libraries' folder (shown above)
 
 - ASIO SDK
 
-To build and run the application as ASIO compliant software, you will need to sign the
-Steinberg license agreement, and download the ASIO SDK from [here](https://www.steinberg.net/en/company/developers.html)
+To build and run the application as ASIO compliant software the Steinberg license agreement must be agreed to and signed,
+and then the ASIO SDK should be download from [here](https://www.steinberg.net/en/company/developers.html)
