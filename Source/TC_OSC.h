@@ -17,6 +17,7 @@ public:
 private:
 	OSCSender sender;
 	TextButton btnA, btnB, btnC, btnD;
+	TextButton close;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OscTestComponent)
 };

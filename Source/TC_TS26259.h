@@ -27,6 +27,8 @@ private:
 	TextButton playButton, stopButton, loopButton;
 	TextButton selectAButton, selectBButton;
 	TextButton prevTrialButton, nextTrialButton;
+	TextButton close;
+
 	OwnedArray<Slider> ratingSliderArray;
 	bool timeSyncPlayback = true;
 

@@ -28,6 +28,10 @@ MushraComponent::MushraComponent()
 	selectReferenceButton.setButtonText("Reference");
 	selectReferenceButton.addListener(this);
 	addChildComponent(selectReferenceButton);
+
+	close.setButtonText("Close Test");
+	close.addListener(this);
+	addAndMakeVisible(close);
 }
 
 MushraComponent::~MushraComponent()
@@ -247,6 +251,8 @@ void MushraComponent::resized()
 	selectReferenceButton.setBounds(300, 360, 280, 40);
 	prevTrialButton.setBounds(40, 420, 80, 40);
 	nextTrialButton.setBounds(140, 420, 80, 40);
+
+	close.setBounds(getWidth() - 100, 0, 100, 30);
 }
 
 void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
@@ -344,6 +350,10 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 			currentTrialIndex++;
 			loadTrial(currentTrialIndex);
 		}
+	}
+	else if (buttonThatWasClicked == &close)
+	{
+		setVisible(false);
 	}
 
 	repaint();

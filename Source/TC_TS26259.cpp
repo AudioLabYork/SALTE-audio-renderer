@@ -81,6 +81,10 @@ TC_TS26259::TC_TS26259()
 			testTrialArray[i]->setScore(j, 0.0f);
 		}
 	}
+
+	close.setButtonText("Close Test");
+	close.addListener(this);
+	addAndMakeVisible(close);
 }
 
 TC_TS26259::~TC_TS26259()
@@ -182,6 +186,8 @@ void TC_TS26259::resized()
 		ratingSliderArray[i]->setSize(sliderWidth, sliderHeight);
 		ratingSliderArray[i]->setCentrePosition(sliderPositionX + i * sliderSpacing, sliderPositionY);
 	}
+
+	close.setBounds(getWidth() - 100, 0, 100, 30);
 }
 
 void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
@@ -279,6 +285,10 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 			currentTrialIndex++;
 			loadTrial(currentTrialIndex);
 		}
+	}
+	else if (buttonThatWasClicked == &close)
+	{
+		setVisible(false);
 	}
 
 	repaint();

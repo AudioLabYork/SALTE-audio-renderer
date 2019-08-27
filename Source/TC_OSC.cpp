@@ -19,6 +19,10 @@ OscTestComponent::OscTestComponent()
 	btnD.setButtonText("D");
 	btnD.addListener(this);
 	addAndMakeVisible(btnD);
+
+	close.setButtonText("Close Test");
+	close.addListener(this);
+	addAndMakeVisible(close);
 }
 
 OscTestComponent::~OscTestComponent()
@@ -46,6 +50,8 @@ void OscTestComponent::resized()
 	btnB.setBounds(40, 100, 40, 40);
 	btnC.setBounds(40, 160, 40, 40);
 	btnD.setBounds(40, 220, 40, 40);
+
+	close.setBounds(getWidth() - 100, 0, 100, 30);
 }
 
 void OscTestComponent::buttonClicked(Button* buttonThatWasClicked)
@@ -54,19 +60,17 @@ void OscTestComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		sender.send("/transport/", (String) "play");
 	}
-	
-	if (buttonThatWasClicked == &btnB)
+	else if (buttonThatWasClicked == &btnB)
 	{
-
 	}
-	
-	if (buttonThatWasClicked == &btnC)
+	else if (buttonThatWasClicked == &btnC)
 	{
-
 	}
-
-	if (buttonThatWasClicked == &btnD)
+	else if (buttonThatWasClicked == &btnD)
 	{
-
+	}
+	else if (buttonThatWasClicked == &close)
+	{
+		setVisible(false);
 	}
 }
