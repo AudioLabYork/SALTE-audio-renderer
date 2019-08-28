@@ -178,11 +178,6 @@ void MushraComponent::paint(Graphics& g)
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
 
-	g.setColour(Colours::pink);
-	g.drawRect(testSpace, 1);
-	g.setColour(Colours::green);
-	g.drawRect(testArea, 1);
-
 	g.setColour(Colours::white);
 	g.drawText("Trial " + String(currentTrialIndex + 1) + " of: " + String(testTrialArray.size()), leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
 	g.drawText(testTrialArray[currentTrialIndex]->getScreenMessage(), leftBorder, topBorder + 20, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
@@ -219,11 +214,6 @@ void MushraComponent::paint(Graphics& g)
 
 	for (int i = 0; i < numLines; ++i)
 		g.drawDashedLine(Line<float>(Point<float>(linesStartX, linesStartY + ySpacer * i), Point<float>(linesStartX + linesWidth, linesStartY + ySpacer * i)), dashPattern, 2, 1.0f);
-
-	g.setColour(Colours::lightblue);
-
-	for (int i = 0; i < testTrialArray[currentTrialIndex]->getNumberOfConditions(); ++i)
-		g.drawRect(ratingSliderArray[i]->getBounds(), 1);
 
 	if (testTrialArray[currentTrialIndex] != nullptr)
 	{
