@@ -204,7 +204,6 @@ void TC_TS26259::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &playButton)
 	{
-		m_player->setPlaybackHeadPosition(0);
 		m_player->play();
 	}
 

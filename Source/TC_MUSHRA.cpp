@@ -259,7 +259,6 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &playButton)
 	{
-		m_player->setPlaybackHeadPosition(0);
 		m_player->play();
 	}
 
