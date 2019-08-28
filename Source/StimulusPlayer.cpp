@@ -20,20 +20,20 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
     addAndMakeVisible(&playButton);
     playButton.setButtonText("Play");
 	playButton.setToggleState(false, NotificationType::dontSendNotification);
-	playButton.setColour(TextButton::buttonColourId, Colours::darkgrey);
+	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	playButton.setColour(TextButton::buttonOnColourId, Colours::red);
     playButton.addListener(this);
     
     addAndMakeVisible(&stopButton);
     stopButton.setButtonText("Stop");
 	stopButton.setToggleState(true, NotificationType::dontSendNotification);
-    stopButton.setColour(TextButton::buttonColourId, Colours::darkgrey);
+    stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	stopButton.setColour(TextButton::buttonOnColourId, Colours::red);
     stopButton.addListener(this);
 
 	addAndMakeVisible(&loopButton);
 	loopButton.setButtonText("Loop");
-	loopButton.setColour(TextButton::buttonColourId, Colours::darkgrey);
+	loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	loopButton.setColour(TextButton::buttonOnColourId, Colours::green);
 	loopButton.setClickingTogglesState(true);
 	loopButton.addListener(this);

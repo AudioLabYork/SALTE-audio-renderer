@@ -6,14 +6,20 @@ MushraComponent::MushraComponent()
 	, m_rendererView(nullptr)
 {
 	playButton.setButtonText("Play");
+	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	playButton.setColour(TextButton::buttonOnColourId, Colours::blue);
 	playButton.addListener(this);
 	addAndMakeVisible(playButton);
 
 	stopButton.setButtonText("Stop");
+	stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	stopButton.setColour(TextButton::buttonOnColourId, Colours::blue);
 	stopButton.addListener(this);
 	addAndMakeVisible(stopButton);
 
 	loopButton.setButtonText("Loop");
+	loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	loopButton.setColour(TextButton::buttonOnColourId, Colours::blue);
 	loopButton.addListener(this);
 	addAndMakeVisible(loopButton);
 
@@ -26,6 +32,8 @@ MushraComponent::MushraComponent()
 	addAndMakeVisible(nextTrialButton);
 
 	selectReferenceButton.setButtonText("Reference");
+	selectReferenceButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::green);
 	selectReferenceButton.addListener(this);
 	addChildComponent(selectReferenceButton);
 
@@ -304,8 +312,6 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 			m_player->play();
 		}
 
-		selectReferenceButton.setColour(TextButton::buttonColourId, Colours::green);
-		// selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 		m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)1);
 		m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
 	}
@@ -328,8 +334,6 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 	//		m_player->play();
 	//	}
 
-	//	selectAButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	//	selectBButton.setColour(TextButton::buttonColourId, Colours::green);
 	//	m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)0);
 	//	m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)1);
 	//}
@@ -419,15 +423,11 @@ void MushraComponent::changeListenerCallback(ChangeBroadcaster* source)
 	{
 		if (m_player->checkPlaybackStatus())
 		{
-			playButton.setColour(TextButton::buttonColourId, Colours::blue);
-			stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)1);
 			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)0);
 		}
 		else
 		{
-			playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			stopButton.setColour(TextButton::buttonColourId, Colours::blue);
 			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)0);
 			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)1);
 		}
