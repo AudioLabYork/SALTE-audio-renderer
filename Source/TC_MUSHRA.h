@@ -30,6 +30,7 @@ private:
 	OwnedArray<TextButton> selectConditionButtonArray;
 	OwnedArray<Slider> ratingSliderArray;
 	bool timeSyncPlayback = true;
+	OwnedArray<Label> ratingReadouts;
 
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;

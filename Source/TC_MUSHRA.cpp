@@ -142,7 +142,9 @@ void MushraComponent::loadTrial(int trialIndex)
 
 	// SLIDERS AND BUTTONS - INITIALIZE
 	ratingSliderArray.clear();
+	ratingReadouts.clear();
 	selectConditionButtonArray.clear();
+
 	StringArray selectButtonAlphabet = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
 											"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 
@@ -157,6 +159,11 @@ void MushraComponent::loadTrial(int trialIndex)
 		ratingSliderArray[i]->setValue(testTrialArray[currentTrialIndex]->getScore(i), dontSendNotification);
 		ratingSliderArray[i]->addListener(this);
 		addAndMakeVisible(ratingSliderArray[i]);
+
+		ratingReadouts.add(new Label());
+		ratingReadouts[i]->setText(String(testTrialArray[currentTrialIndex]->getScore(i)), dontSendNotification);
+		ratingReadouts[i]->setJustificationType(Justification::centred);
+		addAndMakeVisible(ratingReadouts[i]);
 
 		selectConditionButtonArray.add(new TextButton());
 		selectConditionButtonArray[i]->getProperties().set("playSampleButton", true);
@@ -228,8 +235,8 @@ void MushraComponent::paint(Graphics& g)
 		for (int i = 0; i < testTrialArray[currentTrialIndex]->getNumberOfConditions(); ++i)
 		{
 			ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
-			ratingSliderArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, inc, 20);
-			selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 10, sliderWidth, buttonHeight);
+			ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 10, sliderWidth, buttonHeight);
+			selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 40, sliderWidth, buttonHeight);
 		}
 	}
 }
@@ -237,7 +244,7 @@ void MushraComponent::paint(Graphics& g)
 void MushraComponent::resized()
 {
 	testSpace.setBounds(leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), getHeight() - (topBorder + bottomBorder));
-	testArea.setBounds(testSpace.getX() + 90, testSpace.getY() + 50, testSpace.getWidth() - 90, testSpace.getHeight() - 150);
+	testArea.setBounds(testSpace.getX() + 90, testSpace.getY() + 50, testSpace.getWidth() - 90, testSpace.getHeight() - 180);
 
 	prevTrialButton.setBounds(testArea.getX(), testSpace.getBottom() - 25, 80, 25);
 	nextTrialButton.setBounds(testArea.getX() + 80 + 10, testSpace.getBottom() - 25, 80, 25);
@@ -357,6 +364,7 @@ void MushraComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 	{
 		int sliderIndex = sliderThatWasChanged->getProperties()["sliderIndex"];
 		testTrialArray[currentTrialIndex]->setScore(sliderIndex, sliderThatWasChanged->getValue());
+		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
 	}
 }
 
