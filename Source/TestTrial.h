@@ -1,49 +1,60 @@
 #pragma once
 
+#include "../JuceLibraryCode/JuceHeader.h"
+
 class TestTrial
 {
 public:
-	TestTrial()
-	{
-	}
-	~TestTrial()
-	{
-	}
+	TestTrial();
+	~TestTrial();
 
-	void setFilepath(int fileindex, String filepath) { filepathArray.set(fileindex, filepath); }
-	String getFilepath(int fileindex) { return filepathArray[fileindex]; }
-	void setScore(int fileindex, float score) { scoresArray.set(fileindex, score); }
-	float getScore(int fileindex) { return scoresArray[fileindex]; }
-	void setGain(int fileindex, float gainInDB) { stimulusGainArray.set(fileindex, gainInDB); }
-	float getGain(int fileindex) { return stimulusGainArray[fileindex]; }
-	void setScreenMessage(String msg) { screenMessage = msg; }
-	String getScreenMessage() { return screenMessage; }
-	int getNumberOfConditions() { return filepathArray.size(); }
-	void setLastPlaybackHeadPosition(double time) { lastPlaybackHeadPosition = time; }
-	double getLastPlaybackHeadPosition() { return lastPlaybackHeadPosition; }
-	bool getLoopingState() { return isLooping; }
-	void setLooping(bool looping) { isLooping = looping; }
-	void setLoopStart(float startTime) { loopStartTime = startTime; }
-	float getLoopStart() { return loopStartTime; }
-	void setLoopEnd(float endTime) { loopEndTime = endTime; }
-	float getLoopEnd() { return loopEndTime; }
+	void setFilepath(int fileindex, const String& filepath);
+	String getFilepath(int fileindex);
+	
+	void setScore(int fileindex, float score);
+	float getScore(int fileindex);
+	
+	void setGain(int fileindex, float gainInDB);
+	float getGain(int fileindex);
 
-	void setReferenceFilepath(String filepath) { referenceFilepath = filepath; }
-	String getReferenceFilepath() { return referenceFilepath; }
-	bool isReferencePresent() { if (referenceFilepath != "") { return true; } else { return false; } }
+	void setScreenMessage(const String& msg);
+	String getScreenMessage();
+	
+	int getNumberOfConditions();
+	
+	void setRatingOptions(const StringArray ratings);
+	StringArray getRatingOptions();
+	
+	void setLastPlaybackHeadPosition(double time);
+	double getLastPlaybackHeadPosition();
+	
+	bool getLoopingState();
+	void setLooping(bool looping);
+	
+	void setLoopStart(float startTime);
+	float getLoopStart();
+	
+	void setLoopEnd(float endTime);
+	float getLoopEnd();
+
+	void setReferenceFilepath(const String& filepath);
+	String getReferenceFilepath();
+	
+	bool isReferencePresent();
 
 private:
-	bool referencePresent;
 	String referenceFilepath;
-	Array<String> filepathArray;
+	StringArray filepathArray;
 	Array<float> stimulusGainArray;
 	Array<float> scoresArray;
 
-
 	String screenMessage;
+	StringArray ratingOptions;
+
 	double lastPlaybackHeadPosition = 0.0f;
 	bool isLooping = true;
-	float loopStartTime = 0.0f, loopEndTime = 0.0f;
+	float loopStartTime = 0.0f;
+	float loopEndTime = 0.0f;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestTrial)
 };

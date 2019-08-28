@@ -88,6 +88,8 @@ void MushraComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, Bina
 	testTrialArray[0]->setFilepath(11, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
 	testTrialArray[0]->setGain(11, 10);
 	testTrialArray[0]->setScreenMessage("Low Bitrate Spatial Audio Coding");
+	testTrialArray[0]->setRatingOptions({"Excellent", "Good" ,"Fair", "Poor", "Bad"});
+
 
 	testTrialArray.add(new TestTrial);
 	testTrialArray[1]->setReferenceFilepath(ambisonicScenesFolder + "5OA_RENDER_04.wav");
@@ -96,6 +98,7 @@ void MushraComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, Bina
 	testTrialArray[1]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_04_576kbps.wav");
 	testTrialArray[1]->setGain(1, 10);
 	testTrialArray[1]->setScreenMessage("Low Bitrate Spatial Audio Coding");
+	testTrialArray[1]->setRatingOptions({ "Very Clear", "Clear" ,"Fair", "Unclear", "Very Unclear" });
 
 	testTrialArray.add(new TestTrial);
 	testTrialArray[2]->setReferenceFilepath(ambisonicScenesFolder + "under_the_bridge_mix5_STEREO.wav");
@@ -104,6 +107,7 @@ void MushraComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, Bina
 	testTrialArray[2]->setFilepath(1, ambisonicScenesFolder + "under_the_bridge_mix5_5OA.wav");
 	testTrialArray[2]->setGain(1, 0);
 	testTrialArray[2]->setScreenMessage("Stereo vs Ambisonics");
+	testTrialArray[2]->setRatingOptions({ "Good", "Okay" ,"Bad" });
 
 	//// initialize score arrays
 	//for (int i = 0; i < testTrialArray.size(); ++i)
