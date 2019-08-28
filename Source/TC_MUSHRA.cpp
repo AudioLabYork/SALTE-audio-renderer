@@ -134,8 +134,7 @@ void MushraComponent::loadTrial(int trialIndex)
 	}
 
 	// REFERENCE BUTTON
-	if (testTrialArray[currentTrialIndex]->isReferencePresent()) selectReferenceButton.setVisible(true);
-	else selectReferenceButton.setVisible(false);
+	selectReferenceButton.setVisible(testTrialArray[currentTrialIndex]->isReferencePresent());
 
 	// SLIDERS AND BUTTONS - INITIALIZE
 	ratingSliderArray.clear();
@@ -164,6 +163,7 @@ void MushraComponent::loadTrial(int trialIndex)
 		addAndMakeVisible(selectConditionButtonArray[i]);
 	}
 
+	m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
 
 	// SLIDERS AND BUTTONS - POSITION
 	auto sliderSpaceWidth = 400;
@@ -189,18 +189,6 @@ void MushraComponent::loadTrial(int trialIndex)
 	}
 
 
-
-	// LOOPING
-	if (testTrialArray[currentTrialIndex]->getLoopingState())
-	{
-		m_player->loop(true);
-		loopButton.setColour(TextButton::buttonColourId, Colours::blue);
-	}
-	else
-	{
-		m_player->loop(false);
-		loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	}
 
 }
 
