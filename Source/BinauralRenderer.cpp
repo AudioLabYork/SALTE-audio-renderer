@@ -249,7 +249,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 				for (int k = 0; k < 2; ++k)
 				{
 					convo = m_shdConvEngines[i]->Get()[k];
-					buffer.addFrom(k, 0, convo, buffer.getNumSamples());
+					buffer.addFrom(k, 0, convo, availSamples);
 				}
 
 				m_shdConvEngines[i]->Advance(availSamples);
