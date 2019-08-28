@@ -4,6 +4,10 @@ MushraComponent::MushraComponent()
 	: m_oscTxRx(nullptr)
 	, m_player(nullptr)
 	, m_rendererView(nullptr)
+	, leftBorder(20)
+	, rightBorder(20)
+	, topBorder(20)
+	, bottomBorder(20)
 {
 	playButton.setButtonText("Play");
 	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
@@ -149,7 +153,6 @@ void MushraComponent::loadTrial(int trialIndex)
 		ratingSliderArray[i]->getProperties().set("sliderIndex", i);
 		ratingSliderArray[i]->setSliderStyle(Slider::LinearVertical);
 		ratingSliderArray[i]->setTextBoxIsEditable(true);
-		ratingSliderArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, 40, 20);
 		ratingSliderArray[i]->setRange(0, 100, 1);
 		ratingSliderArray[i]->setValue(testTrialArray[currentTrialIndex]->getScore(i), dontSendNotification);
 		ratingSliderArray[i]->addListener(this);
@@ -165,94 +168,96 @@ void MushraComponent::loadTrial(int trialIndex)
 
 	m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
 
-	// SLIDERS AND BUTTONS - POSITION
-	auto sliderSpaceWidth = 400;
-	auto sliderWidth = sliderSpaceWidth / testTrialArray[currentTrialIndex]->getNumberOfConditions();
-	auto sliderHeight = 200;
-	auto sliderSpacing = sliderWidth;
-	auto sliderPositionX = 260;
-	auto sliderPositionY = 200;
-
-	auto buttonWidth = 20;
-	auto buttonHeight = 20;
-	auto buttonPositionY = 320;
-
-	if (testTrialArray[currentTrialIndex] != nullptr)
-	{
-		for (int i = 0; i < testTrialArray[currentTrialIndex]->getNumberOfConditions(); ++i)
-		{
-			ratingSliderArray[i]->setSize(sliderWidth, sliderHeight);
-			ratingSliderArray[i]->setCentrePosition(sliderPositionX + i * sliderSpacing, sliderPositionY);
-			selectConditionButtonArray[i]->setSize(buttonWidth, buttonHeight);
-			selectConditionButtonArray[i]->setCentrePosition(sliderPositionX + i * sliderSpacing, buttonPositionY);
-		}
-	}
-
-
-
+	repaint();
 }
 
 void MushraComponent::paint(Graphics& g)
 {
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));   // clear the background
 
-	// RECTANGULAR OUTLINE
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
 
+	g.setColour(Colours::pink);
+	g.drawRect(testSpace, 1);
+	g.setColour(Colours::green);
+	g.drawRect(testArea, 1);
+
 	g.setColour(Colours::white);
+	g.drawText("Trial " + String(currentTrialIndex + 1) + " of: " + String(testTrialArray.size()), leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
+	g.drawText(testTrialArray[currentTrialIndex]->getScreenMessage(), leftBorder, topBorder + 20, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
+
+	const int textStartX = leftBorder;
+	const int textStartY = topBorder + 55;
+
+	int textWidth = 0;
+
+	StringArray ratings = testTrialArray[currentTrialIndex]->getRatingOptions();
+
 	g.setFont(14.0f);
 
-	// HORIZONTAL DASHED LINES
-	int linesStartX = 220;
-	int linesEndX = 600;
-	int linesStartY = 100;
-	int linesEndY = 280;
-	int linesYinterval = (linesEndY - linesStartY) / 5;
-	Line<float> line1(Point<float>(linesStartX, linesStartY), Point<float>(linesEndX, linesStartY));
-	Line<float> line2(Point<float>(linesStartX, linesStartY + linesYinterval * 1), Point<float>(linesEndX, linesStartY + linesYinterval * 1));
-	Line<float> line3(Point<float>(linesStartX, linesStartY + linesYinterval * 2), Point<float>(linesEndX, linesStartY + linesYinterval * 2));
-	Line<float> line4(Point<float>(linesStartX, linesStartY + linesYinterval * 3), Point<float>(linesEndX, linesStartY + linesYinterval * 3));
-	Line<float> line5(Point<float>(linesStartX, linesStartY + linesYinterval * 4), Point<float>(linesEndX, linesStartY + linesYinterval * 4));
-	Line<float> line6(Point<float>(linesStartX, linesEndY), Point<float>(linesEndX, linesEndY));
-	float dashPattern[2];
-	dashPattern[0] = 4.0;
-	dashPattern[1] = 8.0;
+	for (int i = 0; i < ratings.size(); ++i)
+	{
+		int size = g.getCurrentFont().getStringWidth(ratings[i]);
+		if (size > textWidth)
+			textWidth = size;
+	}
+
+	const int ySpacer = testArea.getHeight() / ratings.size();
+
+	for (int i = 0; i < ratings.size(); ++i)
+		g.drawText(ratings[i], textStartX, textStartY + ySpacer * i, textWidth, ySpacer, Justification::centredRight, true);
+
+	const int lineXSpacer = 20;
+	const int linesStartX = testArea.getX();
+	const int linesStartY = testArea.getY();
+	const int linesWidth = testArea.getWidth();
+	const int numLines = ratings.size() + 1;
+	const float dashPattern[2] = { 4.0, 8.0 };
+
 	g.setColour(Colours::ghostwhite);
-	g.drawDashedLine(line1, dashPattern, 2, 1.0f);
-	g.drawDashedLine(line2, dashPattern, 2, 1.0f);
-	g.drawDashedLine(line3, dashPattern, 2, 1.0f);
-	g.drawDashedLine(line4, dashPattern, 2, 1.0f);
-	g.drawDashedLine(line5, dashPattern, 2, 1.0f);
-	g.drawDashedLine(line6, dashPattern, 2, 1.0f);
 
-	// RATING SCALE
-	int textStartX = linesStartX - 200;
-	int textStartY = linesStartY - linesYinterval / 2 - 10;
-	int textWidth = 180;
+	for (int i = 0; i < numLines; ++i)
+		g.drawDashedLine(Line<float>(Point<float>(linesStartX, linesStartY + ySpacer * i), Point<float>(linesStartX + linesWidth, linesStartY + ySpacer * i)), dashPattern, 2, 1.0f);
 
-	g.drawText("Excellent", textStartX, linesStartY, textWidth, linesYinterval, Justification::centredRight, true);
-	g.drawText("Good", textStartX, linesStartY + linesYinterval * 1, textWidth, linesYinterval, Justification::centredRight, true);
-	g.drawText("Fair", textStartX, linesStartY + linesYinterval * 2, textWidth, linesYinterval, Justification::centredRight, true);
-	g.drawText("Poor", textStartX, linesStartY + linesYinterval * 3, textWidth, linesYinterval, Justification::centredRight, true);
-	g.drawText("Bad", textStartX, linesStartY + linesYinterval * 4, textWidth, linesYinterval, Justification::centredRight, true);
+	g.setColour(Colours::lightblue);
 
+	for (int i = 0; i < testTrialArray[currentTrialIndex]->getNumberOfConditions(); ++i)
+		g.drawRect(ratingSliderArray[i]->getBounds(), 1);
 
-	// TEST INFO
-	g.drawText("Trial " + String(currentTrialIndex + 1) + " of: " + String(testTrialArray.size()), 20, 20, 100, 25, Justification::centredLeft, true);
-	g.drawText(testTrialArray[currentTrialIndex]->getScreenMessage(), 20, 45, 200, 25, Justification::centredLeft, true);
+	if (testTrialArray[currentTrialIndex] != nullptr)
+	{
+		const int sliderSpacing = 0;
+		const int sliderWidth = 30;
+		const int sliderHeight = testArea.getHeight();
+		const int inc = testArea.getWidth() / testTrialArray[currentTrialIndex]->getNumberOfConditions();
+		const int sliderPositionX = testArea.getX();
+		const int sliderPositionY = testArea.getY();
+		const int buttonHeight = 20;
+
+		for (int i = 0; i < testTrialArray[currentTrialIndex]->getNumberOfConditions(); ++i)
+		{
+			ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
+			ratingSliderArray[i]->setTextBoxStyle(Slider::TextBoxBelow, true, inc, 20);
+			selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 10, sliderWidth, buttonHeight);
+		}
+	}
 }
 
 void MushraComponent::resized()
 {
-	playButton.setBounds(300, 420, 80, 40);
-	stopButton.setBounds(400, 420, 80, 40);
-	loopButton.setBounds(500, 420, 80, 40);
-	selectReferenceButton.setBounds(300, 360, 280, 40);
-	prevTrialButton.setBounds(40, 420, 80, 40);
-	nextTrialButton.setBounds(140, 420, 80, 40);
+	testSpace.setBounds(leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), getHeight() - (topBorder + bottomBorder));
+	testArea.setBounds(testSpace.getX() + 90, testSpace.getY() + 50, testSpace.getWidth() - 90, testSpace.getHeight() - 150);
 
-	close.setBounds(getWidth() - 100, 0, 100, 30);
+	prevTrialButton.setBounds(testArea.getX(), testSpace.getBottom() - 25, 80, 25);
+	nextTrialButton.setBounds(testArea.getX() + 80 + 10, testSpace.getBottom() - 25, 80, 25);
+	selectReferenceButton.setBounds(testArea.getX(), testSpace.getBottom() - 60, testArea.getWidth(), 25);
+	
+	playButton.setBounds(testSpace.getRight() - 240 - 20, testSpace.getBottom() - 25, 80, 25);
+	stopButton.setBounds(testSpace.getRight() - 160 - 10, testSpace.getBottom() - 25, 80, 25);
+	loopButton.setBounds(testSpace.getRight() - 80, testSpace.getBottom() - 25, 80, 25);
+
+	close.setBounds(testSpace.getRight() - 100, testSpace.getY(), 100, 25);
 }
 
 void MushraComponent::buttonClicked(Button* buttonThatWasClicked)

@@ -38,6 +38,13 @@ private:
 	OwnedArray<TestTrial> testTrialArray;
 	int currentTrialIndex = 0;
 
+	int leftBorder;
+	int rightBorder;
+	int topBorder;
+	int bottomBorder;
+
+	juce::Rectangle<int> testSpace;
+	juce::Rectangle<int> testArea;
 	// METHODS
 	void loadTrial(int trialIndex);
 	void paint(Graphics&) override;
