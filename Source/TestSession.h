@@ -13,6 +13,8 @@ public:
 	void begin();
 	void reset();
 
+	void randomiseTrials();
+
 	String getId() const;
 	void setSubjectData(std::unique_ptr<SubjectData> subjectData);
 

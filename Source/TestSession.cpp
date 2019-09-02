@@ -22,6 +22,11 @@ void TestSession::reset()
 	m_currentTrialIndex = 0;
 }
 
+void TestSession::randomiseTrials()
+{
+	std::random_shuffle(m_testTrials.begin(), m_testTrials.end());
+}
+
 String TestSession::getId() const
 {
 	return m_sessionId;
@@ -87,12 +92,16 @@ void TestSession::loadSession(const File& sessionFile)
 
 						m_testTrials[i]->addCondition(con);
 					}
+
+					m_testTrials[i]->randomiseConditions();
 				}
 			}
 
 			if (auto ratings = object.getProperty("ratings", "").getArray())
 				m_testTrials[i]->setRatingOptions(*ratings);
 		}
+
+		randomiseTrials();
 	}
 }
 

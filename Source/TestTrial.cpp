@@ -49,6 +49,11 @@ void TestTrial::addReference(Reference* reference)
 	m_references.add(reference);
 }
 
+void TestTrial::randomiseConditions()
+{
+	std::random_shuffle(m_conditions.begin(), m_conditions.end());
+}
+
 int TestTrial::getNumberOfConditions() const
 {
 	return m_conditions.size();

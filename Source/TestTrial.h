@@ -36,6 +36,8 @@ public:
 	void addCondition(Condition* condition);
 	void addReference(Reference* reference);
 
+	void randomiseConditions();
+
 	Condition* getCondition(const int index);
 	Reference* getReference(const int index);
 	
