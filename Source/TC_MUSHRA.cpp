@@ -3,7 +3,7 @@
 MushraComponent::MushraComponent()
 	: m_oscTxRx(nullptr)
 	, m_player(nullptr)
-	, m_rendererView(nullptr)
+	, m_renderer(nullptr)
 	, leftBorder(20)
 	, rightBorder(20)
 	, topBorder(20)
@@ -24,10 +24,12 @@ MushraComponent::MushraComponent()
 	loopButton.setButtonText("Loop");
 	loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	loopButton.setColour(TextButton::buttonOnColourId, Colours::blue);
+	loopButton.setClickingTogglesState(true);
 	loopButton.addListener(this);
 	addAndMakeVisible(loopButton);
 
 	prevTrialButton.setButtonText("Previous Trial");
+	prevTrialButton.setEnabled(false);
 	prevTrialButton.addListener(this);
 	addAndMakeVisible(prevTrialButton);
 
@@ -35,112 +37,71 @@ MushraComponent::MushraComponent()
 	nextTrialButton.addListener(this);
 	addAndMakeVisible(nextTrialButton);
 
+	endTestButton.setButtonText("End Test");
+	endTestButton.setEnabled(false);
+	endTestButton.addListener(this);
+	addAndMakeVisible(endTestButton);
+
 	selectReferenceButton.setButtonText("Reference");
 	selectReferenceButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::green);
 	selectReferenceButton.addListener(this);
 	addChildComponent(selectReferenceButton);
-
-	close.setButtonText("Close Test");
-	close.addListener(this);
-	addAndMakeVisible(close);
 }
 
 MushraComponent::~MushraComponent()
 {
 }
 
-
-void MushraComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRendererView* rendererView)
+void MushraComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer)
 {
-	// CONFIGURE REFERENCES
 	m_oscTxRx = oscTxRx;
 	m_oscTxRx->addListener(this);
+	
+	m_renderer = renderer;
+	
 	m_player = player;
-	m_rendererView = rendererView;
 	m_player->addChangeListener(this);
+}
 
-	// MUSHRA CONFIG
-	// CONFIGURE THE TEST TRIAL ARRAY (MANUALLY FOR NOW)
-	File rootFolder = File::getCurrentWorkingDirectory().getParentDirectory().getParentDirectory().getParentDirectory().getParentDirectory();
-	String ambisonicScenesFolder = rootFolder.getFullPathName() + File::getSeparatorString() + "AmbisonicTestScenes" + File::getSeparatorString();
+void MushraComponent::reset()
+{
+	nextTrialButton.setEnabled(true);
+	prevTrialButton.setEnabled(false);
+	endTestButton.setEnabled(false);
+}
 
-	testTrialArray.add(new TestTrial);
-	testTrialArray[0]->setReferenceFilepath(ambisonicScenesFolder + "5OA_RENDER_03.wav");
-	testTrialArray[0]->setFilepath(0, ambisonicScenesFolder + "5OA_RENDER_03.wav");
-	testTrialArray[0]->setGain(0, 10);
-	testTrialArray[0]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(1, 10);
-	testTrialArray[0]->setFilepath(2, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(2, 10);
-	testTrialArray[0]->setFilepath(3, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(3, 10);
-	testTrialArray[0]->setFilepath(4, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(4, 10);
-	testTrialArray[0]->setFilepath(5, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(5, 10);
-	testTrialArray[0]->setFilepath(6, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(6, 10);
-	testTrialArray[0]->setFilepath(7, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(7, 10);
-	testTrialArray[0]->setFilepath(8, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(8, 10);
-	testTrialArray[0]->setFilepath(9, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(9, 10);
-	testTrialArray[0]->setFilepath(10, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(10, 10);
-	testTrialArray[0]->setFilepath(11, ambisonicScenesFolder + "5OA_ComplexScene_03_576kbps.wav");
-	testTrialArray[0]->setGain(11, 10);
-	testTrialArray[0]->setScreenMessage("Low Bitrate Spatial Audio Coding");
-	testTrialArray[0]->setRatingOptions({"Excellent", "Good" ,"Fair", "Poor", "Bad"});
-
-
-	testTrialArray.add(new TestTrial);
-	testTrialArray[1]->setReferenceFilepath(ambisonicScenesFolder + "5OA_RENDER_04.wav");
-	testTrialArray[1]->setFilepath(0, ambisonicScenesFolder + "5OA_RENDER_04.wav");
-	testTrialArray[1]->setGain(0, 10);
-	testTrialArray[1]->setFilepath(1, ambisonicScenesFolder + "5OA_ComplexScene_04_576kbps.wav");
-	testTrialArray[1]->setGain(1, 10);
-	testTrialArray[1]->setScreenMessage("Low Bitrate Spatial Audio Coding");
-	testTrialArray[1]->setRatingOptions({ "Very Clear", "Clear" ,"Fair", "Unclear", "Very Unclear" });
-
-	testTrialArray.add(new TestTrial);
-	testTrialArray[2]->setReferenceFilepath(ambisonicScenesFolder + "under_the_bridge_mix5_STEREO.wav");
-	testTrialArray[2]->setFilepath(0, ambisonicScenesFolder + "under_the_bridge_mix5_STEREO.wav");
-	testTrialArray[2]->setGain(0, 0);
-	testTrialArray[2]->setFilepath(1, ambisonicScenesFolder + "under_the_bridge_mix5_5OA.wav");
-	testTrialArray[2]->setGain(1, 0);
-	testTrialArray[2]->setScreenMessage("Stereo vs Ambisonics");
-	testTrialArray[2]->setRatingOptions({ "Good", "Okay" ,"Bad" });
-
-	//// initialize score arrays
-	//for (int i = 0; i < testTrialArray.size(); ++i)
-	//{
-	//	for (int j = 0; j < ratingSliderArray.size(); ++j)
-	//	{
-	//		testTrialArray[i]->setScore(j, 0.0f);
-	//	}
-	//}
-
-	// LOAD THE FIRST TRIAL
+void MushraComponent::loadTestSession(TestSession* testSession)
+{
+	m_testSession = testSession;
 	loadTrial(0);
+}
+
+void MushraComponent::addListener(Listener* newListener)
+{
+	mushraTestListeners.add(newListener);
+}
+
+void MushraComponent::removeListener(Listener* listener)
+{
+	mushraTestListeners.remove(listener);
 }
 
 void MushraComponent::loadTrial(int trialIndex)
 {
-	currentTrialIndex = trialIndex; // this has to be checked, things are getting nasty when ipad/vr interface is on
-
-	if (m_player == nullptr)
+	if ((m_testSession == nullptr) || (m_renderer == nullptr) || (m_player == nullptr) || (m_oscTxRx == nullptr))
 	{
-		// m_player needs to be initialized
 		jassertfalse;
 		return;
 	}
 
-	// REFERENCE BUTTON
-	selectReferenceButton.setVisible(testTrialArray[currentTrialIndex]->isReferencePresent());
+	TestTrial* trial = m_testSession->getTrial(trialIndex);
 
-	// SLIDERS AND BUTTONS - INITIALIZE
+	if (trial == nullptr)
+		return;
+
+	selectReferenceButton.setVisible(trial->isReferencePresent());
+
 	ratingSliderArray.clear();
 	ratingReadouts.clear();
 	selectConditionButtonArray.clear();
@@ -148,7 +109,7 @@ void MushraComponent::loadTrial(int trialIndex)
 	StringArray selectButtonAlphabet = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
 											"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 
-	for (int i = 0; i < testTrialArray[currentTrialIndex]->getNumberOfConditions(); ++i)
+	for (int i = 0; i < trial->getNumberOfConditions(); ++i)
 	{
 		ratingSliderArray.add(new Slider());
 		ratingSliderArray[i]->getProperties().set("ratingSlider", true);
@@ -156,87 +117,105 @@ void MushraComponent::loadTrial(int trialIndex)
 		ratingSliderArray[i]->setSliderStyle(Slider::LinearVertical);
 		ratingSliderArray[i]->setTextBoxIsEditable(true);
 		ratingSliderArray[i]->setRange(0, 100, 1);
-		ratingSliderArray[i]->setValue(testTrialArray[currentTrialIndex]->getScore(i), dontSendNotification);
+		ratingSliderArray[i]->setValue(trial->getCondition(i)->score, dontSendNotification);
 		ratingSliderArray[i]->addListener(this);
 		addAndMakeVisible(ratingSliderArray[i]);
 
 		ratingReadouts.add(new Label());
-		ratingReadouts[i]->setText(String(testTrialArray[currentTrialIndex]->getScore(i)), dontSendNotification);
+		ratingReadouts[i]->setText(String(trial->getCondition(i)->score), dontSendNotification);
 		ratingReadouts[i]->setJustificationType(Justification::centred);
 		addAndMakeVisible(ratingReadouts[i]);
 
 		selectConditionButtonArray.add(new TextButton());
+		selectConditionButtonArray[i]->setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		selectConditionButtonArray[i]->setColour(TextButton::buttonOnColourId, Colours::coral);
 		selectConditionButtonArray[i]->getProperties().set("playSampleButton", true);
 		selectConditionButtonArray[i]->getProperties().set("buttonIndex", i);
-		if (i < selectButtonAlphabet.size()) selectConditionButtonArray[i]->setButtonText(selectButtonAlphabet[i]);
+
+		if (i < selectButtonAlphabet.size())
+			selectConditionButtonArray[i]->setButtonText(selectButtonAlphabet[i]);
+
 		selectConditionButtonArray[i]->addListener(this);
 		addAndMakeVisible(selectConditionButtonArray[i]);
 	}
 
-	m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
+	m_player->loop(trial->getLoopingState());
+	loopButton.setToggleState(trial->getLoopingState(), false);
 
 	repaint();
 }
 
 void MushraComponent::paint(Graphics& g)
 {
-	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));   // clear the background
+	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
 
 	g.setColour(Colours::white);
-	g.drawText("Trial " + String(currentTrialIndex + 1) + " of: " + String(testTrialArray.size()), leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
-	g.drawText(testTrialArray[currentTrialIndex]->getScreenMessage(), leftBorder, topBorder + 20, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
 
-	const int textStartX = leftBorder;
-	const int textStartY = topBorder + 55;
-
-	int textWidth = 0;
-
-	StringArray ratings = testTrialArray[currentTrialIndex]->getRatingOptions();
-
-	g.setFont(14.0f);
-
-	for (int i = 0; i < ratings.size(); ++i)
+	if (m_testSession->getNumberOfTrials() > 0)
 	{
-		int size = g.getCurrentFont().getStringWidth(ratings[i]);
-		if (size > textWidth)
-			textWidth = size;
-	}
+		TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 
-	const int ySpacer = testArea.getHeight() / ratings.size();
+		if (trial == nullptr)
+			return;
 
-	for (int i = 0; i < ratings.size(); ++i)
-		g.drawText(ratings[i], textStartX, textStartY + ySpacer * i, textWidth, ySpacer, Justification::centredRight, true);
+		g.drawText("Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials()), leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
+		g.drawText(trial->getTrialName(), leftBorder, topBorder + 20, getWidth() - (leftBorder + rightBorder), 25, Justification::centredLeft, true);
 
-	const int lineXSpacer = 20;
-	const int linesStartX = testArea.getX();
-	const int linesStartY = testArea.getY();
-	const int linesWidth = testArea.getWidth();
-	const int numLines = ratings.size() + 1;
-	const float dashPattern[2] = { 4.0, 8.0 };
+		StringArray ratings = trial->getRatingOptions();
 
-	g.setColour(Colours::ghostwhite);
-
-	for (int i = 0; i < numLines; ++i)
-		g.drawDashedLine(Line<float>(Point<float>(linesStartX, linesStartY + ySpacer * i), Point<float>(linesStartX + linesWidth, linesStartY + ySpacer * i)), dashPattern, 2, 1.0f);
-
-	if (testTrialArray[currentTrialIndex] != nullptr)
-	{
-		const int sliderSpacing = 0;
-		const int sliderWidth = 30;
-		const int sliderHeight = testArea.getHeight();
-		const int inc = testArea.getWidth() / testTrialArray[currentTrialIndex]->getNumberOfConditions();
-		const int sliderPositionX = testArea.getX();
-		const int sliderPositionY = testArea.getY();
-		const int buttonHeight = 20;
-
-		for (int i = 0; i < testTrialArray[currentTrialIndex]->getNumberOfConditions(); ++i)
+		if (!ratings.isEmpty())
 		{
-			ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
-			ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 10, sliderWidth, buttonHeight);
-			selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 40, sliderWidth, buttonHeight);
+			g.setFont(14.0f);
+
+			int textWidth = 0;
+
+			for (int i = 0; i < ratings.size(); ++i)
+			{
+				int size = g.getCurrentFont().getStringWidth(ratings[i]);
+				if (size > textWidth)
+					textWidth = size;
+			}
+
+			int ySpacer = testArea.getHeight() / ratings.size();
+
+			const int textStartX = leftBorder;
+			const int textStartY = testArea.getY();
+
+			for (int i = 0; i < ratings.size(); ++i)
+				g.drawText(ratings[i], textStartX, textStartY + ySpacer * i, textWidth, ySpacer, Justification::centredRight, true);
+
+			const int lineXSpacer = 20;
+			const int linesStartX = testArea.getX();
+			const int linesStartY = testArea.getY();
+			const int linesWidth = testArea.getWidth();
+			const int numLines = ratings.size() + 1;
+			const float dashPattern[2] = { 4.0, 8.0 };
+
+			g.setColour(Colours::ghostwhite);
+
+			for (int i = 0; i < numLines; ++i)
+				g.drawDashedLine(Line<float>(Point<float>(linesStartX, linesStartY + ySpacer * i), Point<float>(linesStartX + linesWidth, linesStartY + ySpacer * i)), dashPattern, 2, 1.0f);
+		}
+
+		if (trial->getNumberOfConditions() > 0)
+		{
+			const int sliderSpacing = 0;
+			const int sliderWidth = 30;
+			const int sliderHeight = testArea.getHeight();
+			const int inc = testArea.getWidth() / trial->getNumberOfConditions();
+			const int sliderPositionX = testArea.getX();
+			const int sliderPositionY = testArea.getY();
+			const int buttonHeight = 20;
+
+			for (int i = 0; i < trial->getNumberOfConditions(); ++i)
+			{
+				ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
+				ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 10, sliderWidth, buttonHeight);
+				selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 40, sliderWidth, buttonHeight);
+			}
 		}
 	}
 }
@@ -246,114 +225,127 @@ void MushraComponent::resized()
 	testSpace.setBounds(leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), getHeight() - (topBorder + bottomBorder));
 	testArea.setBounds(testSpace.getX() + 90, testSpace.getY() + 50, testSpace.getWidth() - 90, testSpace.getHeight() - 180);
 
-	prevTrialButton.setBounds(testArea.getX(), testSpace.getBottom() - 25, 80, 25);
-	nextTrialButton.setBounds(testArea.getX() + 80 + 10, testSpace.getBottom() - 25, 80, 25);
+	prevTrialButton.setBounds(testSpace.getX(), testSpace.getBottom() - 25, 80, 25);
+	nextTrialButton.setBounds(testSpace.getX() + 80 + 10, testSpace.getBottom() - 25, 80, 25);
+	endTestButton.setBounds(testSpace.getX() + 160 + 20, testSpace.getBottom() - 25, 80, 25);
 	selectReferenceButton.setBounds(testArea.getX(), testSpace.getBottom() - 60, testArea.getWidth(), 25);
-	
+
 	playButton.setBounds(testSpace.getRight() - 240 - 20, testSpace.getBottom() - 25, 80, 25);
 	stopButton.setBounds(testSpace.getRight() - 160 - 10, testSpace.getBottom() - 25, 80, 25);
 	loopButton.setBounds(testSpace.getRight() - 80, testSpace.getBottom() - 25, 80, 25);
-
-	close.setBounds(testSpace.getRight() - 100, testSpace.getY(), 100, 25);
 }
 
 void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 {
+	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+
+	for (int i = 0; i < selectConditionButtonArray.size(); ++i)
+	{
+		if (buttonThatWasClicked == selectConditionButtonArray[i])
+		{
+			if (trial == nullptr)
+				break;
+
+			m_player->pause();
+
+			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+			m_player->loadFile(trial->getCondition(i)->filepath);
+			m_player->setGain(trial->getCondition(i)->gain);
+			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+
+			m_renderer->setOrder(trial->getCondition(i)->rendereringOrder);
+			m_renderer->loadFromAmbixConfigFile(trial->getCondition(i)->ambixConfig);
+			m_player->play();
+
+			break;
+		}
+	}
+
 	if (buttonThatWasClicked == &playButton)
 	{
 		m_player->play();
 	}
-
 	else if (buttonThatWasClicked == &stopButton)
 	{
 		m_player->stop();
 	}
-
 	else if (buttonThatWasClicked == &loopButton)
 	{
-		if (!testTrialArray[currentTrialIndex]->getLoopingState())
-		{
-			testTrialArray[currentTrialIndex]->setLooping(true);
-			loopButton.setColour(TextButton::buttonColourId, Colours::blue);
-			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int)1);
-		}
-		else
-		{
-			testTrialArray[currentTrialIndex]->setLooping(false);
-			loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int)0);
-		}
+		bool isLooping = loopButton.getToggleState();
 
-		m_player->loop(testTrialArray[currentTrialIndex]->getLoopingState());
+		trial->setLooping(isLooping);
+		m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int)isLooping);
+		m_player->loop(isLooping);
 	}
-
 	else if (buttonThatWasClicked == &selectReferenceButton)
 	{
+		if (trial == nullptr)
+			return;
+
 		if (timeSyncPlayback)
 		{
 			m_player->stop();
-			testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
-			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
-			m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
-			m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
+			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+			m_player->loadFile(trial->getReference(0)->filepath);
+			m_player->setGain(trial->getCondition(0)->gain);
+			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 			m_player->play();
 		}
 		else
 		{
-			m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
-			m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
+			m_player->loadFile(trial->getReference(0)->filepath);
+			m_player->setGain(trial->getReference(0)->gain);
 			m_player->play();
 		}
 
 		m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)1);
 		m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
 	}
-
-	//else if (buttonThatWasClicked == &selectBButton)
-	//{
-	//	if (timeSyncPlayback)
-	//	{
-	//		m_player->stop();
-	//		testTrialArray[currentTrialIndex]->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
-	//		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
-	//		m_player->setGain(testTrialArray[currentTrialIndex]->getGain(1));
-	//		m_player->setPlaybackHeadPosition(testTrialArray[currentTrialIndex]->getLastPlaybackHeadPosition());
-	//		m_player->play();
-	//	}
-	//	else
-	//	{
-	//		m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(1));
-	//		m_player->setGain(testTrialArray[currentTrialIndex]->getGain(1));
-	//		m_player->play();
-	//	}
-
-	//	m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)0);
-	//	m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)1);
-	//}
-
 	else if (buttonThatWasClicked == &prevTrialButton)
 	{
-		if (currentTrialIndex > 0)
+		int currentIndex = m_testSession->getCurrentTrialIndex();
+
+		if (currentIndex > 0)
 		{
-			currentTrialIndex--;
-			loadTrial(currentTrialIndex);
+			currentIndex--;
+			m_testSession->setCurrentTrialIndex(currentIndex);
+			loadTrial(currentIndex);
+
+			if (currentIndex < m_testSession->getNumberOfTrials() - 1)
+				nextTrialButton.setEnabled(true); 
+			
+			if (currentIndex == 0)
+				prevTrialButton.setEnabled(false);
 		}
 	}
-
 	else if (buttonThatWasClicked == &nextTrialButton)
 	{
-		if (currentTrialIndex < testTrialArray.size() - 1)
+		int currentIndex = m_testSession->getCurrentTrialIndex();
+
+		if (currentIndex < m_testSession->getNumberOfTrials() - 1)
 		{
-			currentTrialIndex++;
-			loadTrial(currentTrialIndex);
+			currentIndex++;
+			m_testSession->setCurrentTrialIndex(currentIndex);
+			loadTrial(currentIndex);
+
+			if (currentIndex > 0)
+				prevTrialButton.setEnabled(true);
+
+			if (currentIndex == m_testSession->getNumberOfTrials() - 1)
+			{
+				// we can end, once we get to the end
+				endTestButton.setEnabled(true);
+				nextTrialButton.setEnabled(false);
+			}
 		}
 	}
-	else if (buttonThatWasClicked == &close)
+	else if (buttonThatWasClicked == &endTestButton)
 	{
+		// save up and close
+		m_testSession->exportResults();
+		mushraTestListeners.call([this](Listener& l) { l.testCompleted(); });
 		setVisible(false);
 	}
-
-	repaint();
 }
 
 void MushraComponent::sliderValueChanged(Slider* sliderThatWasChanged)
@@ -362,8 +354,10 @@ void MushraComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 
 	if (rateSampleSliderChanged)
 	{
+		TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+
 		int sliderIndex = sliderThatWasChanged->getProperties()["sliderIndex"];
-		testTrialArray[currentTrialIndex]->setScore(sliderIndex, sliderThatWasChanged->getValue());
+		trial->getCondition(sliderIndex)->score = sliderThatWasChanged->getValue();
 		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
 	}
 }
@@ -389,10 +383,6 @@ void MushraComponent::oscMessageReceived(const OSCMessage& message)
 		{
 			selectReferenceButton.triggerClick();
 		}
-		//else if (message[0].getString() == "B")
-		//{
-		//	selectBButton.triggerClick();
-		//}
 		else if (message[0].getString() == "prev_trial")
 		{
 			prevTrialButton.triggerClick();
@@ -406,7 +396,6 @@ void MushraComponent::oscMessageReceived(const OSCMessage& message)
 	// CONTROL TS26.258 SLIDERS
 	if (message.size() == 2 && message.getAddressPattern() == "/ts26259/slider" && message[0].isFloat32() && message[1].isFloat32())
 	{
-		//scoresMatrix[currentTrialIndex][(int)message[0].getFloat32()] = message[1].getFloat32();
 		ratingSliderArray[(int)message[0].getFloat32()]->setValue(message[1].getFloat32());
 	}
 }
@@ -425,13 +414,8 @@ void MushraComponent::changeListenerCallback(ChangeBroadcaster* source)
 			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)0);
 			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)1);
 		}
-
 	}
-
 }
-
-
-
 
 ////==============================================================================
 //void MushraComponent::paint (Graphics& g)

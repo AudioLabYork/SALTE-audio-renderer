@@ -6,15 +6,16 @@
 #include "StimulusPlayer.h"
 #include "BinauralRenderer.h"
 #include "BinauralRendererView.h"
-
-// additional test modules
 #include "TC_MUSHRA.h"
-#include "TC_OSC.h"
-#include "TC_TS26259.h"
+#include "TestSession.h"
+#include "TestSessionForm.h"
 
-class MainComponent   :     public AudioAppComponent,
-                            private Button::Listener,
-                            public ChangeListener
+class MainComponent
+	: public AudioAppComponent
+	, public Button::Listener
+	, public TestSessionForm::Listener
+	, public MushraComponent::Listener
+	, public ChangeListener
 {
 public:
     //==============================================================================
@@ -30,22 +31,20 @@ public:
     void paint (Graphics& g) override;
     void resized() override;
     void buttonClicked(Button* buttonThatWasClicked) override;
-
-    // LOG WINDOW UPDATE
+	void formCompleted() override;
+	void testCompleted() override;
     void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
-
-	// COMPONENTS
 	AudioSetup as;
 	OscTransceiver oscTxRx;
     StimulusPlayer sp;
 	BinauralRenderer br;
 	BinauralRendererView brv;
-	OscTestComponent otc; 	// OSC test component
-	TC_TS26259 tsc; 	// 3GPP TS 26.259 component
-	MushraComponent mc; 	// MUSHRA COMPONENT
+	MushraComponent mc;
 
+	TestSession m_testSession;
+	TestSessionForm m_testSessionForm;
 
 	AudioBuffer<float> processBuffer;
 	int m_maxSamplesPerBlock;
@@ -54,7 +53,6 @@ private:
 	TextEditor logWindow;
 
 	TextButton openAudioDeviceManager, connectOscButton;
-	TextButton loadOSCTestButton, loadMushraBtn, loadLocTestBtn, loadTS126259TestBtn;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
 	// save and load settings
