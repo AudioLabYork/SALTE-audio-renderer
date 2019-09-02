@@ -357,6 +357,8 @@ void BinauralRenderer::preprocessHRIRs()
 
 void BinauralRenderer::uploadHRIRsToEngine()
 {
+	ScopedLock lock(m_procLock);
+
 	if (m_useSHDConv)
 	{
 		convertHRIRToSHDHRIR();
