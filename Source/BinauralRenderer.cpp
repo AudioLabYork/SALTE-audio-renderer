@@ -227,7 +227,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	{
 		buffer.clear();
 
-		if (m_shdConvEngines.size() != m_numAmbiChans)
+		if ((m_shdConvEngines.size() != m_numAmbiChans) || (m_shdConvEngines.size() == 0))
 		{
 			// not enough convolution engines to perform this process
 			return;
@@ -258,7 +258,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	}
 	else
 	{
-		if ((m_convEngines.size() != m_numLsChans) || (m_numLsChans == 0))
+		if ((m_convEngines.size() != m_numLsChans) || (m_convEngines.size() == 0))
 		{
 			// not enough convolution engines to perform this process
 			buffer.clear();
