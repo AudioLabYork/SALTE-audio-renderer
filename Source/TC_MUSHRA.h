@@ -1,12 +1,10 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include <vector>
-#include <random>
-#include "TestTrial.h"
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
-#include "BinauralRendererView.h"
+#include "BinauralRenderer.h"
+#include "TestSession.h"
 
 class MushraComponent : public Component,
 						public OSCReceiver,
@@ -20,13 +18,32 @@ public:
 	MushraComponent();
 	~MushraComponent();
 
-	void init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRendererView* rendererView);
+	void init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer);
+	void reset();
+	void loadTestSession(TestSession* testSession);
+
+	class Listener
+	{
+	public:
+		virtual ~Listener() = default;
+		virtual void testCompleted() = 0;
+	};
+
+	void addListener(Listener* newListener);
+	void removeListener(Listener* listener);
 
 private:
+	void loadTrial(int trialIndex);
+	void paint(Graphics&) override;
+	void resized() override;
+	void buttonClicked(Button* buttonThatWasClicked) override;
+	void sliderValueChanged(Slider* sliderThatWasChanged) override;
+	void oscMessageReceived(const OSCMessage& message) override;
+	void changeListenerCallback(ChangeBroadcaster* source) override;
+
 	TextButton playButton, stopButton, loopButton;
-	TextButton prevTrialButton, nextTrialButton;
+	TextButton prevTrialButton, nextTrialButton, endTestButton;
 	TextButton selectReferenceButton;
-	TextButton close;
 	OwnedArray<TextButton> selectConditionButtonArray;
 	OwnedArray<Slider> ratingSliderArray;
 	bool timeSyncPlayback = true;
@@ -34,10 +51,9 @@ private:
 
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;
-	BinauralRendererView* m_rendererView;
+	BinauralRenderer* m_renderer;
 
-	OwnedArray<TestTrial> testTrialArray;
-	int currentTrialIndex = 0;
+	TestSession* m_testSession;
 
 	int leftBorder;
 	int rightBorder;
@@ -46,14 +62,8 @@ private:
 
 	juce::Rectangle<int> testSpace;
 	juce::Rectangle<int> testArea;
-	// METHODS
-	void loadTrial(int trialIndex);
-	void paint(Graphics&) override;
-	void resized() override;
-	void buttonClicked(Button* buttonThatWasClicked) override;
-	void sliderValueChanged(Slider* sliderThatWasChanged) override;
-	void oscMessageReceived(const OSCMessage& message) override;
-	void changeListenerCallback(ChangeBroadcaster* source) override;
+
+	ListenerList<Listener> mushraTestListeners;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MushraComponent)
 };

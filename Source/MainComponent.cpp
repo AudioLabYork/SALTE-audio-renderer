@@ -19,10 +19,9 @@ MainComponent::MainComponent()
 	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
 	
 	Result res = sourcePath.createDirectory();
+
 	if (res.wasOk())
-	{
 		Logger::outputDebugString("application directory created successfully");
-	}
 
 	// set size of the main app window
     setSize (1400, 800);
@@ -46,47 +45,49 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
- 
-	addAndMakeVisible(&connectOscButton);
+	
 	connectOscButton.setButtonText("Connect OSC");
 	connectOscButton.addListener(this);
 	connectOscButton.triggerClick(); // connect on startup
+	addAndMakeVisible(&connectOscButton);
 
-	addAndMakeVisible(&openAudioDeviceManager);
 	openAudioDeviceManager.setButtonText("Audio device setup");
 	openAudioDeviceManager.addListener(this);
-    
-	// optional test interfeace load buttons
-	addAndMakeVisible(&loadOSCTestButton);
-	loadOSCTestButton.setButtonText("OSC Communication Test");
-	loadOSCTestButton.addListener(this);
-
-	addAndMakeVisible(&loadMushraBtn);
-	loadMushraBtn.setButtonText("MUSHRA Test");
-	loadMushraBtn.addListener(this);
-
-	addAndMakeVisible(&loadLocTestBtn);
-	loadLocTestBtn.setButtonText("Localisation Test");
-	loadLocTestBtn.addListener(this);
-
-	addAndMakeVisible(&loadTS126259TestBtn);
-	loadTS126259TestBtn.setButtonText("TS 26.259");
-	loadTS126259TestBtn.addListener(this);
+	addAndMakeVisible(&openAudioDeviceManager);
 
 	// load settings file if available
 	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
 	settingsFile = File(filePath + "/" + "AudioSettings.conf");
+	
 	if (settingsFile.existsAsFile())
-	{
 		loadSettings();
-	}
+
+	m_testSessionForm.init(&m_testSession);
+	m_testSessionForm.addListener(this);
+	addAndMakeVisible(m_testSessionForm);
+
+	mc.init(&oscTxRx, &sp, &br);
+	mc.addListener(this);
+	addChildComponent(mc);
 
 	// log window
-    addAndMakeVisible(logWindow);
     logWindow.setMultiLine(true);
     logWindow.setReadOnly(true);
     logWindow.setCaretVisible(false);
     logWindow.setScrollbarsShown(true);
+	addAndMakeVisible(logWindow);
+
+	//LookAndFeel& lookAndFeel = getLookAndFeel();
+	//lookAndFeel.setColour(ResizableWindow::backgroundColourId, Colours::gainsboro);
+	//lookAndFeel.setColour(TextButton::buttonColourId, Colours::gainsboro.darker());
+	//lookAndFeel.setColour(TextButton::textColourOffId, Colours::black);
+	//lookAndFeel.setColour(ComboBox::backgroundColourId, Colours::gainsboro.darker());
+	//lookAndFeel.setColour(ComboBox::textColourId, Colours::black);
+	//lookAndFeel.setColour(TextEditor::backgroundColourId, Colours::gainsboro.darker());
+	//lookAndFeel.setColour(TextEditor::textColourId, Colours::black);
+	//lookAndFeel.setColour(Label::textColourId, Colours::black);
+	//lookAndFeel.setColour(Slider::backgroundColourId, Colours::gainsboro.darker());
+	//lookAndFeel.setColour(Slider::thumbColourId, Colours::white);
 }
 
 MainComponent::~MainComponent()
@@ -147,26 +148,28 @@ void MainComponent::paint (Graphics& g)
 	g.drawRect(getLocalBounds(), 1);
     juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
     juce::Rectangle<int> tstlogicRect(10, 170, 640, 480);   // test logic component
-    juce::Rectangle<int> renderRect(660, 405, 730, 385);    // rendering component
+    juce::Rectangle<int> renderRect(660, 405, 730, 245);    // rendering component
+	juce::Rectangle<int> testRect(10, 170, 640, 480);    // test component
+
     g.drawRect(oscRect, 1);
     g.drawRect(tstlogicRect, 1);
     g.drawRect(renderRect, 1);
+	g.drawRect(testRect, 1);
 
 	// OSC WINDOW
-	g.setColour(Colours::white);
+	g.setColour(getLookAndFeel().findColour(Label::textColourId));
 
 	g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
 	g.drawText("Send to", 410, 10, 50, 25, Justification::centredLeft, true);
 	g.drawText("Receive at", 490, 10, 75, 25, Justification::centredLeft, true);
 	g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
-
 }
 
 void MainComponent::resized()
 {
 	as.setCentrePosition(getWidth()/2, getHeight()/2);
     sp.setBounds(660, 10, 730, 385);
-	brv.setBounds(660, 405, 730, 385);
+	brv.setBounds(660, 405, 730, 245);
 	openAudioDeviceManager.setBounds(310, 105, 240, 25);
 	connectOscButton.setBounds(310, 70, 240, 25);
 
@@ -174,17 +177,9 @@ void MainComponent::resized()
 	clientTxPortLabel.setBounds(410, 35, 60, 25);
 	clientRxPortLabel.setBounds(490, 35, 60, 25);
 
-	loadOSCTestButton.setBounds(40, 200, 250, 25);
-	loadMushraBtn.setBounds(40, 250, 250, 25);
-	loadTS126259TestBtn.setBounds(40, 300, 250, 25);
-	loadLocTestBtn.setBounds(40, 350, 250, 25);
-
-
     logWindow.setBounds(10, 660, 640, 130);
 
-	// fit test components
-	otc.setBounds(10, 170, 640, 480);
-	tsc.setBounds(10, 170, 640, 480);
+	m_testSessionForm.setBounds(10, 170, 640, 480);
     mc.setBounds(10, 170, 640, 480);
 }
 
@@ -194,7 +189,6 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		addAndMakeVisible(as);
 	}
-
 	else if (buttonThatWasClicked == &connectOscButton)
 	{
 		if (!oscTxRx.isConnected())
@@ -222,35 +216,20 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		}
 	}
 
-	else if (buttonThatWasClicked == &loadOSCTestButton)
-	{
-		// add OSC test component
-		addAndMakeVisible(otc);
-	}
-
-	else if (buttonThatWasClicked == &loadMushraBtn)
-	{
-		mc.init(&oscTxRx, &sp, &brv);
-		addAndMakeVisible(mc);
-	}
-
-	else if (buttonThatWasClicked == &loadTS126259TestBtn)
-	{
-		// pass the osc transceiver
-		// pass the player into the test component so that it can use it for triggering play, pause stop etc
-		// pass the renderer as well, so we can set the ambisonic order and hrtfs
-		tsc.init(&oscTxRx, &sp, &brv);
-		addAndMakeVisible(tsc);
-	}
-
-	else if (buttonThatWasClicked == &loadLocTestBtn)
-	{
-
-	}
-
-
-
     repaint();
+}
+
+void MainComponent::formCompleted()
+{
+	mc.loadTestSession(&m_testSession);
+	mc.setVisible(true);
+}
+
+void MainComponent::testCompleted()
+{
+	mc.reset();
+	m_testSessionForm.reset();
+	m_testSessionForm.setVisible(true);
 }
 
 void MainComponent::loadSettings()

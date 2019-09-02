@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BinauralRenderer.h"
-#include "SOFAReader.h"
 
 enum eOrders
 {
@@ -47,9 +46,7 @@ public:
 	
 	void browseForAmbixConfigFile();
 	void browseForSofaFile();
-	
-	void loadAmbixConfigFile(const File& file);
-	void loadSofaFile(const File& file);
+
 	void loadStandardHRTF();
 
 	String m_currentLogMessage;

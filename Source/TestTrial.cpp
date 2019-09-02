@@ -1,64 +1,67 @@
 #include "TestTrial.h"
 
 TestTrial::TestTrial()
+	: m_trialId(0)
+	, lastPlaybackHeadPosition(0.0f)
+	, isLooping(true)
+	, loopStartTime(0.0f)
+	, loopEndTime(0.0f)
 {
 }
 
-TestTrial::~TestTrial()
+void TestTrial::init(const String& trialId)
 {
+	m_trialId = trialId;
 }
 
-void TestTrial::setFilepath(int fileindex, const String& filepath)
+String TestTrial::getId() const
 {
-	filepathArray.set(fileindex, filepath);
+	return m_trialId;
 }
 
-String TestTrial::getFilepath(int fileindex)
+Condition* TestTrial::getCondition(const int index)
 {
-	return filepathArray[fileindex];
+	return m_conditions[index];
 }
 
-void TestTrial::setScore(int fileindex, float score)
+Reference* TestTrial::getReference(const int index)
 {
-	scoresArray.set(fileindex, score);
+	return m_references[index];
 }
 
-float TestTrial::getScore(int fileindex)
+void TestTrial::setTrialName(const String& name)
 {
-	return scoresArray[fileindex];
+	m_trialName = name;
 }
 
-void TestTrial::setGain(int fileindex, float gainInDB)
+String TestTrial::getTrialName() const
 {
-	stimulusGainArray.set(fileindex, gainInDB);
+	return m_trialName;
 }
 
-float TestTrial::getGain(int fileindex)
+void TestTrial::addCondition(Condition* condition)
 {
-	return stimulusGainArray[fileindex];
-}
-void TestTrial::setScreenMessage(const String& msg)
-{
-	screenMessage = msg;
-}
-String TestTrial::getScreenMessage()
-{
-	return screenMessage;
+	m_conditions.add(condition);
 }
 
-int TestTrial::getNumberOfConditions()
+void TestTrial::addReference(Reference* reference)
 {
-	return filepathArray.size();
+	m_references.add(reference);
+}
+
+int TestTrial::getNumberOfConditions() const
+{
+	return m_conditions.size();
 }
 
 void TestTrial::setRatingOptions(const StringArray ratings)
 {
-	ratingOptions = ratings;
+	m_ratingOptions = ratings;
 }
 
-StringArray TestTrial::getRatingOptions()
+StringArray TestTrial::getRatingOptions() const
 {
-	return ratingOptions;
+	return m_ratingOptions;
 }
 
 void TestTrial::setLastPlaybackHeadPosition(double time)
@@ -66,12 +69,12 @@ void TestTrial::setLastPlaybackHeadPosition(double time)
 	lastPlaybackHeadPosition = time;
 }
 
-double TestTrial::getLastPlaybackHeadPosition()
+double TestTrial::getLastPlaybackHeadPosition() const
 {
 	return lastPlaybackHeadPosition;
 }
 
-bool TestTrial::getLoopingState()
+bool TestTrial::getLoopingState() const
 {
 	return isLooping;
 }
@@ -81,37 +84,27 @@ void TestTrial::setLooping(bool looping)
 	isLooping = looping;
 }
 
-void TestTrial::setLoopStart(float startTime)
+void TestTrial::setLoopStart(const float startTime)
 {
 	loopStartTime = startTime;
 }
 
-float TestTrial::getLoopStart()
+float TestTrial::getLoopStart() const
 {
 	return loopStartTime;
 }
 
-void TestTrial::setLoopEnd(float endTime)
+void TestTrial::setLoopEnd(const float endTime)
 {
 	loopEndTime = endTime;
 }
 
-float TestTrial::getLoopEnd()
+float TestTrial::getLoopEnd() const
 {
 	return loopEndTime;
 }
 
-void TestTrial::setReferenceFilepath(const String& filepath)
-{
-	referenceFilepath = filepath;
-}
-
-String TestTrial::getReferenceFilepath()
-{
-	return referenceFilepath;
-}
-
 bool TestTrial::isReferencePresent()
 {
-	return referenceFilepath.isNotEmpty();
+	return !m_references.isEmpty();
 }

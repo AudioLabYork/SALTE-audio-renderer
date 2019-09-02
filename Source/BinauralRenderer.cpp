@@ -42,6 +42,137 @@ void BinauralRenderer::deinit()
 {
 }
 
+void BinauralRenderer::loadFromAmbixConfigFile(const File& file)
+{
+	FileInputStream fis(file);
+
+	if (!fis.openedOk())
+		return;
+
+	StringArray lines;
+
+	file.readLines(lines);
+
+	while (!fis.isExhausted())
+	{
+		String line = fis.readNextLine();
+
+		if (line.contains("#GLOBAL"))
+		{
+			while (!fis.isExhausted())
+			{
+				line = fis.readNextLine().trim();
+
+				if (line.contains("#END"))
+					break;
+
+				if (line.startsWithIgnoreCase("/debug_msg"))
+				{
+					String res = line.fromFirstOccurrenceOf("/debug_msg ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/dec_mat_gain"))
+				{
+					String res = line.fromFirstOccurrenceOf("/dec_mat_gain ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/coeff_scale"))
+				{
+					String res = line.fromFirstOccurrenceOf("/coeff_scale ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/coeff_seq"))
+				{
+					String res = line.fromFirstOccurrenceOf("/coeff_seq ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/flip"))
+				{
+					String res = line.fromFirstOccurrenceOf("/flip ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/flop"))
+				{
+					String res = line.fromFirstOccurrenceOf("/flop ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/flap"))
+				{
+					String res = line.fromFirstOccurrenceOf("/flap ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/global_hrtf_gain"))
+				{
+					String res = line.fromFirstOccurrenceOf("/global_hrtf_gain ", false, true);
+					Logger::outputDebugString(res);
+				}
+				else if (line.startsWithIgnoreCase("/invert_condon_shortley"))
+				{
+					String res = line.fromFirstOccurrenceOf("/invert_condon_shortley ", false, true);
+					Logger::outputDebugString(res);
+				}
+			}
+		}
+		else if (line.contains("#HRTF"))
+		{
+			clearLoudspeakerChannels();
+			clearHRIR();
+
+			while (!fis.isExhausted())
+			{
+				line = fis.readNextLine().trim();
+
+				if (line.contains("#END"))
+					break;
+
+				String path = file.getParentDirectory().getFullPathName();
+
+				File hrirFile(path + File::getSeparatorString() + line);
+
+				if (hrirFile.existsAsFile())
+				{
+					AudioFormatManager formatManager;
+					formatManager.registerBasicFormats();
+					std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(hrirFile));
+
+					AudioBuffer<float> inputBuffer(reader->numChannels, static_cast<int>(reader->lengthInSamples));
+
+					reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
+
+					addHRIR(inputBuffer);
+				}
+			}
+		}
+		else if (line.contains("#DECODERMATRIX"))
+		{
+			std::vector<float> decodeMatrix;
+
+			while (!fis.isExhausted())
+			{
+				line = fis.readNextLine().trim();
+
+				if (line.contains("#END"))
+				{
+					setDecodingMatrix(decodeMatrix);
+					break;
+				}
+
+				juce::String::CharPointerType charptr = line.getCharPointer();
+
+				while (charptr != charptr.findTerminatingNull())
+				{
+					float nextval = static_cast<float>(CharacterFunctions::readDoubleValue(charptr));
+					decodeMatrix.push_back(nextval);
+				}
+			}
+		}
+	}
+
+	updateMatrices();
+	preprocessHRIRs();
+	uploadHRIRsToEngine();
+}
+
 void BinauralRenderer::oscMessageReceived(const OSCMessage& message)
 {
 	// HEAD TRACKING DATA - QUATERNIONS
@@ -227,7 +358,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	{
 		buffer.clear();
 
-		if (m_shdConvEngines.size() != m_numAmbiChans)
+		if ((m_shdConvEngines.size() != m_numAmbiChans) || (m_shdConvEngines.size() == 0))
 		{
 			// not enough convolution engines to perform this process
 			return;
@@ -258,7 +389,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	}
 	else
 	{
-		if ((m_convEngines.size() != m_numLsChans) || (m_numLsChans == 0))
+		if ((m_convEngines.size() != m_numLsChans) || (m_convEngines.size() == 0))
 		{
 			// not enough convolution engines to perform this process
 			buffer.clear();
@@ -312,6 +443,41 @@ void BinauralRenderer::releaseResources()
 {
 }
 
+void BinauralRenderer::loadFromSofaFile(const File& file)
+{
+	String sofaFilePath = file.getFullPathName();
+
+	SOFAReader reader(sofaFilePath.toStdString());
+
+	std::vector<float> HRIRData;
+	std::size_t channels = reader.getNumImpulseChannels();
+	std::size_t samples = reader.getNumImpulseSamples();
+
+	std::vector<float> azi;
+	std::vector<float> ele;
+	int chans = 0;
+
+	getLoudspeakerChannels(azi, ele, chans);
+
+	clearHRIR();
+
+	for (int i = 0; i < chans; ++i)
+	{
+		if (reader.getResponseForSpeakerPosition(HRIRData, azi[i], ele[i]))
+		{
+			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
+
+			for (int c = 0; c < channels; ++c)
+				inputBuffer.copyFrom(c, 0, HRIRData.data(), static_cast<int>(samples));
+
+			addHRIR(inputBuffer);
+		}
+	}
+
+	preprocessHRIRs();
+	uploadHRIRsToEngine();
+}
+
 void BinauralRenderer::clearHRIR()
 {
 	m_hrirBuffers.clear();
@@ -357,6 +523,8 @@ void BinauralRenderer::preprocessHRIRs()
 
 void BinauralRenderer::uploadHRIRsToEngine()
 {
+	ScopedLock lock(m_procLock);
+
 	if (m_useSHDConv)
 	{
 		convertHRIRToSHDHRIR();

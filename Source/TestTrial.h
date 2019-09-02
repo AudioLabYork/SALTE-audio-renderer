@@ -2,59 +2,74 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
+struct Reference
+{
+	String name;
+	String filepath;
+	float gain;
+	int rendereringOrder;
+	String ambixConfig;
+};
+
+struct Condition
+{
+	String name;
+	String filepath;
+	float gain;
+	float score;
+	int rendereringOrder;
+	String ambixConfig;
+};
+
 class TestTrial
 {
 public:
 	TestTrial();
-	~TestTrial();
 
-	void setFilepath(int fileindex, const String& filepath);
-	String getFilepath(int fileindex);
-	
-	void setScore(int fileindex, float score);
-	float getScore(int fileindex);
-	
-	void setGain(int fileindex, float gainInDB);
-	float getGain(int fileindex);
+	void init(const String& trialId);
 
-	void setScreenMessage(const String& msg);
-	String getScreenMessage();
+	String getId() const;
 	
-	int getNumberOfConditions();
-	
-	void setRatingOptions(const StringArray ratings);
-	StringArray getRatingOptions();
-	
-	void setLastPlaybackHeadPosition(double time);
-	double getLastPlaybackHeadPosition();
-	
-	bool getLoopingState();
-	void setLooping(bool looping);
-	
-	void setLoopStart(float startTime);
-	float getLoopStart();
-	
-	void setLoopEnd(float endTime);
-	float getLoopEnd();
+	void setTrialName(const String& name);
+	String getTrialName() const;
 
-	void setReferenceFilepath(const String& filepath);
-	String getReferenceFilepath();
+	void addCondition(Condition* condition);
+	void addReference(Reference* reference);
+
+	Condition* getCondition(const int index);
+	Reference* getReference(const int index);
 	
+	int getNumberOfConditions() const;
 	bool isReferencePresent();
 
+	void setRatingOptions(const StringArray ratings);
+	StringArray getRatingOptions() const;
+	
+	void setLastPlaybackHeadPosition(double time);
+	double getLastPlaybackHeadPosition() const;
+
+	void setLooping(bool looping);
+	bool getLoopingState() const;
+	
+	void setLoopStart(const float startTime);
+	float getLoopStart() const;
+	
+	void setLoopEnd(const float endTime);
+	float getLoopEnd() const;
+
 private:
-	String referenceFilepath;
-	StringArray filepathArray;
-	Array<float> stimulusGainArray;
-	Array<float> scoresArray;
+	String m_trialId;
+	String m_trialName;
 
-	String screenMessage;
-	StringArray ratingOptions;
+	OwnedArray<Reference> m_references;
+	OwnedArray<Condition> m_conditions;
 
-	double lastPlaybackHeadPosition = 0.0f;
-	bool isLooping = true;
-	float loopStartTime = 0.0f;
-	float loopEndTime = 0.0f;
+	StringArray m_ratingOptions;
+
+	double lastPlaybackHeadPosition;
+	bool isLooping;
+	float loopStartTime;
+	float loopEndTime;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestTrial)
 };

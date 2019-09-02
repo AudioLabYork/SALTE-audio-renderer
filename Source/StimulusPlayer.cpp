@@ -419,9 +419,15 @@ String StimulusPlayer::returnHHMMSS(double lengthInSeconds)
 
 void StimulusPlayer::play()
 {
-	if ((state == Stopped) || (state == Paused))
+	if ((state == Stopped) || (state == Pausing) || (state == Paused))
 		changeState(Starting);
 	else if (state == Playing)
+		changeState(Pausing);
+}
+
+void StimulusPlayer::pause()
+{
+	if (state == Playing)
 		changeState(Pausing);
 }
 
@@ -447,6 +453,10 @@ void StimulusPlayer::setGain(float gainInDB)
 void StimulusPlayer::loop(bool looping)
 {
 	loopingEnabled = looping;
+	
+	// if loop gets called from elsewhere (a test component for example)
+	if (loopButton.getToggleState() != looping)
+		loopButton.setToggleState(looping, false);
 }
 
 bool StimulusPlayer::checkPlaybackStatus()

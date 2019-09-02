@@ -179,7 +179,7 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 
 				// check the file exists, otherwise just use the standard HRTFs
 				if (sofaFile.existsAsFile())
-					loadSofaFile(sofaFile);
+					m_renderer->loadFromSofaFile(sofaFile);
 				else
 					loadStandardHRTF();
 			}
@@ -214,7 +214,7 @@ void BinauralRendererView::browseForAmbixConfigFile()
 	if (fc.browseForFileToOpen())
 	{
 		File chosenFile = fc.getResult();
-		loadAmbixConfigFile(chosenFile);
+		m_renderer->loadFromAmbixConfigFile(chosenFile);
 	}
 #endif
 }
@@ -230,177 +230,9 @@ void BinauralRendererView::browseForSofaFile()
 	if (fc.browseForFileToOpen())
 	{
 		File chosenFile = fc.getResult();
-		loadSofaFile(chosenFile);
+		m_renderer->loadFromSofaFile(chosenFile);
 	}
 #endif
-}
-
-void BinauralRendererView::loadAmbixConfigFile(const File& file)
-{
-	FileInputStream fis(file);
-
-	StringArray lines;
-
-	file.readLines(lines);
-
-	while (!fis.isExhausted())
-	{
-		String line = fis.readNextLine();
-
-		if (line.contains("#GLOBAL"))
-		{
-			while (!fis.isExhausted())
-			{
-				line = fis.readNextLine().trim();
-
-				if (line.contains("#END"))
-					break;
-
-				if (line.startsWithIgnoreCase("/debug_msg"))
-				{
-					String res = line.fromFirstOccurrenceOf("/debug_msg ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/dec_mat_gain"))
-				{
-					String res = line.fromFirstOccurrenceOf("/dec_mat_gain ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/coeff_scale"))
-				{
-					String res = line.fromFirstOccurrenceOf("/coeff_scale ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/coeff_seq"))
-				{
-					String res = line.fromFirstOccurrenceOf("/coeff_seq ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/flip"))
-				{
-					String res = line.fromFirstOccurrenceOf("/flip ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/flop"))
-				{
-					String res = line.fromFirstOccurrenceOf("/flop ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/flap"))
-				{
-					String res = line.fromFirstOccurrenceOf("/flap ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/global_hrtf_gain"))
-				{
-					String res = line.fromFirstOccurrenceOf("/global_hrtf_gain ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/invert_condon_shortley"))
-				{
-					String res = line.fromFirstOccurrenceOf("/invert_condon_shortley ", false, true);
-					Logger::outputDebugString(res);
-				}
-			}
-		}
-		else if (line.contains("#HRTF"))
-		{
-			m_renderer->clearLoudspeakerChannels();
-			m_renderer->clearHRIR();
-
-			while (!fis.isExhausted())
-			{
-				line = fis.readNextLine().trim();
-
-				if (line.contains("#END"))
-					break;
-
-				String path = file.getParentDirectory().getFullPathName();
-
-				File hrirFile(path + File::getSeparatorString() + line);
-
-				if (hrirFile.existsAsFile())
-				{
-					AudioFormatManager formatManager;
-					formatManager.registerBasicFormats();
-					std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(hrirFile));
-
-					AudioBuffer<float> inputBuffer(reader->numChannels, static_cast<int>(reader->lengthInSamples));
-
-					reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
-
-					m_renderer->addHRIR(inputBuffer);
-				}
-			}
-		}
-		else if (line.contains("#DECODERMATRIX"))
-		{
-			std::vector<float> decodeMatrix;
-
-			while (!fis.isExhausted())
-			{
-				line = fis.readNextLine().trim();
-
-				if (line.contains("#END"))
-				{
-					m_renderer->setDecodingMatrix(decodeMatrix);
-					break;
-				}
-
-				juce::String::CharPointerType charptr = line.getCharPointer();
-
-				while (charptr != charptr.findTerminatingNull())
-				{
-					float nextval = static_cast<float>(CharacterFunctions::readDoubleValue(charptr));
-					decodeMatrix.push_back(nextval);
-				}
-			}
-		}
-	}
-
-	m_renderer->updateMatrices();
-	m_renderer->preprocessHRIRs();
-	m_renderer->uploadHRIRsToEngine();
-
-	sendMsgToLogWindow("Ambix Config file " + file.getFileName() + " was loaded");
-}
-
-void BinauralRendererView::loadSofaFile(const File& file)
-{
-	m_sofaFilePath = file.getFullPathName();
-
-	SOFAReader reader(m_sofaFilePath.toStdString());
-
-	std::vector<float> HRIRData;
-	std::size_t channels = reader.getNumImpulseChannels();
-	std::size_t samples = reader.getNumImpulseSamples();
-
-	std::vector<float> azi;
-	std::vector<float> ele;
-	int chans = 0;
-
-	m_renderer->getLoudspeakerChannels(azi, ele, chans);
-	
-	m_renderer->clearHRIR();
-
-	for (int i = 0; i < chans; ++i)
-	{
-		if (reader.getResponseForSpeakerPosition(HRIRData, azi[i], ele[i]))
-		{
-			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
-	
-			for (int c = 0; c < channels; ++c)
-				inputBuffer.copyFrom(c, 0, HRIRData.data(), static_cast<int>(samples));
-
-			m_renderer->addHRIR(inputBuffer);
-			sendMsgToLogWindow("Adding HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
-		}
-	}
-
-	m_renderer->preprocessHRIRs();
-	m_renderer->uploadHRIRsToEngine();
-
-	sendMsgToLogWindow("SOFA file " + file.getFileName() + " was loaded");
 }
 
 void BinauralRendererView::loadStandardHRTF()

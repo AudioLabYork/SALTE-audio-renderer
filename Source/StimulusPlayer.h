@@ -26,6 +26,16 @@ public:
 		Paused
 	};
 
+	StringArray TransportStateString
+	{
+		"Stopping",
+		"Stopped",
+		"Starting",
+		"Playing",
+		"Pausing",
+		"Paused"
+	};
+
     StimulusPlayer();
     ~StimulusPlayer();
     
@@ -47,6 +57,7 @@ public:
 
 	// exposing some playback transport functionality
 	void play();
+	void pause();
 	void stop();
 	int getNumberOfChannels();
 	void setGain(float gainInDB);

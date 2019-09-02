@@ -4,7 +4,7 @@
 #include <convoengine.h>
 #include "AmbisonicRotation.h"
 #include "OscTransceiver.h"
-
+#include "SOFAReader.h"
 
 class BinauralRenderer :	public OSCReceiver,
 							public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
@@ -15,6 +15,8 @@ public:
 	void init(OscTransceiver* oscTxRx);
 	void reset();
 	void deinit();
+
+	void loadFromAmbixConfigFile(const File& file);
 
 	void oscMessageReceived(const OSCMessage& message) override;
 
@@ -36,6 +38,8 @@ public:
 	void processBlock(AudioBuffer<float>& buffer);
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
+
+	void loadFromSofaFile(const File& file);
 
 	void clearHRIR();
 	void addHRIR(const AudioBuffer<float>& buffer);
