@@ -53,7 +53,7 @@ void TestSession::loadSession(const File& sessionFile)
 			m_testTrials[i]->init(object.getProperty("id", ""));
 			m_testTrials[i]->setTrialName(object.getProperty("name", ""));
 
-			File sceneFolder = object.getProperty("scenefolder", "");
+			File sceneFolder(object.getProperty("scenefolder", "").toString());
 
 			if (sceneFolder.exists())
 			{
@@ -61,7 +61,7 @@ void TestSession::loadSession(const File& sessionFile)
 				{
 					for (auto referenceStimulus : *referenceStimuli)
 					{
-						File reference = sceneFolder.getFullPathName() + File::getSeparatorString() + referenceStimulus.getProperty("source", "");
+						File reference(sceneFolder.getFullPathName() + File::getSeparatorString() + referenceStimulus.getProperty("source", "").toString());
 
 						if (reference.existsAsFile())
 						{
@@ -79,7 +79,7 @@ void TestSession::loadSession(const File& sessionFile)
 					{
 						Condition* con = new Condition;
 
-						File source = sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "");
+						File source(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "").toString());
 
 						con->name = stimulus.getProperty("name", "");
 
