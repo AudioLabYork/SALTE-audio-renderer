@@ -4,20 +4,33 @@
 
 struct Reference
 {
+	Reference()
+		: rendereringOrder(0)
+		, gain(1.0f)
+	{
+	}
+
 	String name;
 	String filepath;
-	float gain;
 	int rendereringOrder;
+	float gain;
 	String ambixConfig;
 };
 
 struct Condition
 {
+	Condition()
+		: score(0)
+		, rendereringOrder(0)
+		, gain(1.0f)
+	{
+	}
+
 	String name;
 	String filepath;
-	float gain;
 	float score;
 	int rendereringOrder;
+	float gain;
 	String ambixConfig;
 };
 

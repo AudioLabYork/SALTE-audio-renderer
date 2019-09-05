@@ -68,6 +68,10 @@ void TestSession::loadSession(const File& sessionFile)
 							Reference* ref = new Reference;
 							ref->name = referenceStimulus.getProperty("name", "");
 							ref->filepath = reference.getFullPathName();
+							ref->rendereringOrder = referenceStimulus.getProperty("order", "");
+							ref->gain = 1.0f;
+							ref->ambixConfig = referenceStimulus.getProperty("ambixconfig", "");
+
 							m_testTrials[i]->addReference(ref);
 						}
 					}
@@ -86,9 +90,10 @@ void TestSession::loadSession(const File& sessionFile)
 						if (source.exists())
 							con->filepath = source.getFullPathName();
 
-						con->rendereringOrder = stimulus.getProperty("order", "");
-						con->ambixConfig = stimulus.getProperty("ambixconfig", "");
 						con->score = 0.0f;
+						con->rendereringOrder = stimulus.getProperty("order", "");
+						con->gain = 1.0f;
+						con->ambixConfig = stimulus.getProperty("ambixconfig", "");
 
 						m_testTrials[i]->addCondition(con);
 					}
