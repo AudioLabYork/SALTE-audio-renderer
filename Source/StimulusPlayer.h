@@ -67,6 +67,8 @@ public:
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
     
+	void unloadFileFromTransport();
+
 	// log window message
     String currentMessage;
 
