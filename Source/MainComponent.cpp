@@ -61,6 +61,8 @@ MainComponent::MainComponent()
 	
 	if (settingsFile.existsAsFile())
 		loadSettings();
+	
+	m_testSession.init(Time::getCurrentTime().formatted("%d%m%y_%H%M%S"));
 
 	m_testSessionForm.init(&m_testSession);
 	m_testSessionForm.addListener(this);

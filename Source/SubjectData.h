@@ -16,13 +16,13 @@ struct SubjectData
 
 	void reset()
 	{
-		m_id = 0;
+		m_id = String();
 		m_name = String();
 		m_age = 0;
 		m_gender = String();
 	}
 
-	int m_id;
+	String m_id;
 	String m_name;
 	int m_age;
 	String m_gender;

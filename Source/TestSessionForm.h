@@ -56,7 +56,7 @@ private:
 	TextEditor m_editName;
 	TextEditor m_editAge;
 	TextEditor m_editGender;
-
+	ToggleButton m_btnAnon;
 	ToggleButton m_btnAgree;
 	TextButton m_btnBegin;
 

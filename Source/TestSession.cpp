@@ -44,6 +44,7 @@ void TestSession::loadSession(const File& sessionFile)
 		var json = JSON::parse(sessionFile);
 
 		int trials = json.getProperty("numberoftrials", "");
+		String sessionName = json.getProperty("name", "");
 
 		for (int i = 0; i < trials; ++i)
 		{
@@ -128,9 +129,28 @@ void TestSession::exportResults()
 				fos << m_sessionId << ",";
 
 				if (m_subjectData != nullptr)
-					fos << m_subjectData->m_id << "," << m_subjectData->m_name << "," << m_subjectData->m_age << "," << m_subjectData->m_gender << ",";
+				{
+					fos << m_subjectData->m_id << ",";
+
+					if (m_subjectData->m_name.isNotEmpty())
+						fos << m_subjectData->m_name << ",";
+					else
+						fos << "-,";
+
+					if (m_subjectData->m_age > 0)
+						fos << m_subjectData->m_age << ",";
+					else
+						fos << "-,";
+					
+					if (m_subjectData->m_gender.isNotEmpty())
+						fos << m_subjectData->m_gender << ",";
+					else
+						fos << "-,";
+				}
 				else
+				{
 					fos << "-,-,-,-,";
+				}
 
 				fos << testTrial->getId() << "," << testTrial->getCondition(i)->name << "," << testTrial->getCondition(i)->score << "\n";
 			}

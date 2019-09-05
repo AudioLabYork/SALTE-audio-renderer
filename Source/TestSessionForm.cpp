@@ -45,6 +45,11 @@ TestSessionForm::TestSessionForm()
 	addAndMakeVisible(m_editName);
 	addAndMakeVisible(m_editAge);
 	addAndMakeVisible(m_editGender);
+	
+	m_btnAnon.setButtonText("Anonymize subject");
+	m_btnAnon.addListener(this);
+	addAndMakeVisible(m_btnAnon);
+	
 	m_btnAgree.setButtonText("Consent Form Signed");
 	addAndMakeVisible(m_btnAgree);
 
@@ -127,18 +132,16 @@ void TestSessionForm::resized()
 	m_editAge.setBounds(155, 225, 250, 30);
 	m_editGender.setBounds(155, 260, 250, 30);
 	
+	m_btnAnon.setBounds(410, 260, 200, 30);
+
 	m_btnAgree.setBounds(155, 295, 300, 30);
 	m_btnBegin.setBounds(305, 330, 100, 30);
 }
 
 void TestSessionForm::timerCallback()
 {
-	if (m_editSessionName.getText().isEmpty() ||
-		m_sessionFile.getFullPathName().isEmpty() ||
-		m_exportFile.getFullPathName().isEmpty() ||
-		m_editName.getText().isEmpty() ||
-		m_editAge.getText().isEmpty() ||
-		m_editGender.getText().isEmpty() ||
+	if (m_editSessionName.getText().isEmpty() || m_sessionFile.getFullPathName().isEmpty() || m_exportFile.getFullPathName().isEmpty() ||
+		((m_editName.getText().isEmpty() || m_editAge.getText().isEmpty() || m_editGender.getText().isEmpty()) && !m_btnAnon.getToggleState()) ||
 		(!m_btnAgree.getToggleState())
 		)
 	{
@@ -156,11 +159,19 @@ void TestSessionForm::buttonClicked(Button* button)
 	{
 		m_session->loadSession(m_sessionFile);
 		m_session->setExportFile(m_exportFile);
-		
+
 		std::unique_ptr<SubjectData> subject = std::make_unique<SubjectData>();
-		subject->m_name = m_editName.getText();
-		subject->m_age = m_editAge.getText().getIntValue();
-		subject->m_gender = m_editGender.getText();
+		
+		// only collect subject data if it is not anonymous
+		
+		subject->m_id = Time::getCurrentTime().formatted("%d%m%y_%H%M%S");
+
+		if (!m_btnAnon.getToggleState())
+		{
+			subject->m_name = m_editName.getText();
+			subject->m_age = m_editAge.getText().getIntValue();
+			subject->m_gender = m_editGender.getText();
+		}
 
 		m_session->setSubjectData(std::move(subject));
 		m_session->begin();
