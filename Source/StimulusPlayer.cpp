@@ -356,16 +356,21 @@ void StimulusPlayer::loadFile(String filepath)
 		sendMsgToLogWindow("Can't load file: " + filepath);
 }
 
-void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
+void StimulusPlayer::unloadFileFromTransport()
 {
-	// unload the previous file source and delete it..
+	// unload the previous file source and delete it
 	transportSource.stop();
 	transportSource.setSource(nullptr);
 	currentAudioFileSource = nullptr;
+	thumbnail.setSource(nullptr);
+	loadedFileName.setText("Loaded file: ", dontSendNotification);
+}
 
+void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
+{
+	unloadFileFromTransport();
 
-	AudioFormatReader* reader = formatManager.createReaderFor(audioFile);
-	if (reader != nullptr)
+	if (AudioFormatReader * reader = formatManager.createReaderFor(audioFile))
 	{
 		currentAudioFileSource = std::make_unique<AudioFormatReaderSource>(reader, true);
 

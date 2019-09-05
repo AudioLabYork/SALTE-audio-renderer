@@ -89,16 +89,15 @@ void MushraComponent::removeListener(Listener* listener)
 
 void MushraComponent::loadTrial(int trialIndex)
 {
-	if ((m_testSession == nullptr) || (m_renderer == nullptr) || (m_player == nullptr) || (m_oscTxRx == nullptr))
+	TestTrial* trial = m_testSession->getTrial(trialIndex);
+	
+	if ((m_testSession == nullptr) || (m_renderer == nullptr) || (m_player == nullptr) || (m_oscTxRx == nullptr) || (trial == nullptr))
 	{
 		jassertfalse;
 		return;
 	}
 
-	TestTrial* trial = m_testSession->getTrial(trialIndex);
-
-	if (trial == nullptr)
-		return;
+	m_player->unloadFileFromTransport();
 
 	selectReferenceButton.setVisible(trial->isReferencePresent());
 
