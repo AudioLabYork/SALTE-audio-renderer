@@ -3,6 +3,7 @@
 MainComponent::MainComponent()
 	: as(deviceManager)
 	, m_maxSamplesPerBlock(0)
+	, showOnlyTestInterface(false)
 {
     // add and make visible the stimulus player object
     addAndMakeVisible(sp);
@@ -79,6 +80,12 @@ MainComponent::MainComponent()
     logWindow.setScrollbarsShown(true);
 	addAndMakeVisible(logWindow);
 
+	showTestInterface.setButtonText("show test interface");
+	showTestInterface.addListener(this);
+	addAndMakeVisible(showTestInterface);
+
+
+
 	//LookAndFeel& lookAndFeel = getLookAndFeel();
 	//lookAndFeel.setColour(ResizableWindow::backgroundColourId, Colours::gainsboro);
 	//lookAndFeel.setColour(TextButton::buttonColourId, Colours::gainsboro.darker());
@@ -145,44 +152,63 @@ void MainComponent::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
     
-	// RECTANGULAR OUTLINE
-	g.setColour(Colours::black);
-	g.drawRect(getLocalBounds(), 1);
-    juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
-    juce::Rectangle<int> tstlogicRect(10, 170, 640, 480);   // test logic component
-    juce::Rectangle<int> renderRect(660, 405, 730, 245);    // rendering component
-	juce::Rectangle<int> testRect(10, 170, 640, 480);    // test component
+	if (showOnlyTestInterface)
+	{
 
-    g.drawRect(oscRect, 1);
-    g.drawRect(tstlogicRect, 1);
-    g.drawRect(renderRect, 1);
-	g.drawRect(testRect, 1);
+	}
+	else
+	{
+		// RECTANGULAR OUTLINE
+		g.setColour(Colours::black);
+		g.drawRect(getLocalBounds(), 1);
+		juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
+		juce::Rectangle<int> tstlogicRect(10, 170, 640, 480);   // test logic component
+		juce::Rectangle<int> renderRect(660, 405, 730, 245);    // rendering component
+		juce::Rectangle<int> testRect(10, 170, 640, 480);    // test component
 
-	// OSC WINDOW
-	g.setColour(getLookAndFeel().findColour(Label::textColourId));
+		g.drawRect(oscRect, 1);
+		g.drawRect(tstlogicRect, 1);
+		g.drawRect(renderRect, 1);
+		g.drawRect(testRect, 1);
 
-	g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
-	g.drawText("Send to", 410, 10, 50, 25, Justification::centredLeft, true);
-	g.drawText("Receive at", 490, 10, 75, 25, Justification::centredLeft, true);
-	g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
+		// OSC WINDOW
+		g.setColour(getLookAndFeel().findColour(Label::textColourId));
+
+		g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
+		g.drawText("Send to", 410, 10, 50, 25, Justification::centredLeft, true);
+		g.drawText("Receive at", 490, 10, 75, 25, Justification::centredLeft, true);
+		g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
+	}
 }
 
 void MainComponent::resized()
 {
-	as.setCentrePosition(getWidth()/2, getHeight()/2);
-    sp.setBounds(660, 10, 730, 385);
-	brv.setBounds(660, 405, 730, 245);
-	openAudioDeviceManager.setBounds(310, 105, 240, 25);
-	connectOscButton.setBounds(310, 70, 240, 25);
+	if (showOnlyTestInterface)
+	{
+		sp.setBounds(660, 10, 730, 480);
+		m_testSessionForm.setBounds(10, 10, getWidth() - 20, getHeight() - 20);
+		mc.setBounds(10, 10, 640, 480);
 
-	clientTxIpLabel.setBounds(310, 35, 80, 25);
-	clientTxPortLabel.setBounds(410, 35, 60, 25);
-	clientRxPortLabel.setBounds(490, 35, 60, 25);
+	}
+	else
+	{
+		as.setCentrePosition(getWidth() / 2, getHeight() / 2);
+		sp.setBounds(660, 10, 730, 385);
+		brv.setBounds(660, 405, 730, 245);
+		openAudioDeviceManager.setBounds(310, 105, 240, 25);
+		connectOscButton.setBounds(310, 70, 240, 25);
 
-    logWindow.setBounds(10, 660, 640, 130);
+		clientTxIpLabel.setBounds(310, 35, 80, 25);
+		clientTxPortLabel.setBounds(410, 35, 60, 25);
+		clientRxPortLabel.setBounds(490, 35, 60, 25);
 
-	m_testSessionForm.setBounds(10, 170, 640, 480);
-    mc.setBounds(10, 170, 640, 480);
+		logWindow.setBounds(10, 660, 640, 130);
+
+		m_testSessionForm.setBounds(10, 170, 640, 480);
+		mc.setBounds(10, 170, 640, 480);
+
+		showTestInterface.setBounds(10, 10, 100, 30);
+	}
 }
 
 void MainComponent::buttonClicked(Button* buttonThatWasClicked)
@@ -217,6 +243,25 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 			connectOscButton.setButtonText("Connect OSC");
 		}
 	}
+	else if (buttonThatWasClicked == &showTestInterface)
+	{
+		showOnlyTestInterface = true;
+
+		as.setVisible(false);
+		sp.setVisible(false);
+		sp.setShowTransportControls(false);
+		
+		brv.setVisible(false);
+		openAudioDeviceManager.setVisible(false);
+		connectOscButton.setVisible(false);
+		clientTxIpLabel.setVisible(false);
+		clientTxPortLabel.setVisible(false);
+		clientRxPortLabel.setVisible(false);
+		logWindow.setVisible(false);
+		showTestInterface.setVisible(false);
+
+		resized();
+	}
 
     repaint();
 }
@@ -225,6 +270,7 @@ void MainComponent::formCompleted()
 {
 	mc.loadTestSession(&m_testSession);
 	mc.setVisible(true);
+	sp.setVisible(true);
 }
 
 void MainComponent::testCompleted()
@@ -232,6 +278,7 @@ void MainComponent::testCompleted()
 	mc.reset();
 	m_testSessionForm.reset();
 	m_testSessionForm.setVisible(true);
+	sp.setVisible(false);
 }
 
 void MainComponent::loadSettings()

@@ -4,7 +4,8 @@
 StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 									thumbnailCache(10), // maxNumThumbsToStore parameter lets you specify how many previews should be kept in memory at once.
 									thumbnail(512, formatManager, thumbnailCache),
-									state(Stopped)
+									state(Stopped),
+									m_shouldShowTransportControls(true)
 						
 {
 	transportSource.addChangeListener(this);
@@ -154,19 +155,19 @@ void StimulusPlayer::paint (Graphics& g)
 
 void StimulusPlayer::resized()
 {
-    openButton.setBounds(20, 20, 230, 25);
-    playButton.setBounds(20, 55, 230, 25);
-    stopButton.setBounds(20, 90, 230, 25);
+	openButton.setBounds(20, 20, 230, 25);
+	playButton.setBounds(20, 55, 230, 25);
+	stopButton.setBounds(20, 90, 230, 25);
 	loopButton.setBounds(20, 125, 230, 25);
 
-    loadedFileName.setBounds(280, 20, 500, 25);
-    playbackHeadPosition.setBounds(280, 45, 500, 25);
+	loadedFileName.setBounds(280, 20, 500, 25);
 
 	rollSlider.setBounds(320, 75, 300, 25);
 	pitchSlider.setBounds(320, 100, 300, 25);
 	yawSlider.setBounds(320, 125, 300, 25);
 
 	transportSlider.setBounds(10, 260, 710, 115);
+	playbackHeadPosition.setBounds(280, 45, 500, 25);
 }
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
@@ -364,6 +365,25 @@ void StimulusPlayer::unloadFileFromTransport()
 	currentAudioFileSource = nullptr;
 	thumbnail.setSource(nullptr);
 	loadedFileName.setText("Loaded file: ", dontSendNotification);
+}
+
+void StimulusPlayer::setShowTransportControls(bool shouldShow)
+{
+	m_shouldShowTransportControls = shouldShow;
+	
+	openButton.setVisible(shouldShow);
+	playButton.setVisible(shouldShow);
+	stopButton.setVisible(shouldShow);
+	loopButton.setVisible(shouldShow);
+
+	loadedFileName.setVisible(shouldShow);
+
+	rollSlider.setVisible(shouldShow);
+	pitchSlider.setVisible(shouldShow);
+	yawSlider.setVisible(shouldShow);
+	
+	resized();
+	repaint();
 }
 
 void StimulusPlayer::loadFileIntoTransport(const File& audioFile)

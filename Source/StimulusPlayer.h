@@ -69,6 +69,8 @@ public:
     
 	void unloadFileFromTransport();
 
+	void setShowTransportControls(bool shouldShow);
+
 	// log window message
     String currentMessage;
 
@@ -106,6 +108,8 @@ private:
     
 	AudioThumbnailCache thumbnailCache;
 	AudioThumbnail thumbnail;
+
+	bool m_shouldShowTransportControls;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StimulusPlayer)
 };

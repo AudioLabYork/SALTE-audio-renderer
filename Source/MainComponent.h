@@ -55,6 +55,9 @@ private:
 	TextButton openAudioDeviceManager, connectOscButton;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
+	TextButton showTestInterface;
+	bool showOnlyTestInterface;
+
 	// save and load settings
 	File settingsFile;
 	void loadSettings();
