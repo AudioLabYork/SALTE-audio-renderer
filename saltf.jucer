@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="zmM4K5" name="saltf" projectType="guiapp" jucerVersion="5.4.4">
+<JUCERPROJECT id="zmM4K5" name="saltf" projectType="guiapp" jucerVersion="5.4.4"
+              companyName="University of York" companyWebsite="https://audiolab.york.ac.uk">
   <MAINGROUP id="H9ikxc" name="saltf">
     <GROUP id="{4F75A548-1CF0-634F-1E14-36BD701C1135}" name="Source">
       <GROUP id="{63E3C94B-474D-4592-AD5A-1246BDB34199}" name="WDL">
@@ -126,5 +127,5 @@
     <OSX/>
     <WINDOWS/>
   </LIVE_SETTINGS>
-  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_ASIO="1"/>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
 </JUCERPROJECT>
