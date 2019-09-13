@@ -481,6 +481,10 @@ void BinauralRenderer::loadFromSofaFile(const File& file)
 void BinauralRenderer::clearHRIR()
 {
 	m_hrirBuffers.clear();
+
+	for (int i = 0; i < m_hrirShdBuffers.size(); ++i)
+		m_hrirShdBuffers[i].clear();
+
 	m_numLsChans = 0;
 	m_numHrirLoaded = 0;
 }
@@ -577,6 +581,9 @@ void BinauralRenderer::uploadHRIRsToEngine()
 
 void BinauralRenderer::convertHRIRToSHDHRIR()
 {
+	if (m_hrirBuffers.size() <= 0)
+		return;
+
 	int hrirSamples = m_hrirBuffers[0].getNumSamples();
 
 	for (auto& hrirShdBuffer : m_hrirShdBuffers)

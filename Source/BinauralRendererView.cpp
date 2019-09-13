@@ -248,30 +248,37 @@ void BinauralRendererView::loadStandardHRTF()
 	String filename;
 	File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE").getChildFile("48K_24bit");
 
-	for (int i = 0; i < chans; ++i)
+	if (sourcePath.exists())
 	{
-		filename = "azi_" + String(azi[i], 1).replaceCharacter('.', ',') + "_ele_" + String(ele[i], 1).replaceCharacter('.', ',') + ".wav";
-
-		File hrirFile(sourcePath.getChildFile(filename));
-
-		if (hrirFile.existsAsFile())
+		for (int i = 0; i < chans; ++i)
 		{
-			AudioFormatManager formatManager;
-			formatManager.registerBasicFormats();
-			std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(hrirFile));
+			filename = "azi_" + String(azi[i], 1).replaceCharacter('.', ',') + "_ele_" + String(ele[i], 1).replaceCharacter('.', ',') + ".wav";
 
-			AudioBuffer<float> inputBuffer(reader->numChannels, static_cast<int>(reader->lengthInSamples));
+			File hrirFile(sourcePath.getChildFile(filename));
 
-			reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
+			if (hrirFile.existsAsFile())
+			{
+				AudioFormatManager formatManager;
+				formatManager.registerBasicFormats();
+				std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(hrirFile));
 
-			m_renderer->addHRIR(inputBuffer);
-			sendMsgToLogWindow("Adding HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
+				AudioBuffer<float> inputBuffer(reader->numChannels, static_cast<int>(reader->lengthInSamples));
+
+				reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
+
+				m_renderer->addHRIR(inputBuffer);
+				sendMsgToLogWindow("Adding HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
+			}
 		}
+
+		m_renderer->uploadHRIRsToEngine();
+
+		sendMsgToLogWindow("Standard HRIRs were loaded");
 	}
-
-	m_renderer->uploadHRIRsToEngine();
-
-	sendMsgToLogWindow("Standard HRIRs were loaded");
+	else
+	{
+		sendMsgToLogWindow("Standard HRIRs folder could not be located");
+	}
 }
 
 void BinauralRendererView::timerCallback()
