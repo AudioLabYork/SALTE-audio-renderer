@@ -329,13 +329,13 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 
 			if (currentIndex > 0)
 				prevTrialButton.setEnabled(true);
+		}
 
-			if (currentIndex == m_testSession->getNumberOfTrials() - 1)
-			{
-				// we can end, once we get to the end
-				endTestButton.setEnabled(true);
-				nextTrialButton.setEnabled(false);
-			}
+		if (currentIndex == m_testSession->getNumberOfTrials() - 1)
+		{
+			// we can end, once we get to the end
+			endTestButton.setEnabled(true);
+			nextTrialButton.setEnabled(false);
 		}
 	}
 	else if (buttonThatWasClicked == &endTestButton)
