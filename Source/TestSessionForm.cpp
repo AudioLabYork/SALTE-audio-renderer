@@ -164,7 +164,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		
 		// only collect subject data if it is not anonymous
 		
-		subject->m_id = Time::getCurrentTime().formatted("%d%m%y_%H%M%S");
+		subject->m_id = Time::getCurrentTime().formatted("%y%m%d_%H%M%S");
 
 		if (!m_btnAnon.getToggleState())
 		{
