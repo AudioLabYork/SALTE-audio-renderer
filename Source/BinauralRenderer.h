@@ -19,6 +19,8 @@ public:
 	void loadFromAmbixConfigFile(const File& file);
 
 	void oscMessageReceived(const OSCMessage& message) override;
+	void oscBundleReceived(const OSCBundle& bundle) override;
+	void processOscMessage(const OSCMessage& message);
 
 	void setOrder(const int order);
 	void clearLoudspeakerChannels();

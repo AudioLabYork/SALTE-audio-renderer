@@ -13,6 +13,7 @@ BinauralRenderer::BinauralRenderer()
 	, m_xTrans(0.0f)
 	, m_yTrans(0.0f)
 	, m_zTrans(0.0f)
+	, m_oscTxRx(nullptr)
 	, m_useSHDConv(false)
 	, m_enableRotation(true)
 	, m_enableTranslation(true)
@@ -174,6 +175,17 @@ void BinauralRenderer::loadFromAmbixConfigFile(const File& file)
 }
 
 void BinauralRenderer::oscMessageReceived(const OSCMessage& message)
+{
+	processOscMessage(message);
+}
+
+void BinauralRenderer::oscBundleReceived(const OSCBundle& bundle)
+{
+	OSCBundle::Element elem = bundle[0];
+	processOscMessage(elem.getMessage());
+}
+
+void BinauralRenderer::processOscMessage(const OSCMessage& message)
 {
 	// HEAD TRACKING DATA - QUATERNIONS
 	if (message.size() == 4 && message.getAddressPattern() == "/rendering/quaternions")
