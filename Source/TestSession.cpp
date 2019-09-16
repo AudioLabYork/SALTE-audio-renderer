@@ -70,7 +70,7 @@ void TestSession::loadSession(const File& sessionFile)
 							ref->name = referenceStimulus.getProperty("name", "");
 							ref->filepath = reference.getFullPathName();
 							ref->rendereringOrder = referenceStimulus.getProperty("order", "");
-							ref->gain = 1.0f;
+							ref->gain = referenceStimulus.getProperty("gain", "");
 							ref->ambixConfig = referenceStimulus.getProperty("ambixconfig", "");
 
 							m_testTrials[i]->addReference(ref);
@@ -93,7 +93,7 @@ void TestSession::loadSession(const File& sessionFile)
 
 						con->score = 0.0f;
 						con->rendereringOrder = stimulus.getProperty("order", "");
-						con->gain = 1.0f;
+						con->gain = stimulus.getProperty("gain", "");
 						con->ambixConfig = stimulus.getProperty("ambixconfig", "");
 
 						m_testTrials[i]->addCondition(con);
