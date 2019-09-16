@@ -341,8 +341,12 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 	else if (buttonThatWasClicked == &endTestButton)
 	{
 		// save up and close
+		m_player->stop();
+
 		m_testSession->exportResults();
+
 		mushraTestListeners.call([this](Listener& l) { l.testCompleted(); });
+
 		setVisible(false);
 	}
 }
