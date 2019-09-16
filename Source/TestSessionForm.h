@@ -35,24 +35,24 @@ private:
 	TestSession* m_session;
 	Label m_labelSession;
 
-	Label m_labelSessionName;
 	Label m_labelSessionFile;
 	Label m_labelExportFile;
-	TextEditor m_editSessionName;
 	TextButton m_btnSessionFile;
 	TextButton m_btnExportFile;
 
 	File m_sessionFile;
 	File m_exportFile;
 
-	ToggleButton m_btnStickySession;
 	bool m_shouldSaveSessionSettings;
+	bool m_anonymizeSubject;
 
 	Label m_labelSubject;
 
+	Label m_labelSubjectID;
 	Label m_labelName;
 	Label m_labelAge;
 	Label m_labelGender;
+	TextEditor m_editSubjectID;
 	TextEditor m_editName;
 	TextEditor m_editAge;
 	TextEditor m_editGender;
