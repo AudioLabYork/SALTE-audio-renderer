@@ -143,10 +143,11 @@ void TestSessionForm::resized()
 
 void TestSessionForm::timerCallback()
 {
-	if (m_sessionFile.getFullPathName().isEmpty() || m_exportFile.getFullPathName().isEmpty() ||
-		((m_editName.getText().isEmpty() || m_editAge.getText().isEmpty() || m_editGender.getText().isEmpty()) && !m_btnAnon.getToggleState()) ||
-		(!m_btnAgree.getToggleState())
-		)
+	if (m_sessionFile.getFullPathName().isEmpty() ||
+		m_exportFile.getFullPathName().isEmpty() ||
+		(!m_anonymizeSubject && (m_editSubjectID.getText().isEmpty() || m_editName.getText().isEmpty() || m_editAge.getText().isEmpty() || m_editGender.getText().isEmpty())) ||
+		(m_anonymizeSubject && m_editSubjectID.getText().isEmpty()) ||
+		!m_btnAgree.getToggleState())
 	{
 		m_btnBegin.setEnabled(false);
 	}
@@ -190,9 +191,10 @@ void TestSessionForm::buttonClicked(Button* button)
 		
 		// only collect subject data if it is not anonymous
 		
-		subject->m_id = Time::getCurrentTime().formatted("%y%m%d_%H%M%S");
+		//subject->m_id = Time::getCurrentTime().formatted("%y%m%d_%H%M%S");
+		subject->m_id = m_editSubjectID.getText();;
 
-		if (!m_btnAnon.getToggleState())
+		if (!m_anonymizeSubject)
 		{
 			subject->m_name = m_editName.getText();
 			subject->m_age = m_editAge.getText().getIntValue();
