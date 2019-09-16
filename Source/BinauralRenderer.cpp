@@ -556,9 +556,6 @@ void BinauralRenderer::uploadHRIRsToEngine()
 			for (int m = 0; m < impulseBuffer.GetNumChannels(); ++m)
 				impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getReadPointer(m), m_hrirShdBuffers[i].getNumSamples());
 
-			//std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
-			//convEngine->SetImpulse(&impulseBuffer);
-			//convEngine->Reset();
 			std::unique_ptr<WDL_ConvolutionEngine> convEngine = std::make_unique<WDL_ConvolutionEngine>();
 			convEngine->SetImpulse(&impulseBuffer, -1, 0, 0, false);
 			convEngine->Reset();
@@ -579,9 +576,6 @@ void BinauralRenderer::uploadHRIRsToEngine()
 			for (int m = 0; m < impulseBuffer.GetNumChannels(); ++m)
 				impulseBuffer.impulses[m].Set(m_hrirBuffers[i].getReadPointer(m), m_hrirBuffers[i].getNumSamples());
 
-			//std::unique_ptr<WDL_ConvolutionEngine_Div> convEngine = std::make_unique<WDL_ConvolutionEngine_Div>();
-			//convEngine->SetImpulse(&impulseBuffer);
-			//convEngine->Reset();
 			std::unique_ptr<WDL_ConvolutionEngine> convEngine = std::make_unique<WDL_ConvolutionEngine>();
 			convEngine->SetImpulse(&impulseBuffer, -1, 0, 0, false);
 			convEngine->Reset();
