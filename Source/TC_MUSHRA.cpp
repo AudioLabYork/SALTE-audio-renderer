@@ -9,25 +9,6 @@ MushraComponent::MushraComponent()
 	, topBorder(20)
 	, bottomBorder(20)
 {
-	playButton.setButtonText("Play");
-	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	playButton.setColour(TextButton::buttonOnColourId, Colours::blue);
-	playButton.addListener(this);
-	addAndMakeVisible(playButton);
-
-	stopButton.setButtonText("Stop");
-	stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	stopButton.setColour(TextButton::buttonOnColourId, Colours::blue);
-	stopButton.addListener(this);
-	addAndMakeVisible(stopButton);
-
-	loopButton.setButtonText("Loop");
-	loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	loopButton.setColour(TextButton::buttonOnColourId, Colours::blue);
-	loopButton.setClickingTogglesState(true);
-	loopButton.addListener(this);
-	addAndMakeVisible(loopButton);
-
 	prevTrialButton.setButtonText("Previous Trial");
 	prevTrialButton.setEnabled(false);
 	prevTrialButton.addListener(this);
@@ -139,8 +120,6 @@ void MushraComponent::loadTrial(int trialIndex)
 	}
 
 	m_player->loop(trial->getLoopingState());
-	loopButton.setToggleState(trial->getLoopingState(), false);
-
 	repaint();
 }
 
@@ -228,10 +207,6 @@ void MushraComponent::resized()
 	nextTrialButton.setBounds(testSpace.getX() + 80 + 10, testSpace.getBottom() - 25, 80, 25);
 	endTestButton.setBounds(testSpace.getX() + 160 + 20, testSpace.getBottom() - 25, 80, 25);
 	selectReferenceButton.setBounds(testArea.getX(), testSpace.getBottom() - 60, testArea.getWidth(), 25);
-
-	playButton.setBounds(testSpace.getRight() - 240 - 20, testSpace.getBottom() - 25, 80, 25);
-	stopButton.setBounds(testSpace.getRight() - 160 - 10, testSpace.getBottom() - 25, 80, 25);
-	loopButton.setBounds(testSpace.getRight() - 80, testSpace.getBottom() - 25, 80, 25);
 }
 
 void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
@@ -248,35 +223,20 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 			m_player->pause();
 
 			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+			
 			m_player->loadFile(trial->getCondition(i)->filepath);
 			m_player->setGain(trial->getCondition(i)->gain);
 			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 
 			m_renderer->setOrder(trial->getCondition(i)->rendereringOrder);
 			m_renderer->loadFromAmbixConfigFile(trial->getCondition(i)->ambixConfig);
+			
 			m_player->play();
-
 			break;
 		}
 	}
 
-	if (buttonThatWasClicked == &playButton)
-	{
-		m_player->play();
-	}
-	else if (buttonThatWasClicked == &stopButton)
-	{
-		m_player->stop();
-	}
-	else if (buttonThatWasClicked == &loopButton)
-	{
-		bool isLooping = loopButton.getToggleState();
-
-		trial->setLooping(isLooping);
-		m_oscTxRx->sendOscMessage("/ts26259/button", (String) "loop", (int)isLooping);
-		m_player->loop(isLooping);
-	}
-	else if (buttonThatWasClicked == &selectReferenceButton)
+	if (buttonThatWasClicked == &selectReferenceButton)
 	{
 		if (trial == nullptr)
 			return;
@@ -370,19 +330,7 @@ void MushraComponent::oscMessageReceived(const OSCMessage& message)
 	// CONTROL TS26.258 BUTTONS
 	if (message.size() == 1 && message.getAddressPattern() == "/ts26259/button" && message[0].isString())
 	{
-		if (message[0].getString() == "play")
-		{
-			playButton.triggerClick();
-		}
-		else if (message[0].getString() == "stop")
-		{
-			stopButton.triggerClick();
-		}
-		else if (message[0].getString() == "loop")
-		{
-			loopButton.triggerClick();
-		}
-		else if (message[0].getString() == "reference")
+		if (message[0].getString() == "reference")
 		{
 			selectReferenceButton.triggerClick();
 		}

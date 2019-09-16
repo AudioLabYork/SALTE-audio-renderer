@@ -5,7 +5,7 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 									thumbnailCache(10), // maxNumThumbsToStore parameter lets you specify how many previews should be kept in memory at once.
 									thumbnail(512, formatManager, thumbnailCache),
 									state(Stopped),
-									m_shouldShowTransportControls(true)
+									m_shouldShowTest(true)
 						
 {
 	transportSource.addChangeListener(this);
@@ -23,6 +23,7 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 	playButton.setToggleState(false, NotificationType::dontSendNotification);
 	playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	playButton.setColour(TextButton::buttonOnColourId, Colours::red);
+	playButton.setEnabled(false);
     playButton.addListener(this);
     
     addAndMakeVisible(&stopButton);
@@ -30,6 +31,7 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 	stopButton.setToggleState(true, NotificationType::dontSendNotification);
     stopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	stopButton.setColour(TextButton::buttonOnColourId, Colours::red);
+	stopButton.setEnabled(false);
     stopButton.addListener(this);
 
 	addAndMakeVisible(&loopButton);
@@ -37,6 +39,7 @@ StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
 	loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 	loopButton.setColour(TextButton::buttonOnColourId, Colours::green);
 	loopButton.setClickingTogglesState(true);
+	loopButton.setEnabled(false);
 	loopButton.addListener(this);
 
     loadedFileName.setText("Loaded file:", dontSendNotification);
@@ -103,6 +106,7 @@ void StimulusPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRa
 {
     transportSource.prepareToPlay(samplesPerBlockExpected, sampleRate);
 }
+
 void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
     if (currentAudioFileSource.get() == nullptr)
@@ -365,19 +369,17 @@ void StimulusPlayer::unloadFileFromTransport()
 	currentAudioFileSource = nullptr;
 	thumbnail.setSource(nullptr);
 	loadedFileName.setText("Loaded file: ", dontSendNotification);
+	playButton.setEnabled(false);
+	stopButton.setEnabled(false);
+	loopButton.setEnabled(false);
 }
 
-void StimulusPlayer::setShowTransportControls(bool shouldShow)
+void StimulusPlayer::setShowTest(bool shouldShow)
 {
-	m_shouldShowTransportControls = shouldShow;
-	
+	m_shouldShowTest = shouldShow;
+
 	openButton.setVisible(shouldShow);
-	playButton.setVisible(shouldShow);
-	stopButton.setVisible(shouldShow);
-	loopButton.setVisible(shouldShow);
-
 	loadedFileName.setVisible(shouldShow);
-
 	rollSlider.setVisible(shouldShow);
 	pitchSlider.setVisible(shouldShow);
 	yawSlider.setVisible(shouldShow);
@@ -419,6 +421,10 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 			String(reader->sampleRate) + "," +
 			String(reader->lengthInSamples) + "," +
 			String(reader->lengthInSamples / reader->sampleRate));
+
+		playButton.setEnabled(true);
+		stopButton.setEnabled(true);
+		loopButton.setEnabled(true);
 	}
 }
 
@@ -444,10 +450,13 @@ String StimulusPlayer::returnHHMMSS(double lengthInSeconds)
 
 void StimulusPlayer::play()
 {
-	if ((state == Stopped) || (state == Pausing) || (state == Paused))
-		changeState(Starting);
-	else if (state == Playing)
-		changeState(Pausing);
+	if (transportSource.getLengthInSeconds() > 0.0)
+	{
+		if ((state == Stopped) || (state == Pausing) || (state == Paused))
+			changeState(Starting);
+		else if (state == Playing)
+			changeState(Pausing);
+	}
 }
 
 void StimulusPlayer::pause()

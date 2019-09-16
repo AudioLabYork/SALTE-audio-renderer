@@ -69,7 +69,7 @@ public:
     
 	void unloadFileFromTransport();
 
-	void setShowTransportControls(bool shouldShow);
+	void setShowTest(bool shouldShow);
 
 	// log window message
     String currentMessage;
@@ -109,7 +109,7 @@ private:
 	AudioThumbnailCache thumbnailCache;
 	AudioThumbnail thumbnail;
 
-	bool m_shouldShowTransportControls;
+	bool m_shouldShowTest;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (StimulusPlayer)
 };

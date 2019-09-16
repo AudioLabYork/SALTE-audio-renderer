@@ -81,6 +81,7 @@ MainComponent::MainComponent()
 	addAndMakeVisible(logWindow);
 
 	showTestInterface.setButtonText("show test interface");
+	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
 
@@ -188,7 +189,7 @@ void MainComponent::resized()
 		sp.setBounds(660, 10, 730, 480);
 		m_testSessionForm.setBounds(10, 10, getWidth() - 20, getHeight() - 20);
 		mc.setBounds(10, 10, 640, 480);
-
+		showTestInterface.setBounds(getWidth() - 10, getHeight()-10, 10, 10);
 	}
 	else
 	{
@@ -245,21 +246,21 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	}
 	else if (buttonThatWasClicked == &showTestInterface)
 	{
-		showOnlyTestInterface = true;
-
-		as.setVisible(false);
-		sp.setVisible(false);
-		sp.setShowTransportControls(false);
+		bool show = showTestInterface.getToggleState();
+		showOnlyTestInterface = show;
 		
-		brv.setVisible(false);
-		openAudioDeviceManager.setVisible(false);
-		connectOscButton.setVisible(false);
-		clientTxIpLabel.setVisible(false);
-		clientTxPortLabel.setVisible(false);
-		clientRxPortLabel.setVisible(false);
-		logWindow.setVisible(false);
-		showTestInterface.setVisible(false);
-
+		as.setVisible(!show);
+		sp.setVisible(!show);
+		sp.setShowTest(!show);
+		
+		brv.setVisible(!show);
+		openAudioDeviceManager.setVisible(!show);
+		connectOscButton.setVisible(!show);
+		clientTxIpLabel.setVisible(!show);
+		clientTxPortLabel.setVisible(!show);
+		clientRxPortLabel.setVisible(!show);
+		logWindow.setVisible(!show);
+		
 		resized();
 	}
 

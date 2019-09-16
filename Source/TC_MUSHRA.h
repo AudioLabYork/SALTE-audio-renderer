@@ -41,7 +41,6 @@ private:
 	void oscMessageReceived(const OSCMessage& message) override;
 	void changeListenerCallback(ChangeBroadcaster* source) override;
 
-	TextButton playButton, stopButton, loopButton;
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
 	TextButton selectReferenceButton;
 	OwnedArray<TextButton> selectConditionButtonArray;
