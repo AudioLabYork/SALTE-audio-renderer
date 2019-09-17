@@ -18,14 +18,13 @@ MainComponent::MainComponent()
 	addAndMakeVisible(brv);
 
 	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
-	
 	Result res = sourcePath.createDirectory();
 
 	if (res.wasOk())
 		Logger::outputDebugString("application directory created successfully");
 
 	// set size of the main app window
-    setSize (1400, 800);
+	setSize(1400, 800);
 
     // set number of output channels to 2 (binaural rendering case)
     setAudioChannels (0, 2);
@@ -58,13 +57,11 @@ MainComponent::MainComponent()
 
 	// load settings file if available
 	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
-	settingsFile = File(filePath + "/" + "AudioSettings.conf");
+	settingsFile = File(filePath + "/" + "SALTEAppSettings.conf");
 	
 	if (settingsFile.existsAsFile())
 		loadSettings();
 	
-	m_testSession.init(Time::getCurrentTime().formatted("%y%m%d_%H%M%S"));
-
 	m_testSessionForm.init(&m_testSession);
 	m_testSessionForm.addListener(this);
 	addAndMakeVisible(m_testSessionForm);
@@ -85,8 +82,6 @@ MainComponent::MainComponent()
 	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
-
-
 
 	//LookAndFeel& lookAndFeel = getLookAndFeel();
 	//lookAndFeel.setColour(ResizableWindow::backgroundColourId, Colours::gainsboro);
@@ -275,7 +270,6 @@ void MainComponent::formCompleted()
 
 void MainComponent::testCompleted()
 {
-	mc.reset();
 	m_testSessionForm.reset();
 	m_testSessionForm.setVisible(true);
 }
@@ -294,6 +288,8 @@ void MainComponent::saveSettings()
 	{
 		audioDeviceSettings->writeTo(settingsFile);
 	}
+
+	// m_testSessionForm.m_btnSessionFile.getButtonText();
 }
 
 // LOG WINDOW

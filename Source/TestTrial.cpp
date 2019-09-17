@@ -39,6 +39,16 @@ String TestTrial::getTrialName() const
 	return m_trialName;
 }
 
+void TestTrial::setTrialInstruction(const String& instruction)
+{
+	m_trialInstruction = instruction;
+}
+
+String TestTrial::getTrialInstruction() const
+{
+	return m_trialInstruction;
+}
+
 void TestTrial::addCondition(Condition* condition)
 {
 	m_conditions.add(condition);

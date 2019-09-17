@@ -37,7 +37,7 @@ AudioSetup::AudioSetup(AudioDeviceManager& deviceManager)
 	closeWindowBtn.onClick = [this] { setVisible(false); };
 	addAndMakeVisible(closeWindowBtn);
 
-	setSize(760, 360);
+	setSize(760, 400);
 
 	admPointer->addChangeListener(this);
 

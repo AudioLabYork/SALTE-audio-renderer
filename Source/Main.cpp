@@ -60,6 +60,7 @@ public:
            #if JUCE_IOS || JUCE_ANDROID
             setFullScreen (true);
            #else
+
             setResizable (false, true);
             centreWithSize (getWidth(), getHeight());
            #endif

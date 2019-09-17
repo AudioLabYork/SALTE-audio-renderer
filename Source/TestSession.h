@@ -9,7 +9,6 @@ class TestSession
 public:
 	TestSession();
 
-	void init(const String& sessionId);
 	void begin();
 	void reset();
 

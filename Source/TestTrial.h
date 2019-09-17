@@ -46,6 +46,9 @@ public:
 	void setTrialName(const String& name);
 	String getTrialName() const;
 
+	void setTrialInstruction(const String& instruction);
+	String getTrialInstruction() const;
+
 	void addCondition(Condition* condition);
 	void addReference(Reference* reference);
 
@@ -75,6 +78,7 @@ public:
 private:
 	String m_trialId;
 	String m_trialName;
+	String m_trialInstruction;
 
 	OwnedArray<Reference> m_references;
 	OwnedArray<Condition> m_conditions;

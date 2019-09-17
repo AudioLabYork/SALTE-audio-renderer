@@ -20,7 +20,6 @@ public:
 	~MushraComponent();
 
 	void init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer);
-	void reset();
 	void loadTestSession(TestSession* testSession);
 
 	class Listener
@@ -57,7 +56,6 @@ private:
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;
 	BinauralRenderer* m_renderer;
-
 	TestSession* m_testSession;
 
 	int leftBorder;

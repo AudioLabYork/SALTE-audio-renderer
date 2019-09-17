@@ -9,11 +9,6 @@ TestSession::TestSession()
 
 }
 
-void TestSession::init(const String& sessionId)
-{
-	m_sessionId = sessionId;
-}
-
 void TestSession::reset()
 {
 	m_subjectData.reset();
@@ -53,6 +48,7 @@ void TestSession::loadSession(const File& sessionFile)
 			m_testTrials.add(new TestTrial);
 			m_testTrials[i]->init(object.getProperty("id", ""));
 			m_testTrials[i]->setTrialName(object.getProperty("name", ""));
+			m_testTrials[i]->setTrialInstruction(object.getProperty("instruction", ""));
 
 			File sceneFolder(object.getProperty("scenefolder", "").toString());
 
@@ -180,5 +176,5 @@ TestTrial* TestSession::getTrial(const int index)
 
 void TestSession::begin()
 {
-	m_startTimeOfTest = Time::getCurrentTime().currentTimeMillis();
+	m_sessionId = Time::getCurrentTime().formatted("%y%m%d_%H%M%S");
 }
