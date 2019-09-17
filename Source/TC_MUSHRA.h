@@ -11,7 +11,8 @@ class MushraComponent : public Component,
 						public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
 						private Button::Listener,
 						private Slider::Listener,
-						private ChangeListener
+						private ChangeListener,
+						public ChangeBroadcaster
 {
 public:
 	//==============================================================================
@@ -31,6 +32,11 @@ public:
 
 	void addListener(Listener* newListener);
 	void removeListener(Listener* listener);
+
+	void sendMsgToLogWindow(String message);
+
+	// log window message
+	String currentMessage;
 
 private:
 	void loadTrial(int trialIndex);

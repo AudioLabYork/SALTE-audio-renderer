@@ -378,11 +378,11 @@ void StimulusPlayer::setShowTest(bool shouldShow)
 {
 	m_shouldShowTest = shouldShow;
 
-	openButton.setVisible(shouldShow);
-	loadedFileName.setVisible(shouldShow);
-	rollSlider.setVisible(shouldShow);
-	pitchSlider.setVisible(shouldShow);
-	yawSlider.setVisible(shouldShow);
+	openButton.setVisible(!shouldShow);
+	loadedFileName.setVisible(!shouldShow);
+	rollSlider.setVisible(!shouldShow);
+	pitchSlider.setVisible(!shouldShow);
+	yawSlider.setVisible(!shouldShow);
 	
 	resized();
 	repaint();

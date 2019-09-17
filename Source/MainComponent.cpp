@@ -71,6 +71,7 @@ MainComponent::MainComponent()
 
 	mc.init(&oscTxRx, &sp, &br);
 	mc.addListener(this);
+	mc.addChangeListener(this);
 	addChildComponent(mc);
 
 	// log window
@@ -249,10 +250,9 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		bool show = showTestInterface.getToggleState();
 		showOnlyTestInterface = show;
 		
+		sp.setShowTest(show);
+
 		as.setVisible(!show);
-		sp.setVisible(!show);
-		sp.setShowTest(!show);
-		
 		brv.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
 		connectOscButton.setVisible(!show);
@@ -271,7 +271,6 @@ void MainComponent::formCompleted()
 {
 	mc.loadTestSession(&m_testSession);
 	mc.setVisible(true);
-	sp.setVisible(true);
 }
 
 void MainComponent::testCompleted()
@@ -279,7 +278,6 @@ void MainComponent::testCompleted()
 	mc.reset();
 	m_testSessionForm.reset();
 	m_testSessionForm.setVisible(true);
-	sp.setVisible(false);
 }
 
 void MainComponent::loadSettings()
@@ -311,7 +309,12 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 		logWindowMessage += brv.m_currentLogMessage;
 		brv.m_currentLogMessage.clear();
 	}
-    
+	else if (source == &mc)
+	{
+		logWindowMessage += mc.currentMessage;
+		mc.currentMessage.clear();
+	}
+
     logWindow.setText(logWindowMessage);
     logWindow.moveCaretToEnd();
 }

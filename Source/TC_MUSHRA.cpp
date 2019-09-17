@@ -68,6 +68,12 @@ void MushraComponent::removeListener(Listener* listener)
 	mushraTestListeners.remove(listener);
 }
 
+void MushraComponent::sendMsgToLogWindow(String message)
+{
+	currentMessage += message + "\n";
+	sendChangeMessage();  // broadcast change message to inform and update the editor
+}
+
 void MushraComponent::loadTrial(int trialIndex)
 {
 	TestTrial* trial = m_testSession->getTrial(trialIndex);
@@ -221,6 +227,8 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 				break;
 
 			m_player->pause();
+
+			sendMsgToLogWindow(trial->getCondition(i)->name);
 
 			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 			
