@@ -46,6 +46,9 @@ private:
 	bool m_shouldSaveSessionSettings;
 	bool m_anonymizeSubject;
 
+	TextButton m_createRndSubjectIDButton;
+	void createRandomSubjectID();
+
 	Label m_labelSubject;
 
 	Label m_labelSubjectID;

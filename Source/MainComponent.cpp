@@ -246,7 +246,6 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		showOnlyTestInterface = show;
 		
 		sp.setShowTest(show);
-
 		as.setVisible(!show);
 		brv.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);

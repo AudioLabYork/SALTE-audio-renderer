@@ -23,7 +23,9 @@ TestSessionForm::TestSessionForm()
 	m_btnExportFile.addListener(this);
 	addAndMakeVisible(m_btnExportFile);
 
-
+	m_createRndSubjectIDButton.setButtonText("Random Subject ID");
+	m_createRndSubjectIDButton.addListener(this);
+	addAndMakeVisible(m_createRndSubjectIDButton);
 
 	m_labelSubject.setText("Subject Data", NotificationType::dontSendNotification);
 	addAndMakeVisible(m_labelSubject);
@@ -80,6 +82,8 @@ void TestSessionForm::init(TestSession* session)
 	}
 	
 	m_session = session;
+
+	createRandomSubjectID();
 }
 
 void TestSessionForm::reset()
@@ -135,7 +139,8 @@ void TestSessionForm::resized()
 	m_editAge.setBounds(155, 210, 250, 25);
 	m_editGender.setBounds(155, 240, 250, 25);
 	
-	m_btnAnon.setBounds(410, 150, 200, 25);
+	m_createRndSubjectIDButton.setBounds(410, 150, 200, 25);
+	m_btnAnon.setBounds(410, 180, 200, 25);
 
 	m_btnAgree.setBounds(155, 295, 300, 25);
 	m_btnBegin.setBounds(305, 330, 100, 25);
@@ -182,6 +187,10 @@ void TestSessionForm::buttonClicked(Button* button)
 		}
 
 	}
+	else if (button == &m_createRndSubjectIDButton)
+	{
+		createRandomSubjectID();
+	}
 	else if (button == &m_btnBegin)
 	{
 		m_session->loadSession(m_sessionFile);
@@ -189,11 +198,11 @@ void TestSessionForm::buttonClicked(Button* button)
 
 		std::unique_ptr<SubjectData> subject = std::make_unique<SubjectData>();
 		
-		// only collect subject data if it is not anonymous
 		
-		//subject->m_id = Time::getCurrentTime().formatted("%y%m%d_%H%M%S");
+		// get subject ID
 		subject->m_id = m_editSubjectID.getText();;
 
+		// only collect subject data (name, age, gender) if it is not anonymous
 		if (!m_anonymizeSubject)
 		{
 			subject->m_name = m_editName.getText();
@@ -239,11 +248,17 @@ void TestSessionForm::buttonClicked(Button* button)
 				m_exportFile.create();
 
 				FileOutputStream fos(m_exportFile);
-				fos << "ses_id,sub_id,sub_name,sub_age,sub_gen,trial_id,con_name,con_score\n";
+				fos << "ses_date,sub_id,sub_name,sub_age,sub_gen,trial_id,con_name,con_score\n";
 			}
 
 			m_btnExportFile.setButtonText(m_exportFile.getFullPathName());
 		}
 #endif
 	}
+}
+
+void TestSessionForm::createRandomSubjectID()
+{
+	auto randomInt = Random::getSystemRandom().nextInt();
+	m_editSubjectID.setText(String(randomInt).getLastCharacters(6));
 }
