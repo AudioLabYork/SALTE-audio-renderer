@@ -126,7 +126,7 @@ void MushraComponent::loadTrial(int trialIndex)
 	else
 		prevTrialButton.setEnabled(true);
 
-	if(m_testSession->getNumberOfTrials() > 1 && (m_testSession->getCurrentTrialIndex() != 0 || m_testSession->getCurrentTrialIndex() != m_testSession->getNumberOfTrials() - 1))
+	if(m_testSession->getNumberOfTrials() > 1 && m_testSession->getCurrentTrialIndex() < m_testSession->getNumberOfTrials() - 1)
 		nextTrialButton.setEnabled(true);
 	else
 		nextTrialButton.setEnabled(false);
