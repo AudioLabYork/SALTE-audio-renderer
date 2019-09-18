@@ -160,6 +160,8 @@ void MushraComponent::paint(Graphics& g)
 		g.drawText(trial->getTrialName(), leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), 25, Justification::centred, true);
 		g.drawText(trial->getTrialInstruction(), leftBorder, topBorder + 20, getWidth() - (leftBorder + rightBorder), 25, Justification::centred, true);
 
+
+		// paint rating scale labels and horizontal lines
 		StringArray ratings = trial->getRatingOptions();
 
 		if (!ratings.isEmpty())
@@ -189,13 +191,12 @@ void MushraComponent::paint(Graphics& g)
 			const int linesWidth = testArea.getWidth();
 			const int numLines = ratings.size() + 1;
 			const float dashPattern[2] = { 4.0, 8.0 };
-
 			g.setColour(Colours::ghostwhite);
-
 			for (int i = 0; i < numLines; ++i)
 				g.drawDashedLine(Line<float>(Point<float>(linesStartX, linesStartY + ySpacer * i), Point<float>(linesStartX + linesWidth, linesStartY + ySpacer * i)), dashPattern, 2, 1.0f);
 		}
 
+		// position condition sliders
 		if (trial->getNumberOfConditions() > 0)
 		{
 			const int sliderSpacing = 0;

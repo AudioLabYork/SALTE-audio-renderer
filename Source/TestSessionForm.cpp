@@ -9,11 +9,11 @@ TestSessionForm::TestSessionForm()
 	addAndMakeVisible(m_labelSession);
 
 	m_labelSessionFile.setText("Configuration File:", NotificationType::dontSendNotification);
-	m_labelSessionFile.setJustificationType(Justification::centredRight);
+	m_labelSessionFile.setJustificationType(Justification::centredLeft);
 	addAndMakeVisible(m_labelSessionFile);
 
 	m_labelExportFile.setText("Results File:", NotificationType::dontSendNotification);
-	m_labelExportFile.setJustificationType(Justification::centredRight);
+	m_labelExportFile.setJustificationType(Justification::centredLeft);
 	addAndMakeVisible(m_labelExportFile);
 
 	m_btnSessionFile.setButtonText("Select file...");
@@ -41,6 +41,14 @@ TestSessionForm::TestSessionForm()
 	m_labelGender.setText("Gender:", NotificationType::dontSendNotification);
 	m_labelGender.setJustificationType(Justification::centredRight);
 
+	// load settings
+	initSettings();
+	if (TestSessionFormSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
+	{
+		loadSettings();
+	}
+
+	// show name / age / gender fields
 	if (!m_anonymizeSubject)
 	{
 
@@ -71,6 +79,7 @@ TestSessionForm::TestSessionForm()
 TestSessionForm::~TestSessionForm()
 {
 	stopTimer();
+	saveSettings();
 }
 
 void TestSessionForm::init(TestSession* session)
@@ -89,18 +98,12 @@ void TestSessionForm::init(TestSession* session)
 void TestSessionForm::reset()
 {
 	m_session->reset();
-	
-	if (!m_shouldSaveSessionSettings)
-	{
-		m_btnSessionFile.setButtonText("Select file...");
-		m_btnExportFile.setButtonText("Select file...");
-	}
 
-	m_editName.setText("");
-	m_editAge.setText("");
-	m_editGender.setText("");
+	//m_editName.setText("");
+	//m_editAge.setText("");
+	//m_editGender.setText("");
 
-	m_btnAgree.setToggleState(false, NotificationType::dontSendNotification);
+	//m_btnAgree.setToggleState(false, NotificationType::dontSendNotification);
 }
 
 void TestSessionForm::addListener(Listener* newListener)
@@ -122,10 +125,10 @@ void TestSessionForm::resized()
 
 	m_labelSession.setBounds(20, 20, 100, 25);
 
-	m_labelSessionFile.setBounds(30, 50, 120, 25);
-	m_labelExportFile.setBounds(30, 80, 120, 25);
-	m_btnSessionFile.setBounds(155, 50, 300, 25);
-	m_btnExportFile.setBounds(155, 80, 300, 25);
+	m_labelSessionFile.setBounds(30, 50, 500, 25);
+	m_labelExportFile.setBounds(30, 80, 500, 25);
+	m_btnSessionFile.setBounds(530, 50, 80, 25);
+	m_btnExportFile.setBounds(530, 80, 80, 25);
 
 	m_labelSubject.setBounds(20, 120, 100, 25);
 
@@ -227,7 +230,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		if (fc.browseForFileToOpen())
 		{
 			m_sessionFile = fc.getResult();
-			m_btnSessionFile.setButtonText(m_sessionFile.getFullPathName());
+			m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}
@@ -251,7 +254,7 @@ void TestSessionForm::buttonClicked(Button* button)
 				fos << "ses_date,sub_id,sub_name,sub_age,sub_gen,trial_id,con_name,con_score\n";
 			}
 
-			m_btnExportFile.setButtonText(m_exportFile.getFullPathName());
+			m_labelExportFile.setText("Results File: " + m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}
@@ -261,4 +264,33 @@ void TestSessionForm::createRandomSubjectID()
 {
 	auto randomInt = Random::getSystemRandom().nextInt();
 	m_editSubjectID.setText(String(randomInt).getLastCharacters(6));
+}
+
+void TestSessionForm::initSettings()
+{
+	PropertiesFile::Options options;
+	// options.applicationName = ProjectInfo::projectName;
+	options.applicationName = "SALTETestSessionFormSettings";
+	options.filenameSuffix = ".conf";
+	options.osxLibrarySubFolder = "Application Support";
+	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
+	options.storageFormat = PropertiesFile::storeAsXML;
+	//    PropertiesFile::reload();
+	TestSessionFormSettings.setStorageParameters(options);
+}
+
+void TestSessionForm::loadSettings()
+{
+	m_sessionFile = TestSessionFormSettings.getUserSettings()->getValue("configFilePath");
+	m_exportFile = TestSessionFormSettings.getUserSettings()->getValue("resultsFilePath");
+	m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
+	m_labelExportFile.setText("Results File: " + m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
+}
+
+void TestSessionForm::saveSettings()
+{
+	TestSessionFormSettings.getUserSettings()->setValue("configFilePath", m_sessionFile.getFullPathName());
+	TestSessionFormSettings.getUserSettings()->setValue("resultsFilePath", m_exportFile.getFullPathName());
+
+	TestSessionFormSettings.getUserSettings()->setValue("loadSettingsFile", true);
 }

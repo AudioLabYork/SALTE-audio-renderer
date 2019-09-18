@@ -65,5 +65,10 @@ private:
 
 	ListenerList<Listener> testSessionListeners;
 
+	void initSettings();
+	void loadSettings();
+	void saveSettings();
+	ApplicationProperties TestSessionFormSettings;
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestSessionForm)
 };

@@ -59,7 +59,7 @@ private:
 	bool showOnlyTestInterface;
 
 	// save and load settings
-	File settingsFile;
+	File audioSettingsFile;
 	void loadSettings();
 	void saveSettings();
 

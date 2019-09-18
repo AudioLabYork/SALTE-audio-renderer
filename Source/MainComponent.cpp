@@ -57,9 +57,9 @@ MainComponent::MainComponent()
 
 	// load settings file if available
 	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
-	settingsFile = File(filePath + "/" + "SALTEAppSettings.conf");
+	audioSettingsFile = File(filePath + "/" + "SALTEAudioSettings.conf");
 	
-	if (settingsFile.existsAsFile())
+	if (audioSettingsFile.existsAsFile())
 		loadSettings();
 	
 	m_testSessionForm.init(&m_testSession);
@@ -275,7 +275,7 @@ void MainComponent::testCompleted()
 
 void MainComponent::loadSettings()
 {
-	XmlDocument asxmldoc(settingsFile);
+	XmlDocument asxmldoc(audioSettingsFile);
 	std::unique_ptr<XmlElement> audioDeviceSettings (asxmldoc.getDocumentElement());
 	deviceManager.initialise(0, 2, audioDeviceSettings.get(), true);
 }
@@ -285,10 +285,8 @@ void MainComponent::saveSettings()
 	std::unique_ptr<XmlElement> audioDeviceSettings(deviceManager.createStateXml());
 	if (audioDeviceSettings.get())
 	{
-		audioDeviceSettings->writeTo(settingsFile);
+		audioDeviceSettings->writeTo(audioSettingsFile);
 	}
-
-	// m_testSessionForm.m_btnSessionFile.getButtonText();
 }
 
 // LOG WINDOW
