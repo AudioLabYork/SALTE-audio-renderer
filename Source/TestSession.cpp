@@ -36,25 +36,30 @@ void TestSession::loadSession(const File& sessionFile)
 {
 	if (sessionFile.existsAsFile())
 	{
+		// parse the JSON file
 		var json = JSON::parse(sessionFile);
 
+		// get number of trials
 		int trials = json.getProperty("numberoftrials", "");
-		String sessionName = json.getProperty("name", "");
 
+		// load each trial
 		for (int i = 0; i < trials; ++i)
 		{
-			var object = json.getProperty("trial" + String(i), "");
+			// create trial object
+			var trialObject = json.getProperty("trial" + String(i), "");
 
 			m_testTrials.add(new TestTrial);
-			m_testTrials[i]->init(object.getProperty("id", ""));
-			m_testTrials[i]->setTrialName(object.getProperty("name", ""));
-			m_testTrials[i]->setTrialInstruction(object.getProperty("instruction", ""));
 
-			File sceneFolder(object.getProperty("scenefolder", "").toString());
+			// setup the trial settings
+			m_testTrials[i]->init(trialObject.getProperty("id", ""));
+			m_testTrials[i]->setTrialName(trialObject.getProperty("name", ""));
+			m_testTrials[i]->setTrialInstruction(trialObject.getProperty("instruction", ""));
+			File sceneFolder(trialObject.getProperty("scenefolder", "").toString());
 
 			if (sceneFolder.exists())
 			{
-				if (auto referenceStimuli = object.getProperty("referencestimuli", "").getArray())
+				// MUSHRA REFERENCE
+				if (auto referenceStimuli = trialObject.getProperty("MushraReference", "").getArray())
 				{
 					for (auto referenceStimulus : *referenceStimuli)
 					{
@@ -62,23 +67,24 @@ void TestSession::loadSession(const File& sessionFile)
 
 						if (reference.existsAsFile())
 						{
-							Reference* ref = new Reference;
+							MushraReference* ref = new MushraReference;
 							ref->name = referenceStimulus.getProperty("name", "");
 							ref->filepath = reference.getFullPathName();
-							ref->rendereringOrder = referenceStimulus.getProperty("order", "");
+							ref->renderingOrder = referenceStimulus.getProperty("order", "");
 							ref->gain = referenceStimulus.getProperty("gain", "");
 							ref->ambixConfig = referenceStimulus.getProperty("ambixconfig", "");
 
-							m_testTrials[i]->addReference(ref);
+							m_testTrials[i]->addMReference(ref);
 						}
 					}
 				}
 
-				if (auto stimuli = object.getProperty("teststimuli", "").getArray())
+				// MUSHRA CONDITIONS
+				if (auto stimuli = trialObject.getProperty("MushraConditions", "").getArray())
 				{
 					for (auto stimulus : *stimuli)
 					{
-						Condition* con = new Condition;
+						MushraCondition* con = new MushraCondition;
 
 						File source(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "").toString());
 
@@ -88,19 +94,59 @@ void TestSession::loadSession(const File& sessionFile)
 							con->filepath = source.getFullPathName();
 
 						con->score = 0.0f;
-						con->rendereringOrder = stimulus.getProperty("order", "");
+						con->renderingOrder = stimulus.getProperty("order", "");
 						con->gain = stimulus.getProperty("gain", "");
 						con->ambixConfig = stimulus.getProperty("ambixconfig", "");
 
-						m_testTrials[i]->addCondition(con);
+						m_testTrials[i]->addMCondition(con);
 					}
 
-					m_testTrials[i]->randomiseConditions();
+					// randomise MUSHRA conditions
+					m_testTrials[i]->randomiseMConditions();
 				}
-			}
 
-			if (auto ratings = object.getProperty("ratings", "").getArray())
-				m_testTrials[i]->setRatingOptions(*ratings);
+				// TS26259 ATTRIBUTES
+				if (auto stimuli = trialObject.getProperty("TS26259Attributes", "").getArray())
+				{
+					for (auto stimulus : *stimuli)
+					{
+						TS26259Attribute* con = new TS26259Attribute;
+
+						con->name = stimulus.getProperty("name", "");
+
+						m_testTrials[i]->addTAttribute(con);
+					}
+				}
+
+				// TS26259 CONDITIONS
+				if (auto stimuli = trialObject.getProperty("TS26259Conditions", "").getArray())
+				{
+					for (auto stimulus : *stimuli)
+					{
+						TS26259Condition* con = new TS26259Condition;
+
+						File source(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "").toString());
+
+						con->name = stimulus.getProperty("name", "");
+
+						if (source.exists())
+							con->filepath = source.getFullPathName();
+
+						con->renderingOrder = stimulus.getProperty("order", "");
+						con->gain = stimulus.getProperty("gain", "");
+						con->ambixConfig = stimulus.getProperty("ambixconfig", "");
+
+						m_testTrials[i]->addTCondition(con);
+					}
+
+					// randomise MUSHRA conditions
+					m_testTrials[i]->randomiseMConditions();
+				}
+
+				// read rating scale for the trial
+				if (auto ratings = trialObject.getProperty("ratings", "").getArray())
+					m_testTrials[i]->setRatingOptions(*ratings);
+			}
 		}
 
 		randomiseTrials();
@@ -120,7 +166,7 @@ void TestSession::exportResults()
 
 		for (auto& testTrial : m_testTrials)
 		{
-			for (int i = 0; i < testTrial->getNumberOfConditions(); ++i)
+			for (int i = 0; i < testTrial->getNumberOfMConditions(); ++i)
 			{
 				fos << m_sessionId << ",";
 
@@ -148,7 +194,7 @@ void TestSession::exportResults()
 					fos << "-,-,-,-,";
 				}
 
-				fos << testTrial->getId() << "," << testTrial->getCondition(i)->name << "," << testTrial->getCondition(i)->score << "\n";
+				fos << testTrial->getId() << "," << testTrial->getMCondition(i)->name << "," << testTrial->getMCondition(i)->score << "\n";
 			}
 		}
 	}

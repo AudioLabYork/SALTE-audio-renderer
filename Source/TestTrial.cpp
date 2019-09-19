@@ -19,14 +19,24 @@ String TestTrial::getId() const
 	return m_trialId;
 }
 
-Condition* TestTrial::getCondition(const int index)
+MushraCondition* TestTrial::getMCondition(const int index)
 {
-	return m_conditions[index];
+	return m_MConditions[index];
 }
 
-Reference* TestTrial::getReference(const int index)
+MushraReference* TestTrial::getMReference(const int index)
 {
-	return m_references[index];
+	return m_MReferences[index];
+}
+
+TS26259Attribute* TestTrial::getTAttribute(const int index)
+{
+	return m_TAttributes[index];
+}
+
+TS26259Condition* TestTrial::getTCondition(const int index)
+{
+	return m_TConditions[index];
 }
 
 void TestTrial::setTrialName(const String& name)
@@ -49,24 +59,34 @@ String TestTrial::getTrialInstruction() const
 	return m_trialInstruction;
 }
 
-void TestTrial::addCondition(Condition* condition)
+void TestTrial::addMCondition(MushraCondition* condition)
 {
-	m_conditions.add(condition);
+	m_MConditions.add(condition);
 }
 
-void TestTrial::addReference(Reference* reference)
+void TestTrial::addMReference(MushraReference* reference)
 {
-	m_references.add(reference);
+	m_MReferences.add(reference);
 }
 
-void TestTrial::randomiseConditions()
+void TestTrial::addTAttribute(TS26259Attribute* attribute)
 {
-	std::random_shuffle(m_conditions.begin(), m_conditions.end());
+	m_TAttributes.add(attribute);
 }
 
-int TestTrial::getNumberOfConditions() const
+void TestTrial::addTCondition(TS26259Condition* condition)
 {
-	return m_conditions.size();
+	m_TConditions.add(condition);
+}
+
+void TestTrial::randomiseMConditions()
+{
+	std::random_shuffle(m_MConditions.begin(), m_MConditions.end());
+}
+
+int TestTrial::getNumberOfMConditions() const
+{
+	return m_MConditions.size();
 }
 
 void TestTrial::setRatingOptions(const StringArray ratings)
@@ -119,7 +139,7 @@ float TestTrial::getLoopEnd() const
 	return loopEndTime;
 }
 
-bool TestTrial::isReferencePresent()
+bool TestTrial::isMReferencePresent()
 {
-	return !m_references.isEmpty();
+	return !m_MReferences.isEmpty();
 }

@@ -2,37 +2,75 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 
-struct Reference
+// MUSHRA or MUSHA (no reference) condition
+struct MushraCondition
 {
-	Reference()
-		: rendereringOrder(0)
-		, gain(1.0f)
-	{
-	}
-
-	String name;
-	String filepath;
-	int rendereringOrder;
-	float gain;
-	String ambixConfig;
-};
-
-struct Condition
-{
-	Condition()
+	MushraCondition()
 		: score(0)
-		, rendereringOrder(0)
+		, minScore(0)
+		, maxScore(100)
+		, renderingOrder(0)
 		, gain(1.0f)
 	{
 	}
 
 	String name;
+	float minScore, maxScore, score;
+	// stimulus settings
 	String filepath;
-	float score;
-	int rendereringOrder;
+	int renderingOrder;
 	float gain;
 	String ambixConfig;
 };
+
+// MUSHRA reference
+struct MushraReference
+{
+	MushraReference()
+		: renderingOrder(0)
+		, gain(1.0f)
+	{
+	}
+
+	String name;
+	// stimulus settings
+	String filepath;
+	int renderingOrder;
+	float gain;
+	String ambixConfig;
+};
+
+// TS26.259 attribute (typically there are 4 of these in a single trial)
+struct TS26259Attribute
+{
+	TS26259Attribute()
+		: score(0)
+		, minScore(-3)
+		, maxScore(3)
+	{
+	}
+
+	String name;
+	float minScore, maxScore, score;
+};
+
+// TS26.259 condition trigger (typically one of the two: A or B, doesn't contain the scores)
+struct TS26259Condition
+{
+	TS26259Condition()
+		: renderingOrder(0)
+		, gain(1.0f)
+	{
+	}
+
+	String name;
+	// stimulus settings
+	String filepath;
+	float gain;
+	int renderingOrder;
+	String ambixConfig;
+};
+
 
 class TestTrial
 {
@@ -49,16 +87,20 @@ public:
 	void setTrialInstruction(const String& instruction);
 	String getTrialInstruction() const;
 
-	void addCondition(Condition* condition);
-	void addReference(Reference* reference);
+	void addMCondition(MushraCondition* condition);
+	void addMReference(MushraReference* reference);
+	void addTAttribute(TS26259Attribute* attribute);
+	void addTCondition(TS26259Condition* condition);
 
-	void randomiseConditions();
+	void randomiseMConditions();
 
-	Condition* getCondition(const int index);
-	Reference* getReference(const int index);
+	MushraCondition* getMCondition(const int index);
+	MushraReference* getMReference(const int index);
+	TS26259Attribute* getTAttribute(const int index);
+	TS26259Condition* getTCondition(const int index);
 	
-	int getNumberOfConditions() const;
-	bool isReferencePresent();
+	int getNumberOfMConditions() const;
+	bool isMReferencePresent();
 
 	void setRatingOptions(const StringArray ratings);
 	StringArray getRatingOptions() const;
@@ -80,8 +122,10 @@ private:
 	String m_trialName;
 	String m_trialInstruction;
 
-	OwnedArray<Reference> m_references;
-	OwnedArray<Condition> m_conditions;
+	OwnedArray<MushraCondition> m_MConditions;
+	OwnedArray<MushraReference> m_MReferences;
+	OwnedArray<TS26259Attribute> m_TAttributes;
+	OwnedArray<TS26259Condition> m_TConditions;
 
 	StringArray m_ratingOptions;
 

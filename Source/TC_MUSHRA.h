@@ -47,12 +47,17 @@ private:
 	void changeListenerCallback(ChangeBroadcaster* source) override;
 
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
+	
 	TextButton selectReferenceButton;
+	OwnedArray<TextButton> selectTConditionButtonArray; // used for TS26259
 	OwnedArray<TextButton> selectConditionButtonArray;
 	OwnedArray<Slider> ratingSliderArray;
-	bool timeSyncPlayback = true;
 	OwnedArray<Label> ratingReadouts;
+	OwnedArray<Label> attributeRatingLabels; // used for TS26259
 
+	bool timeSyncPlayback = true;
+
+	// references to other SALTE Renderer objects
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;
 	BinauralRenderer* m_renderer;
@@ -62,6 +67,7 @@ private:
 	int rightBorder;
 	int topBorder;
 	int bottomBorder;
+	int ratingLabelsTextWidth;
 
 	juce::Rectangle<int> testSpace;
 	juce::Rectangle<int> testArea;
