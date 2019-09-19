@@ -54,7 +54,7 @@ void TestSession::loadSession(const File& sessionFile)
 			m_testTrials[i]->init(trialObject.getProperty("id", ""));
 			m_testTrials[i]->setTrialName(trialObject.getProperty("name", ""));
 			m_testTrials[i]->setTrialInstruction(trialObject.getProperty("instruction", ""));
-			File sceneFolder(trialObject.getProperty("scenefolder", "").toString());
+			File sceneFolder(sessionFile.getParentDirectory().getFullPathName() + "/" + trialObject.getProperty("scenefolder", "").toString());
 
 			if (sceneFolder.exists())
 			{

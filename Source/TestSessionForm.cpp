@@ -2,7 +2,6 @@
 
 TestSessionForm::TestSessionForm()
 	: m_session(nullptr)
-	, m_shouldSaveSessionSettings(true)
 	, m_anonymizeSubject(true)
 {
 	m_labelSession.setText("Session Data", NotificationType::dontSendNotification);

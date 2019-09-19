@@ -49,7 +49,7 @@ private:
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
 	
 	TextButton selectReferenceButton;
-	OwnedArray<TextButton> selectTConditionButtonArray; // used for TS26259
+	TextButton selectTConditionAButton, selectTConditionBButton; // used for TS26259
 	OwnedArray<TextButton> selectConditionButtonArray;
 	OwnedArray<Slider> ratingSliderArray;
 	OwnedArray<Label> ratingReadouts;

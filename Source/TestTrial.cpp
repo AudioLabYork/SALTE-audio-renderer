@@ -89,6 +89,20 @@ int TestTrial::getNumberOfMConditions() const
 	return m_MConditions.size();
 }
 
+int TestTrial::getNumberOfTAttributes() const
+{
+	return m_TAttributes.size();
+}
+
+bool TestTrial::areTConditionsPresent()
+{
+	if (m_TConditions.size() == 2)
+		return true;
+	else
+		return false;
+}
+
+
 void TestTrial::setRatingOptions(const StringArray ratings)
 {
 	m_ratingOptions = ratings;

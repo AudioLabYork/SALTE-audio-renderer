@@ -43,7 +43,6 @@ private:
 	File m_sessionFile;
 	File m_exportFile;
 
-	bool m_shouldSaveSessionSettings;
 	bool m_anonymizeSubject;
 
 	TextButton m_createRndSubjectIDButton;

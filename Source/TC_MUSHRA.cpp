@@ -28,6 +28,18 @@ MushraComponent::MushraComponent()
 	selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::green);
 	selectReferenceButton.addListener(this);
 	addChildComponent(selectReferenceButton);
+
+	selectTConditionAButton.setButtonText("A");
+	selectTConditionAButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	selectTConditionAButton.setColour(TextButton::buttonOnColourId, Colours::green);
+	selectTConditionAButton.addListener(this);
+	addChildComponent(selectTConditionAButton);
+
+	selectTConditionBButton.setButtonText("B");
+	selectTConditionBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	selectTConditionBButton.setColour(TextButton::buttonOnColourId, Colours::green);
+	selectTConditionBButton.addListener(this);
+	addChildComponent(selectTConditionBButton);
 }
 
 MushraComponent::~MushraComponent()
@@ -79,80 +91,134 @@ void MushraComponent::loadTrial(int trialIndex)
 
 	m_player->unloadFileFromTransport();
 
+	ratingSliderArray.clear();
+	ratingReadouts.clear();
+	selectConditionButtonArray.clear();
+	attributeRatingLabels.clear();
+
 	// MUSHRA Reference
 	selectReferenceButton.setVisible(trial->isMReferencePresent());
 
 	// MUSHRA Conditions
-	ratingSliderArray.clear();
-	ratingReadouts.clear();
-	selectConditionButtonArray.clear();
-
-	StringArray selectButtonAlphabet = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-											"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
-
-	for (int i = 0; i < trial->getNumberOfMConditions(); ++i)
+	if (trial->getNumberOfMConditions() > 0)
 	{
-		ratingSliderArray.add(new Slider());
-		ratingSliderArray[i]->getProperties().set("ratingSlider", true);
-		ratingSliderArray[i]->getProperties().set("sliderIndex", i);
-		ratingSliderArray[i]->setSliderStyle(Slider::LinearBarVertical);
-		ratingSliderArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
-		ratingSliderArray[i]->setTextBoxIsEditable(false);
-		ratingSliderArray[i]->setRange(0, 100, 1);
-		ratingSliderArray[i]->setValue(trial->getMCondition(i)->score, dontSendNotification);
-		ratingSliderArray[i]->addListener(this);
-		addAndMakeVisible(ratingSliderArray[i]);
+		StringArray selectButtonAlphabet = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
+												"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 
-		ratingReadouts.add(new Label());
-		ratingReadouts[i]->setText(String(trial->getMCondition(i)->score), dontSendNotification);
-		ratingReadouts[i]->setJustificationType(Justification::centred);
-		addAndMakeVisible(ratingReadouts[i]);
+		for (int i = 0; i < trial->getNumberOfMConditions(); ++i)
+		{
+			ratingSliderArray.add(new Slider());
+			ratingSliderArray[i]->getProperties().set("ratingSlider", true);
+			ratingSliderArray[i]->getProperties().set("sliderIndex", i);
+			ratingSliderArray[i]->setSliderStyle(Slider::LinearBarVertical);
+			ratingSliderArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
+			ratingSliderArray[i]->setTextBoxIsEditable(false);
+			ratingSliderArray[i]->setRange(trial->getMCondition(i)->minScore, trial->getMCondition(i)->maxScore, 1);
+			ratingSliderArray[i]->setValue(trial->getMCondition(i)->score, dontSendNotification);
+			ratingSliderArray[i]->addListener(this);
+			addAndMakeVisible(ratingSliderArray[i]);
 
-		selectConditionButtonArray.add(new TextButton());
-		selectConditionButtonArray[i]->setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-		selectConditionButtonArray[i]->setColour(TextButton::buttonOnColourId, Colours::coral);
-		selectConditionButtonArray[i]->getProperties().set("playSampleButton", true);
-		selectConditionButtonArray[i]->getProperties().set("buttonIndex", i);
+			ratingReadouts.add(new Label());
+			ratingReadouts[i]->setText(String(trial->getMCondition(i)->score), dontSendNotification);
+			ratingReadouts[i]->setJustificationType(Justification::centred);
+			addAndMakeVisible(ratingReadouts[i]);
 
-		if (i < selectButtonAlphabet.size())
-			selectConditionButtonArray[i]->setButtonText(selectButtonAlphabet[i]);
+			selectConditionButtonArray.add(new TextButton());
+			selectConditionButtonArray[i]->setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+			selectConditionButtonArray[i]->setColour(TextButton::buttonOnColourId, Colours::coral);
+			selectConditionButtonArray[i]->getProperties().set("playSampleButton", true);
+			selectConditionButtonArray[i]->getProperties().set("buttonIndex", i);
 
-		selectConditionButtonArray[i]->addListener(this);
-		addAndMakeVisible(selectConditionButtonArray[i]);
+			if (i < selectButtonAlphabet.size())
+				selectConditionButtonArray[i]->setButtonText(selectButtonAlphabet[i]);
+
+			selectConditionButtonArray[i]->addListener(this);
+			addAndMakeVisible(selectConditionButtonArray[i]);
+		}
 	}
 
 	// TS26259 Attributes
+	if (trial->getNumberOfTAttributes() > 0)
+	{
+		for (int i = 0; i < trial->getNumberOfTAttributes(); ++i)
+		{
+			ratingSliderArray.add(new Slider());
+			ratingSliderArray[i]->getProperties().set("ratingSlider", true);
+			ratingSliderArray[i]->getProperties().set("sliderIndex", i);
+			ratingSliderArray[i]->setSliderStyle(Slider::LinearBarVertical);
+			ratingSliderArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
+			ratingSliderArray[i]->setTextBoxIsEditable(false);
+			ratingSliderArray[i]->setRange(trial->getTAttribute(i)->minScore, trial->getTAttribute(i)->maxScore, 0.05);
+			ratingSliderArray[i]->setValue(trial->getTAttribute(i)->score, dontSendNotification);
+			ratingSliderArray[i]->addListener(this);
+			addAndMakeVisible(ratingSliderArray[i]);
+
+			ratingReadouts.add(new Label());
+			ratingReadouts[i]->setText(String(trial->getTAttribute(i)->score), dontSendNotification);
+			ratingReadouts[i]->setJustificationType(Justification::centred);
+			addAndMakeVisible(ratingReadouts[i]);
+
+			attributeRatingLabels.add(new Label());
+			attributeRatingLabels[i]->setText(trial->getTAttribute(i)->name, dontSendNotification);
+			attributeRatingLabels[i]->setJustificationType(Justification::centred);
+			addAndMakeVisible(attributeRatingLabels[i]);
+		}
+	}
 
 	// TS26259 Conditions
-
-
+	selectTConditionAButton.setVisible(trial->areTConditionsPresent());
+	selectTConditionBButton.setVisible(trial->areTConditionsPresent());
 
 	// DISTRIBUTE ELEMENTS IN THE GUI
 	const int topMargin = 50;
 	const int bottomMargin = 120;
 	testArea.setBounds(testSpace.getX() + ratingLabelsTextWidth, testSpace.getY() + topMargin, testSpace.getWidth() - ratingLabelsTextWidth, testSpace.getHeight() - (topMargin + bottomMargin));
 
-	// position condition sliders
+	// position MUSHRA condition sliders
 	if (trial->getNumberOfMConditions() > 0)
 	{
 		const int sliderSpacing = 0;
 		const int sliderWidth = 30;
 		const int sliderHeight = testArea.getHeight();
-		const int inc = testArea.getWidth() / trial->getNumberOfMConditions();
+		int inc = testArea.getWidth() / trial->getNumberOfMConditions();
+		inc = (int) inc + ((inc - sliderWidth) / trial->getNumberOfMConditions());
 		const int sliderPositionX = testArea.getX();
 		const int sliderPositionY = testArea.getY();
-		const int buttonHeight = 20;
 
 		for (int i = 0; i < trial->getNumberOfMConditions(); ++i)
 		{
 			ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
-			ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 10, sliderWidth, buttonHeight);
-			selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 40, sliderWidth, buttonHeight);
+			ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 5, sliderWidth, 20);
+			selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 30, sliderWidth, 25);
 		}
 	}
 
 	// position MUSHRA reference button
-	selectReferenceButton.setBounds(testArea.getX(), testSpace.getBottom() - 60, testArea.getWidth(), 25);
+	selectReferenceButton.setBounds(testArea.getX(), testArea.getBottom() + 65, testArea.getWidth(), 25);
+
+	// position TS26259 attributes
+	if (trial->getNumberOfTAttributes() > 0)
+	{
+		const int sliderSpacing = 0;
+		const int sliderWidth = 30;
+		const int sliderHeight = testArea.getHeight();
+		int inc = testArea.getWidth() / trial->getNumberOfTAttributes();
+		inc = (int)inc + ((inc - sliderWidth) / trial->getNumberOfTAttributes());
+		const int sliderPositionX = testArea.getX();
+		const int sliderPositionY = testArea.getY();
+
+		for (int i = 0; i < trial->getNumberOfTAttributes(); ++i)
+		{
+			ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
+			ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 5, sliderWidth, 20);
+			attributeRatingLabels[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 30, 100, 25);
+		}
+	}
+
+	// position TS26259 conditions buttons
+	selectTConditionAButton.setBounds(testArea.getX(), testArea.getBottom() + 65, testArea.getWidth()/3, 25);
+	selectTConditionBButton.setBounds(testArea.getX() + 2 * testArea.getWidth() / 3, testArea.getBottom() + 65, testArea.getWidth()/3, 25);
+
 
 	// set the looping state of the player
 	m_player->loop(trial->getLoopingState());
@@ -225,7 +291,7 @@ void MushraComponent::paint(Graphics& g)
 			const float dashPattern[2] = { 4.0, 8.0 };
 			g.setColour(Colours::ghostwhite);
 			for (int i = 0; i < numLines; ++i)
-				g.drawDashedLine(Line<float>(Point<float>(linesStartX, linesStartY + ySpacer * i), Point<float>(linesStartX + linesWidth, linesStartY + ySpacer * i)), dashPattern, 2, 1.0f);
+				g.drawDashedLine(Line<float>(Point<float>(linesStartX, linesStartY + ySpacer * i), Point<float>(linesStartX + linesWidth, linesStartY + ySpacer * i)), dashPattern, 2, 0.5f);
 		}
 	}
 }
@@ -328,7 +394,8 @@ void MushraComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 		TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 
 		int sliderIndex = sliderThatWasChanged->getProperties()["sliderIndex"];
-		trial->getMCondition(sliderIndex)->score = sliderThatWasChanged->getValue();
+		if (trial->getMCondition(sliderIndex) != nullptr) trial->getMCondition(sliderIndex)->score = sliderThatWasChanged->getValue();
+		if (trial->getTAttribute(sliderIndex) != nullptr) trial->getTAttribute(sliderIndex)->score = sliderThatWasChanged->getValue();
 		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
 	}
 }

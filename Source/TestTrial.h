@@ -101,6 +101,8 @@ public:
 	
 	int getNumberOfMConditions() const;
 	bool isMReferencePresent();
+	int getNumberOfTAttributes() const;
+	bool areTConditionsPresent();
 
 	void setRatingOptions(const StringArray ratings);
 	StringArray getRatingOptions() const;
