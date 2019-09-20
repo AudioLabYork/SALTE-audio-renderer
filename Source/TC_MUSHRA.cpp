@@ -240,6 +240,7 @@ void MushraComponent::loadTrial(int trialIndex)
 		endTestButton.setEnabled(false);
 
 	repaint();
+	updateRemoteInterface();
 }
 
 void MushraComponent::paint(Graphics& g)
@@ -350,8 +351,6 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 		m_player->play();
 
-		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)1);
-		//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
 	}
 	else if (buttonThatWasClicked == &prevTrialButton)
 	{
@@ -400,14 +399,75 @@ void MushraComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 	}
 }
 
+void MushraComponent::updateRemoteInterface()
+{
+
+	//currentTrialIndex = trialIndex;
+	//m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
+	//m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
+	//selectAButton.setColour(TextButton::buttonColourId, Colours::green);
+	//selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	//sender.send("/ts26259/button", (String) "A", (int)1);
+	//sender.send("/ts26259/button", (String) "B", (int)0);
+
+	//playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	//stopButton.setColour(TextButton::buttonColourId, Colours::blue);
+	//sender.send("/ts26259/button", (String) "play", (int)0);
+	//sender.send("/ts26259/button", (String) "stop", (int)1);
+
+	//if (testTrialArray[currentTrialIndex]->getLoopingState())
+	//{
+	//	m_player->loop(true);
+	//	loopButton.setColour(TextButton::buttonColourId, Colours::blue);
+	//	sender.send("/ts26259/button", (String) "loop", (int)1);
+	//}
+	//else
+	//{
+	//	m_player->loop(false);
+	//	loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+	//	sender.send("/ts26259/button", (String) "loop", (int)0);
+	//}
+
+	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+
+	// update remote sliders
+	for (int i = 0; i < ratingSliderArray.size(); ++i)
+	{
+		m_oscTxRx->sendOscMessage("/ts26259/slider", (int)i, (float)ratingSliderArray[i]->getValue());
+	}
+
+	// send string to display on the screen
+	String screenMessage1 = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
+	m_oscTxRx->sendOscMessage("/ts26259/screen", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+	
+	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)1);
+	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
+}
+
 void MushraComponent::oscMessageReceived(const OSCMessage& message)
 {
 	// CONTROL TS26.258 BUTTONS
 	if (message.size() == 1 && message.getAddressPattern() == "/ts26259/button" && message[0].isString())
 	{
-		if (message[0].getString() == "reference")
+		if (message[0].getString() == "play")
 		{
-			selectReferenceButton.triggerClick();
+			m_player->play();
+		}
+		else if (message[0].getString() == "stop")
+		{
+			m_player->stop();
+		}
+		//else if (message[0].getString() == "loop")
+		//{
+		//	loopButton.triggerClick();
+		//}
+		else if (message[0].getString() == "A")
+		{
+			selectTConditionAButton.triggerClick();
+		}
+		else if (message[0].getString() == "B")
+		{
+			selectTConditionBButton.triggerClick();
 		}
 		else if (message[0].getString() == "prev_trial")
 		{

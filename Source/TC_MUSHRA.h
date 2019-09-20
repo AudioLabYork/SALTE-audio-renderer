@@ -46,6 +46,8 @@ private:
 	void oscMessageReceived(const OSCMessage& message) override;
 	void changeListenerCallback(ChangeBroadcaster* source) override;
 
+	void updateRemoteInterface();
+
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
 	
 	TextButton selectReferenceButton;
