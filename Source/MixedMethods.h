@@ -6,7 +6,7 @@
 #include "BinauralRenderer.h"
 #include "TestSession.h"
 
-class MushraComponent : public Component,
+class MixedMethodsComponent : public Component,
 						public OSCReceiver,
 						public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
 						private Button::Listener,
@@ -16,8 +16,8 @@ class MushraComponent : public Component,
 {
 public:
 	//==============================================================================
-	MushraComponent();
-	~MushraComponent();
+	MixedMethodsComponent();
+	~MixedMethodsComponent();
 
 	void init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer);
 	void loadTestSession(TestSession* testSession);
@@ -69,12 +69,11 @@ private:
 	int rightBorder;
 	int topBorder;
 	int bottomBorder;
-	int ratingLabelsTextWidth;
 
 	juce::Rectangle<int> testSpace;
 	juce::Rectangle<int> testArea;
 
 	ListenerList<Listener> mushraTestListeners;
 
-	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MushraComponent)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MixedMethodsComponent)
 };

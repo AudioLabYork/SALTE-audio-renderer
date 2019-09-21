@@ -26,6 +26,11 @@ MainComponent::MainComponent()
 	// set size of the main app window
 	setSize(1400, 800);
 
+	// add logo
+	logo = ImageFileFormat::loadFrom(BinaryData::logo_180px_png, BinaryData::logo_180px_pngSize);
+	if (logo.isValid()) imageComponent.setImage(logo);
+	addAndMakeVisible(&imageComponent);
+
     // set number of output channels to 2 (binaural rendering case)
     setAudioChannels (0, 2);
 
@@ -78,7 +83,7 @@ MainComponent::MainComponent()
     logWindow.setScrollbarsShown(true);
 	addAndMakeVisible(logWindow);
 
-	showTestInterface.setButtonText("show test interface");
+	showTestInterface.setButtonText("Show test interface");
 	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
@@ -189,11 +194,14 @@ void MainComponent::resized()
 	}
 	else
 	{
+		// imageComponent.setBounds(140, 60, 90, 90);
+		imageComponent.setBounds(20, 20, 90, 90);
+
 		as.setCentrePosition(getWidth() / 2, getHeight() / 2);
 		sp.setBounds(660, 10, 730, 385);
 		brv.setBounds(660, 405, 730, 245);
-		openAudioDeviceManager.setBounds(310, 105, 240, 25);
 		connectOscButton.setBounds(310, 70, 240, 25);
+		openAudioDeviceManager.setBounds(310, 105, 240, 25);
 
 		clientTxIpLabel.setBounds(310, 35, 80, 25);
 		clientTxPortLabel.setBounds(410, 35, 60, 25);
@@ -204,7 +212,7 @@ void MainComponent::resized()
 		m_testSessionForm.setBounds(10, 170, 640, 480);
 		mc.setBounds(10, 170, 640, 480);
 
-		showTestInterface.setBounds(10, 10, 100, 30);
+		showTestInterface.setBounds(560, 70, 80, 60);
 	}
 }
 
@@ -231,7 +239,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		
 		if (oscTxRx.isConnected())
 		{
-			connectOscButton.setColour(TextButton::buttonColourId, Colours::red);
+			connectOscButton.setColour(TextButton::buttonColourId, Colours::green);
 			connectOscButton.setButtonText("OSC connected");
 		}
 		else

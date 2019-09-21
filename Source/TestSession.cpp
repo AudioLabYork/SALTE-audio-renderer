@@ -55,6 +55,7 @@ void TestSession::loadSession(const File& sessionFile)
 			m_testTrials[i]->setTrialName(trialObject.getProperty("name", ""));
 			m_testTrials[i]->setTrialInstruction(trialObject.getProperty("instruction", ""));
 			File sceneFolder(sessionFile.getParentDirectory().getFullPathName() + "/" + trialObject.getProperty("scenefolder", "").toString());
+			File ambixconfigFolder(sessionFile.getParentDirectory().getFullPathName() + "/" + trialObject.getProperty("ambixconfigfolder", "").toString());
 
 			if (sceneFolder.exists())
 			{
@@ -64,6 +65,7 @@ void TestSession::loadSession(const File& sessionFile)
 					for (auto referenceStimulus : *referenceStimuli)
 					{
 						File reference(sceneFolder.getFullPathName() + File::getSeparatorString() + referenceStimulus.getProperty("source", "").toString());
+						File ambixconfig(sceneFolder.getFullPathName() + File::getSeparatorString() + referenceStimulus.getProperty("ambixconfig", "").toString());
 
 						if (reference.existsAsFile())
 						{
@@ -72,7 +74,8 @@ void TestSession::loadSession(const File& sessionFile)
 							ref->filepath = reference.getFullPathName();
 							ref->renderingOrder = referenceStimulus.getProperty("order", "");
 							ref->gain = referenceStimulus.getProperty("gain", "");
-							ref->ambixConfig = referenceStimulus.getProperty("ambixconfig", "");
+							// ref->ambixConfig = referenceStimulus.getProperty("ambixconfig", "");
+							if(ambixconfig.existsAsFile()) ref->ambixConfig = ambixconfig.getFullPathName();
 
 							m_testTrials[i]->addMReference(ref);
 						}
@@ -87,6 +90,7 @@ void TestSession::loadSession(const File& sessionFile)
 						MushraCondition* con = new MushraCondition;
 
 						File source(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "").toString());
+						File ambixconfig(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("ambixconfig", "").toString());
 
 						con->name = stimulus.getProperty("name", "");
 
@@ -96,7 +100,7 @@ void TestSession::loadSession(const File& sessionFile)
 						con->score = 0.0f;
 						con->renderingOrder = stimulus.getProperty("order", "");
 						con->gain = stimulus.getProperty("gain", "");
-						con->ambixConfig = stimulus.getProperty("ambixconfig", "");
+						if (ambixconfig.existsAsFile()) con->ambixConfig = ambixconfig.getFullPathName();
 
 						m_testTrials[i]->addMCondition(con);
 					}
@@ -126,6 +130,8 @@ void TestSession::loadSession(const File& sessionFile)
 						TS26259Condition* con = new TS26259Condition;
 
 						File source(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "").toString());
+						File ambixconfig(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("ambixconfig", "").toString());
+
 
 						con->name = stimulus.getProperty("name", "");
 
@@ -134,7 +140,7 @@ void TestSession::loadSession(const File& sessionFile)
 
 						con->renderingOrder = stimulus.getProperty("order", "");
 						con->gain = stimulus.getProperty("gain", "");
-						con->ambixConfig = stimulus.getProperty("ambixconfig", "");
+						if (ambixconfig.existsAsFile()) con->ambixConfig = ambixconfig.getFullPathName();
 
 						m_testTrials[i]->addTCondition(con);
 					}
@@ -149,7 +155,7 @@ void TestSession::loadSession(const File& sessionFile)
 			}
 		}
 
-		randomiseTrials();
+		// randomiseTrials(); // randomisation doesn't work, needs to be verified
 	}
 }
 

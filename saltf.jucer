@@ -42,8 +42,9 @@
             file="Source/StimulusPlayer.h"/>
       <FILE id="cb4RTH" name="SubjectData.cpp" compile="1" resource="0" file="Source/SubjectData.cpp"/>
       <FILE id="ahUtip" name="SubjectData.h" compile="0" resource="0" file="Source/SubjectData.h"/>
-      <FILE id="eVWJjz" name="TC_MUSHRA.cpp" compile="1" resource="0" file="Source/TC_MUSHRA.cpp"/>
-      <FILE id="GF936q" name="TC_MUSHRA.h" compile="0" resource="0" file="Source/TC_MUSHRA.h"/>
+      <FILE id="eVWJjz" name="MixedMethods.cpp" compile="1" resource="0"
+            file="Source/MixedMethods.cpp"/>
+      <FILE id="GF936q" name="MixedMethods.h" compile="0" resource="0" file="Source/MixedMethods.h"/>
       <FILE id="s2ueny" name="TestSession.cpp" compile="1" resource="0" file="Source/TestSession.cpp"/>
       <FILE id="Qp9oqs" name="TestSession.h" compile="0" resource="0" file="Source/TestSession.h"/>
       <FILE id="gDn1A1" name="TestSessionForm.cpp" compile="1" resource="0"
@@ -53,6 +54,7 @@
       <FILE id="nf8o7P" name="TestTrial.cpp" compile="1" resource="0" file="Source/TestTrial.cpp"/>
       <FILE id="uu02kR" name="TestTrial.h" compile="0" resource="0" file="Source/TestTrial.h"/>
     </GROUP>
+    <FILE id="nNrZIR" name="logo_180px.png" compile="0" resource="1" file="logo_180px.png"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" externalLibraries="sofa_debug&#10;curl&#10;hdf5_hl&#10;hdf5&#10;netcdf_c++4&#10;netcdf&#10;z">

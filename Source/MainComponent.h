@@ -6,7 +6,7 @@
 #include "StimulusPlayer.h"
 #include "BinauralRenderer.h"
 #include "BinauralRendererView.h"
-#include "TC_MUSHRA.h"
+#include "MixedMethods.h"
 #include "TestSession.h"
 #include "TestSessionForm.h"
 
@@ -14,7 +14,7 @@ class MainComponent
 	: public AudioAppComponent
 	, public Button::Listener
 	, public TestSessionForm::Listener
-	, public MushraComponent::Listener
+	, public MixedMethodsComponent::Listener
 	, public ChangeListener
 {
 public:
@@ -41,7 +41,7 @@ private:
     StimulusPlayer sp;
 	BinauralRenderer br;
 	BinauralRendererView brv;
-	MushraComponent mc;
+	MixedMethodsComponent mc;
 
 	TestSession m_testSession;
 	TestSessionForm m_testSessionForm;
@@ -57,6 +57,9 @@ private:
 
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;
+
+	Image logo;
+	ImageComponent imageComponent;
 
 	// save and load settings
 	File audioSettingsFile;

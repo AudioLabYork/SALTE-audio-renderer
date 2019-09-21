@@ -1,6 +1,6 @@
-#include "TC_MUSHRA.h"
+#include "MixedMethods.h"
 
-MushraComponent::MushraComponent()
+MixedMethodsComponent::MixedMethodsComponent()
 	: m_oscTxRx(nullptr)
 	, m_player(nullptr)
 	, m_renderer(nullptr)
@@ -9,7 +9,6 @@ MushraComponent::MushraComponent()
 	, rightBorder(15)
 	, topBorder(15)
 	, bottomBorder(15)
-	, ratingLabelsTextWidth(130)
 {
 	prevTrialButton.setButtonText("Previous Trial");
 	prevTrialButton.addListener(this);
@@ -25,28 +24,28 @@ MushraComponent::MushraComponent()
 
 	selectReferenceButton.setButtonText("Reference");
 	selectReferenceButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::green);
+	selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::red);
 	selectReferenceButton.addListener(this);
 	addChildComponent(selectReferenceButton);
 
 	selectTConditionAButton.setButtonText("A");
 	selectTConditionAButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	selectTConditionAButton.setColour(TextButton::buttonOnColourId, Colours::green);
+	selectTConditionAButton.setColour(TextButton::buttonOnColourId, Colours::red);
 	selectTConditionAButton.addListener(this);
 	addChildComponent(selectTConditionAButton);
 
 	selectTConditionBButton.setButtonText("B");
 	selectTConditionBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	selectTConditionBButton.setColour(TextButton::buttonOnColourId, Colours::green);
+	selectTConditionBButton.setColour(TextButton::buttonOnColourId, Colours::red);
 	selectTConditionBButton.addListener(this);
 	addChildComponent(selectTConditionBButton);
 }
 
-MushraComponent::~MushraComponent()
+MixedMethodsComponent::~MixedMethodsComponent()
 {
 }
 
-void MushraComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer)
+void MixedMethodsComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer)
 {
 	m_oscTxRx = oscTxRx;
 	m_oscTxRx->addListener(this);
@@ -57,29 +56,29 @@ void MushraComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, Bina
 	m_player->addChangeListener(this);
 }
 
-void MushraComponent::loadTestSession(TestSession* testSession)
+void MixedMethodsComponent::loadTestSession(TestSession* testSession)
 {
 	m_testSession = testSession;
 	loadTrial(0);
 }
 
-void MushraComponent::addListener(Listener* newListener)
+void MixedMethodsComponent::addListener(Listener* newListener)
 {
 	mushraTestListeners.add(newListener);
 }
 
-void MushraComponent::removeListener(Listener* listener)
+void MixedMethodsComponent::removeListener(Listener* listener)
 {
 	mushraTestListeners.remove(listener);
 }
 
-void MushraComponent::sendMsgToLogWindow(String message)
+void MixedMethodsComponent::sendMsgToLogWindow(String message)
 {
 	currentMessage += message + "\n";
 	sendChangeMessage();  // broadcast change message to inform and update the editor
 }
 
-void MushraComponent::loadTrial(int trialIndex)
+void MixedMethodsComponent::loadTrial(int trialIndex)
 {
 	TestTrial* trial = m_testSession->getTrial(trialIndex);
 	
@@ -125,7 +124,7 @@ void MushraComponent::loadTrial(int trialIndex)
 
 			selectConditionButtonArray.add(new TextButton());
 			selectConditionButtonArray[i]->setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			selectConditionButtonArray[i]->setColour(TextButton::buttonOnColourId, Colours::coral);
+			selectConditionButtonArray[i]->setColour(TextButton::buttonOnColourId, Colours::red);
 			selectConditionButtonArray[i]->getProperties().set("playSampleButton", true);
 			selectConditionButtonArray[i]->getProperties().set("buttonIndex", i);
 
@@ -169,56 +168,38 @@ void MushraComponent::loadTrial(int trialIndex)
 	selectTConditionAButton.setVisible(trial->areTConditionsPresent());
 	selectTConditionBButton.setVisible(trial->areTConditionsPresent());
 
-	// DISTRIBUTE ELEMENTS IN THE GUI
+	// ######################## DISTRIBUTE ELEMENTS IN THE GUI ########################
 	const int topMargin = 50;
-	const int bottomMargin = 120;
-	testArea.setBounds(testSpace.getX() + ratingLabelsTextWidth, testSpace.getY() + topMargin, testSpace.getWidth() - ratingLabelsTextWidth, testSpace.getHeight() - (topMargin + bottomMargin));
+	const int bottomMargin = 125;
+	const int leftMargin = 120;
+	testArea.setBounds(testSpace.getX() + leftMargin, testSpace.getY() + topMargin, testSpace.getWidth() - leftMargin, testSpace.getHeight() - (topMargin + bottomMargin));
 
-	// position MUSHRA condition sliders
-	if (trial->getNumberOfMConditions() > 0)
+	// position sliders
+	if (trial->getNumberOfMConditions() > 0 || trial->getNumberOfTAttributes() > 0)
 	{
-		const int sliderSpacing = 0;
+		const int numberOfSliders = trial->getNumberOfMConditions() + trial->getNumberOfTAttributes();
 		const int sliderWidth = 30;
 		const int sliderHeight = testArea.getHeight();
-		int inc = testArea.getWidth() / trial->getNumberOfMConditions();
-		inc = (int) inc + ((inc - sliderWidth) / trial->getNumberOfMConditions());
-		const int sliderPositionX = testArea.getX();
-		const int sliderPositionY = testArea.getY();
+		const int inc = testArea.getWidth() / (numberOfSliders + 1);
 
-		for (int i = 0; i < trial->getNumberOfMConditions(); ++i)
+		for (int i = 0; i < numberOfSliders; ++i)
 		{
-			ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
-			ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 5, sliderWidth, 20);
-			selectConditionButtonArray[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 30, sliderWidth, 25);
+			int sliderPositionX = testArea.getX() + (i + 1) * inc - sliderWidth / 2;
+			ratingSliderArray[i]->setBounds(sliderPositionX, testArea.getY(), sliderWidth, sliderHeight);
+			if (ratingReadouts[i] != nullptr) ratingReadouts[i]->setBounds(sliderPositionX - 8, testArea.getBottom() + 5, sliderWidth + 16, 20);
+			if (selectConditionButtonArray[i] != nullptr) selectConditionButtonArray[i]->setBounds(sliderPositionX, testArea.getBottom() + 30, sliderWidth, 25);
+			if (attributeRatingLabels[i] != nullptr) attributeRatingLabels[i]->setBounds(sliderPositionX - 50 + sliderWidth / 2, testArea.getBottom() + 30, 100, 25);
+
 		}
 	}
 
-	// position MUSHRA reference button
-	selectReferenceButton.setBounds(testArea.getX(), testArea.getBottom() + 65, testArea.getWidth(), 25);
 
-	// position TS26259 attributes
-	if (trial->getNumberOfTAttributes() > 0)
-	{
-		const int sliderSpacing = 0;
-		const int sliderWidth = 30;
-		const int sliderHeight = testArea.getHeight();
-		int inc = testArea.getWidth() / trial->getNumberOfTAttributes();
-		inc = (int)inc + ((inc - sliderWidth) / trial->getNumberOfTAttributes());
-		const int sliderPositionX = testArea.getX();
-		const int sliderPositionY = testArea.getY();
-
-		for (int i = 0; i < trial->getNumberOfTAttributes(); ++i)
-		{
-			ratingSliderArray[i]->setBounds(sliderPositionX + (i * inc), sliderPositionY, sliderWidth, sliderHeight);
-			ratingReadouts[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 5, sliderWidth, 20);
-			attributeRatingLabels[i]->setBounds(sliderPositionX + (i * inc), testArea.getBottom() + 30, 100, 25);
-		}
-	}
-
-	// position TS26259 conditions buttons
-	selectTConditionAButton.setBounds(testArea.getX(), testArea.getBottom() + 65, testArea.getWidth()/3, 25);
-	selectTConditionBButton.setBounds(testArea.getX() + 2 * testArea.getWidth() / 3, testArea.getBottom() + 65, testArea.getWidth()/3, 25);
-
+	// position MUSHRA reference / TS26259 conditions button
+	int referencePositionX = ratingSliderArray.getFirst()->getX();
+	int referenceWidth = ratingSliderArray.getLast()->getX() + ratingSliderArray.getLast()->getWidth() - referencePositionX;
+	selectReferenceButton.setBounds(referencePositionX, testArea.getBottom() + 65, referenceWidth, 25);
+	selectTConditionAButton.setBounds(referencePositionX, testArea.getBottom() + 65, referenceWidth / 3, 25);
+	selectTConditionBButton.setBounds(referencePositionX + 2 * referenceWidth / 3, testArea.getBottom() + 65, referenceWidth / 3, 25);
 
 	// set the looping state of the player
 	m_player->loop(trial->getLoopingState());
@@ -243,7 +224,7 @@ void MushraComponent::loadTrial(int trialIndex)
 	updateRemoteInterface();
 }
 
-void MushraComponent::paint(Graphics& g)
+void MixedMethodsComponent::paint(Graphics& g)
 {
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 
@@ -261,29 +242,31 @@ void MushraComponent::paint(Graphics& g)
 
 		g.drawText("Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials()), leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), 20, Justification::centredLeft, true);
 		g.setFont(16.0f);
-		g.drawText(trial->getTrialName(), testArea.getX(), testSpace.getY(), testArea.getWidth(), 20, Justification::centred, true);
-		g.drawText(trial->getTrialInstruction(), testArea.getX(), testSpace.getY() + 20, testArea.getWidth(), 20, Justification::centred, true);
+		g.drawFittedText(trial->getTrialName(), testArea.getX(), testSpace.getY(), testArea.getWidth(), 20, Justification::centred, 1);
+		g.drawFittedText(trial->getTrialInstruction(), testArea.getX(), testSpace.getY() + 20, testArea.getWidth(), 20, Justification::centred, 1);
 
 		// paint rating scale labels and horizontal lines
 		StringArray ratings = trial->getRatingOptions();
 		if (!ratings.isEmpty())
 		{
 			g.setFont(14.0f);
-
-			//ratingLabelsTextWidth = 100;
-			//for (int i = 0; i < ratings.size(); ++i)
-			//{
-			//	int size = g.getCurrentFont().getStringWidth(ratings[i]);
-			//	if (size > ratingLabelsTextWidth)
-			//		ratingLabelsTextWidth = size;
-			//}
-
-			int ySpacer = testArea.getHeight() / ratings.size();
+			
+			// check the maximum width of rating labels
+			int maxTextWidth = 0;
+			for (int i = 0; i < ratings.size(); ++i)
+			{
+				int size = g.getCurrentFont().getStringWidth(ratings[i]);
+				if (size > maxTextWidth)
+					maxTextWidth = size;
+			}
 
 			const int textStartX = leftBorder;
 			const int textStartY = testArea.getY();
+			int ratingLabelsTextWidth = testArea.getX() - leftBorder;
+			if (maxTextWidth > ratingLabelsTextWidth) ratingLabelsTextWidth = maxTextWidth;
+			int ySpacer = testArea.getHeight() / ratings.size();
 			for (int i = 0; i < ratings.size(); ++i)
-				g.drawFittedText(ratings[i], textStartX, textStartY + ySpacer * i, ratingLabelsTextWidth, ySpacer, Justification::centred, 1);
+				g.drawFittedText(ratings[i], textStartX, textStartY + ySpacer * i, ratingLabelsTextWidth, ySpacer, Justification::centredRight, 1);
 
 			const int linesStartX = testArea.getX();
 			const int linesStartY = testArea.getY();
@@ -297,15 +280,15 @@ void MushraComponent::paint(Graphics& g)
 	}
 }
 
-void MushraComponent::resized()
+void MixedMethodsComponent::resized()
 {
 	testSpace.setBounds(leftBorder, topBorder, getWidth() - (leftBorder + rightBorder), getHeight() - (topBorder + bottomBorder));
-	prevTrialButton.setBounds(testSpace.getX(), testSpace.getBottom() - 25, 80, 25);
-	nextTrialButton.setBounds(testSpace.getX() + 80 + 10, testSpace.getBottom() - 25, 80, 25);
-	endTestButton.setBounds(testSpace.getX() + 160 + 20, testSpace.getBottom() - 25, 80, 25);
+	prevTrialButton.setBounds(testSpace.getX(), testSpace.getBottom() - 25, 120, 25);
+	nextTrialButton.setBounds(testSpace.getX() + 120 + 10, testSpace.getBottom() - 25, 120, 25);
+	endTestButton.setBounds(testSpace.getX() + testSpace.getWidth() - 120, testSpace.getBottom() - 25, 120, 25);
 }
 
-void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
+void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 {
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 
@@ -335,8 +318,11 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 			
 			// play the scene
 			m_player->play();
-			break;
+
+			// light the button
+			selectConditionButtonArray[i]->setToggleState(true, dontSendNotification);
 		}
+		else selectConditionButtonArray[i]->setToggleState(false, dontSendNotification);
 	}
 
 	if (buttonThatWasClicked == &selectReferenceButton)
@@ -345,14 +331,58 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 			return;
 
 		m_player->pause();
+		sendMsgToLogWindow(trial->getMReference(0)->name);
 		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(trial->getMReference(0)->filepath);
 		m_player->setGain(trial->getMReference(0)->gain);
 		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
+		m_renderer->loadFromAmbixConfigFile(trial->getMReference(0)->ambixConfig);
 		m_player->play();
 
+		selectReferenceButton.setToggleState(true, dontSendNotification);
 	}
-	else if (buttonThatWasClicked == &prevTrialButton)
+	else selectReferenceButton.setToggleState(false, dontSendNotification);
+
+	if (buttonThatWasClicked == &selectTConditionAButton)
+	{
+		if (trial == nullptr)
+			return;
+
+		m_player->pause();
+		sendMsgToLogWindow(trial->getTCondition(0)->name);
+		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		m_player->loadFile(trial->getTCondition(0)->filepath);
+		m_player->setGain(trial->getTCondition(0)->gain);
+		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
+		m_renderer->loadFromAmbixConfigFile(trial->getTCondition(0)->ambixConfig);
+		m_player->play();
+
+		selectTConditionAButton.setToggleState(true, dontSendNotification);
+	}
+	else selectTConditionAButton.setToggleState(false, dontSendNotification);
+
+	if (buttonThatWasClicked == &selectTConditionBButton)
+	{
+		if (trial == nullptr)
+			return;
+
+		m_player->pause();
+		sendMsgToLogWindow(trial->getTCondition(1)->name);
+		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		m_player->loadFile(trial->getTCondition(1)->filepath);
+		m_player->setGain(trial->getTCondition(1)->gain);
+		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
+		m_renderer->loadFromAmbixConfigFile(trial->getTCondition(1)->ambixConfig);
+		m_player->play();
+
+		selectTConditionBButton.setToggleState(true, dontSendNotification);
+	}
+	else selectTConditionBButton.setToggleState(false, dontSendNotification);
+
+	if (buttonThatWasClicked == &prevTrialButton)
 	{
 		int currentIndex = m_testSession->getCurrentTrialIndex();
 
@@ -384,7 +414,7 @@ void MushraComponent::buttonClicked(Button* buttonThatWasClicked)
 	}
 }
 
-void MushraComponent::sliderValueChanged(Slider* sliderThatWasChanged)
+void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 {
 	bool rateSampleSliderChanged = sliderThatWasChanged->getProperties()["ratingSlider"];
 
@@ -399,7 +429,7 @@ void MushraComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 	}
 }
 
-void MushraComponent::updateRemoteInterface()
+void MixedMethodsComponent::updateRemoteInterface()
 {
 
 	//currentTrialIndex = trialIndex;
@@ -444,7 +474,7 @@ void MushraComponent::updateRemoteInterface()
 	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
 }
 
-void MushraComponent::oscMessageReceived(const OSCMessage& message)
+void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 {
 	// CONTROL TS26.258 BUTTONS
 	if (message.size() == 1 && message.getAddressPattern() == "/ts26259/button" && message[0].isString())
@@ -486,7 +516,7 @@ void MushraComponent::oscMessageReceived(const OSCMessage& message)
 	}
 }
 
-void MushraComponent::changeListenerCallback(ChangeBroadcaster* source)
+void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_player)
 	{
