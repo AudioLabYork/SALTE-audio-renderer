@@ -454,9 +454,13 @@ void MixedMethodsComponent::updateRemoteInterface()
 
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 
-	// send string to display on the screen
-	String screenMessage1 = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
-	m_oscTxRx->sendOscMessage("/screen", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+	if (trial != nullptr)
+	{
+		// send string to display on the screen
+		String screenMessage1 = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
+		m_oscTxRx->sendOscMessage("/screen", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+	}
+
 
 	if (selectTConditionAButton.isVisible() && selectTConditionBButton.isVisible() && ratingSliderArray.size() == 4)
 	{
@@ -525,6 +529,6 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_player)
 	{
-		updateRemoteInterface();
+		if(m_testSession != nullptr) updateRemoteInterface();
 	}
 }

@@ -65,7 +65,7 @@ void TestSession::loadSession(const File& sessionFile)
 					for (auto referenceStimulus : *referenceStimuli)
 					{
 						File reference(sceneFolder.getFullPathName() + File::getSeparatorString() + referenceStimulus.getProperty("source", "").toString());
-						File ambixconfig(sceneFolder.getFullPathName() + File::getSeparatorString() + referenceStimulus.getProperty("ambixconfig", "").toString());
+						File ambixconfig(ambixconfigFolder.getFullPathName() + File::getSeparatorString() + referenceStimulus.getProperty("ambixconfig", "").toString());
 
 						if (reference.existsAsFile())
 						{
@@ -90,7 +90,7 @@ void TestSession::loadSession(const File& sessionFile)
 						MushraCondition* con = new MushraCondition;
 
 						File source(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "").toString());
-						File ambixconfig(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("ambixconfig", "").toString());
+						File ambixconfig(ambixconfigFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("ambixconfig", "").toString());
 
 						con->name = stimulus.getProperty("name", "");
 
@@ -130,7 +130,7 @@ void TestSession::loadSession(const File& sessionFile)
 						TS26259Condition* con = new TS26259Condition;
 
 						File source(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("source", "").toString());
-						File ambixconfig(sceneFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("ambixconfig", "").toString());
+						File ambixconfig(ambixconfigFolder.getFullPathName() + File::getSeparatorString() + stimulus.getProperty("ambixconfig", "").toString());
 
 
 						con->name = stimulus.getProperty("name", "");
