@@ -283,6 +283,7 @@ void StimulusPlayer::changeState(TransportState newState)
 		default:
 			break;
 		}
+		sendChangeMessage();
 	}
 }
 
@@ -318,24 +319,24 @@ void StimulusPlayer::timerCallback()
 
 void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
 {
-	// load file from path (file path received by osc)
-	if (message.size() == 1 && message.getAddressPattern() == "/player/loadstimulus" && message[0].isString())
-	{
-		loadFile(message[0].getString());
-	}
+	//// load file from path (file path received by osc)
+	//if (message.size() == 1 && message.getAddressPattern() == "/player/loadstimulus" && message[0].isString())
+	//{
+	//	loadFile(message[0].getString());
+	//}
 
-	if (message.size() == 1 && message.getAddressPattern() == "/player/transport" && message[0].isString())
-	{
-		if (message[0].getString() == "play")
-		{
-			play();
-		}
+	//if (message.size() == 1 && message.getAddressPattern() == "/player/transport" && message[0].isString())
+	//{
+	//	if (message[0].getString() == "play")
+	//	{
+	//		play();
+	//	}
 
-		if (message[0].getString() == "stop")
-		{
-			stop();
-		}
-	}
+	//	if (message[0].getString() == "stop")
+	//	{
+	//		stop();
+	//	}
+	//}
 }
 
 void StimulusPlayer::browseForFile()
@@ -491,11 +492,18 @@ void StimulusPlayer::loop(bool looping)
 	// if loop gets called from elsewhere (a test component for example)
 	if (loopButton.getToggleState() != looping)
 		loopButton.setToggleState(looping, dontSendNotification);
+
+	sendChangeMessage();
 }
 
 bool StimulusPlayer::checkPlaybackStatus()
 {
-	return isPlaying;
+	return transportSource.isPlaying();
+}
+
+bool StimulusPlayer::checkLoopStatus()
+{
+	return loopingEnabled;
 }
 
 double StimulusPlayer::getPlaybackHeadPosition()

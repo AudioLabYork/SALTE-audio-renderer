@@ -195,7 +195,7 @@ void MainComponent::resized()
 	else
 	{
 		// imageComponent.setBounds(140, 60, 90, 90);
-		imageComponent.setBounds(20, 20, 90, 90);
+		imageComponent.setBounds(20, 20, 75, 75);
 
 		as.setCentrePosition(getWidth() / 2, getHeight() / 2);
 		sp.setBounds(660, 10, 730, 385);

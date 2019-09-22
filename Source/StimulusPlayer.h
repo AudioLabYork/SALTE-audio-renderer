@@ -63,6 +63,7 @@ public:
 	void setGain(float gainInDB);
 	void loop(bool looping);
 	bool checkPlaybackStatus();
+	bool checkLoopStatus();
 	void loadFile(String filepath);
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
@@ -84,7 +85,6 @@ private:
 	AmbisonicRotation ar;
 
 	bool loopingEnabled = false;
-	bool isPlaying = false;
 	int loadedFileChannelCount = 0;
 
 	// METHODS

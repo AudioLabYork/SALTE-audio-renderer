@@ -431,53 +431,58 @@ void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 
 void MixedMethodsComponent::updateRemoteInterface()
 {
+	// Transport controls
+	if (m_player->checkPlaybackStatus())
+	{
+		m_oscTxRx->sendOscMessage("/button", (String) "play", (int)1);
+		m_oscTxRx->sendOscMessage("/button", (String) "stop", (int)0);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/button", (String) "play", (int)0);
+		m_oscTxRx->sendOscMessage("/button", (String) "stop", (int)1);
+	}
 
-	//currentTrialIndex = trialIndex;
-	//m_player->loadFile(testTrialArray[currentTrialIndex]->getFilepath(0));
-	//m_player->setGain(testTrialArray[currentTrialIndex]->getGain(0));
-	//selectAButton.setColour(TextButton::buttonColourId, Colours::green);
-	//selectBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	//sender.send("/ts26259/button", (String) "A", (int)1);
-	//sender.send("/ts26259/button", (String) "B", (int)0);
-
-	//playButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	//stopButton.setColour(TextButton::buttonColourId, Colours::blue);
-	//sender.send("/ts26259/button", (String) "play", (int)0);
-	//sender.send("/ts26259/button", (String) "stop", (int)1);
-
-	//if (testTrialArray[currentTrialIndex]->getLoopingState())
-	//{
-	//	m_player->loop(true);
-	//	loopButton.setColour(TextButton::buttonColourId, Colours::blue);
-	//	sender.send("/ts26259/button", (String) "loop", (int)1);
-	//}
-	//else
-	//{
-	//	m_player->loop(false);
-	//	loopButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-	//	sender.send("/ts26259/button", (String) "loop", (int)0);
-	//}
+	if (m_player->checkLoopStatus())
+	{
+		m_oscTxRx->sendOscMessage("/button", (String) "loop", (int)1);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/button", (String) "loop", (int)0);
+	}
 
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 
-	// update remote sliders
-	for (int i = 0; i < ratingSliderArray.size(); ++i)
-	{
-		m_oscTxRx->sendOscMessage("/ts26259/slider", (int)i, (float)ratingSliderArray[i]->getValue());
-	}
-
 	// send string to display on the screen
 	String screenMessage1 = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
-	m_oscTxRx->sendOscMessage("/ts26259/screen", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+	m_oscTxRx->sendOscMessage("/screen", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+
+	if (selectTConditionAButton.isVisible() && selectTConditionBButton.isVisible() && ratingSliderArray.size() == 4)
+	{
+		// update remote sliders
+		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		{
+			if (i < 4) m_oscTxRx->sendOscMessage("/slider", (int)i, (float)ratingSliderArray[i]->getValue());
+		}
+
+		// update A / B buttons
+		m_oscTxRx->sendOscMessage("/button", (String) "A", (int) selectTConditionAButton.getToggleState());
+		m_oscTxRx->sendOscMessage("/button", (String) "B", (int) selectTConditionBButton.getToggleState());
+
+		m_oscTxRx->sendOscMessage("/showUI", (int) 1);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/showUI", (int)0);
+	}
 	
-	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "A", (int)1);
-	//m_oscTxRx->sendOscMessage("/ts26259/button", (String) "B", (int)0);
 }
 
 void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 {
-	// CONTROL TS26.258 BUTTONS
-	if (message.size() == 1 && message.getAddressPattern() == "/ts26259/button" && message[0].isString())
+	// CONTROL BUTTONS
+	if (message.size() == 1 && message.getAddressPattern() == "/button" && message[0].isString())
 	{
 		if (message[0].getString() == "play")
 		{
@@ -487,10 +492,10 @@ void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 		{
 			m_player->stop();
 		}
-		//else if (message[0].getString() == "loop")
-		//{
-		//	loopButton.triggerClick();
-		//}
+		else if (message[0].getString() == "loop")
+		{
+			m_player->loop(!m_player->checkLoopStatus());
+		}
 		else if (message[0].getString() == "A")
 		{
 			selectTConditionAButton.triggerClick();
@@ -509,8 +514,8 @@ void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 		}
 	}
 
-	// CONTROL TS26.258 SLIDERS
-	if (message.size() == 2 && message.getAddressPattern() == "/ts26259/slider" && message[0].isFloat32() && message[1].isFloat32())
+	// CONTROL SLIDERS
+	if (message.size() == 2 && message.getAddressPattern() == "/slider" && message[0].isFloat32() && message[1].isFloat32())
 	{
 		ratingSliderArray[(int)message[0].getFloat32()]->setValue(message[1].getFloat32());
 	}
@@ -520,15 +525,6 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_player)
 	{
-		if (m_player->checkPlaybackStatus())
-		{
-			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)1);
-			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)0);
-		}
-		else
-		{
-			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "play", (int)0);
-			m_oscTxRx->sendOscMessage("/ts26259/button", (String) "stop", (int)1);
-		}
+		updateRemoteInterface();
 	}
 }
