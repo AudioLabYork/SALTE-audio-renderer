@@ -1,10 +1,10 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "StimulusPlayer.h"
 
-StimulusPlayer::StimulusPlayer() :	readAheadThread("transport read ahead"),
+StimulusPlayer::StimulusPlayer() :  state(Stopped),
+                                    readAheadThread("transport read ahead"),
 									thumbnailCache(10), // maxNumThumbsToStore parameter lets you specify how many previews should be kept in memory at once.
 									thumbnail(512, formatManager, thumbnailCache),
-									state(Stopped),
 									m_shouldShowTest(true)
 						
 {
@@ -490,7 +490,7 @@ void StimulusPlayer::loop(bool looping)
 	
 	// if loop gets called from elsewhere (a test component for example)
 	if (loopButton.getToggleState() != looping)
-		loopButton.setToggleState(looping, false);
+		loopButton.setToggleState(looping, dontSendNotification);
 }
 
 bool StimulusPlayer::checkPlaybackStatus()

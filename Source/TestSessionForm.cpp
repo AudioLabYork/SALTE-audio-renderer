@@ -83,7 +83,7 @@ TestSessionForm::~TestSessionForm()
 
 void TestSessionForm::init(TestSession* session)
 {
-	if ((session == nullptr))
+	if (session == nullptr)
 	{
 		jassertfalse;
 		return;

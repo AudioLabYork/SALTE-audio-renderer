@@ -15,7 +15,7 @@ struct MushraCondition
 	}
 
 	String name;
-	float minScore, maxScore, score;
+	float score, minScore, maxScore;
 	// stimulus settings
 	String filepath;
 	int renderingOrder;
@@ -51,15 +51,15 @@ struct TS26259Attribute
 	}
 
 	String name;
-	float minScore, maxScore, score;
+	float score, minScore, maxScore;
 };
 
 // TS26.259 condition trigger (typically one of the two: A or B, doesn't contain the scores)
 struct TS26259Condition
 {
 	TS26259Condition()
-		: renderingOrder(0)
-		, gain(1.0f)
+		: gain(1.0f)
+		, renderingOrder(0)
 	{
 	}
 

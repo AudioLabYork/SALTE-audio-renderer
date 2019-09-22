@@ -38,7 +38,7 @@ public:
 	void resized() override;
 	
 	void buttonClicked(Button* buttonClicked) override;
-	void comboBoxChanged(ComboBox* comboBoxChanged);
+	void comboBoxChanged(ComboBox* comboBoxChanged) override;
 
 	void changeComboBox(int order);
 	

@@ -1,19 +1,19 @@
 #include "BinauralRenderer.h"
 
 BinauralRenderer::BinauralRenderer()
-	: m_order(0)
+    : m_yaw(0.0f)
+    , m_pitch(0.0f)
+    , m_roll(0.0f)
+    , m_xTrans(0.0f)
+    , m_yTrans(0.0f)
+    , m_zTrans(0.0f)
+    , m_oscTxRx(nullptr)
+    , m_order(0)
 	, m_numAmbiChans(1)
 	, m_numLsChans(0)
 	, m_numHrirLoaded(0)
 	, m_blockSize(0)
 	, m_sampleRate(0.0)
-	, m_yaw(0.0f)
-	, m_pitch(0.0f)
-	, m_roll(0.0f)
-	, m_xTrans(0.0f)
-	, m_yTrans(0.0f)
-	, m_zTrans(0.0f)
-	, m_oscTxRx(nullptr)
 	, m_useSHDConv(false)
 	, m_enableRotation(true)
 	, m_enableTranslation(true)
@@ -409,7 +409,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 		}
 
 		const float** in = buffer.getArrayOfReadPointers();
-		float** out = m_workingBuffer.getArrayOfWritePointers();
+		// float** out = m_workingBuffer.getArrayOfWritePointers();
 
 		for (int i = 0; i < m_numLsChans; ++i)
 		{
