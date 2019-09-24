@@ -11,7 +11,7 @@ BinauralHeadView::BinauralHeadView()
 
 void BinauralHeadView::newOpenGLContextCreated()
 {
-	glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 void BinauralHeadView::paint(Graphics& g) {}
