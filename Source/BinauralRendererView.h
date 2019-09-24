@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BinauralRenderer.h"
+#include "BinauralHeadView.h"
 
 enum eOrders
 {
@@ -67,5 +68,7 @@ private:
 	Label m_pitchLabel;
 	Label m_yawLabel;
 	
+	BinauralHeadView m_binauralHeadView;
+
 	virtual void timerCallback() override;
 };

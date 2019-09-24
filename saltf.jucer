@@ -16,6 +16,10 @@
             file="Source/AmbisonicRotation.h"/>
       <FILE id="xQvnjH" name="AudioSetup.cpp" compile="1" resource="0" file="Source/AudioSetup.cpp"/>
       <FILE id="wP7O4l" name="AudioSetup.h" compile="0" resource="0" file="Source/AudioSetup.h"/>
+      <FILE id="tS7yUz" name="BinauralHeadView.cpp" compile="1" resource="0"
+            file="Source/BinauralHeadView.cpp"/>
+      <FILE id="UBAapJ" name="BinauralHeadView.h" compile="0" resource="0"
+            file="Source/BinauralHeadView.h"/>
       <FILE id="KlnV7t" name="BinauralRenderer.cpp" compile="1" resource="0"
             file="Source/BinauralRenderer.cpp"/>
       <FILE id="i1aY0Y" name="BinauralRenderer.h" compile="0" resource="0"
@@ -28,6 +32,9 @@
       <FILE id="hrTOiU" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="mi7Esd" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="eVWJjz" name="MixedMethods.cpp" compile="1" resource="0"
+            file="Source/MixedMethods.cpp"/>
+      <FILE id="GF936q" name="MixedMethods.h" compile="0" resource="0" file="Source/MixedMethods.h"/>
       <FILE id="pcfrcV" name="OscTransceiver.cpp" compile="1" resource="0"
             file="Source/OscTransceiver.cpp"/>
       <FILE id="NFM0r4" name="OscTransceiver.h" compile="0" resource="0"
@@ -42,9 +49,6 @@
             file="Source/StimulusPlayer.h"/>
       <FILE id="cb4RTH" name="SubjectData.cpp" compile="1" resource="0" file="Source/SubjectData.cpp"/>
       <FILE id="ahUtip" name="SubjectData.h" compile="0" resource="0" file="Source/SubjectData.h"/>
-      <FILE id="eVWJjz" name="MixedMethods.cpp" compile="1" resource="0"
-            file="Source/MixedMethods.cpp"/>
-      <FILE id="GF936q" name="MixedMethods.h" compile="0" resource="0" file="Source/MixedMethods.h"/>
       <FILE id="s2ueny" name="TestSession.cpp" compile="1" resource="0" file="Source/TestSession.cpp"/>
       <FILE id="Qp9oqs" name="TestSession.h" compile="0" resource="0" file="Source/TestSession.h"/>
       <FILE id="gDn1A1" name="TestSessionForm.cpp" compile="1" resource="0"

@@ -16,33 +16,35 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	m_ambixFileBrowse.setButtonText("Select Ambix Config file...");
 	m_ambixFileBrowse.addListener(this);
 	m_ambixFileBrowse.setEnabled(false);
-	addAndMakeVisible(&m_ambixFileBrowse);
+	addAndMakeVisible(m_ambixFileBrowse);
 
 	m_useSofa.setButtonText("Should use SOFA file");
 	m_useSofa.addListener(this);
-	addAndMakeVisible(&m_useSofa);
+	addAndMakeVisible(m_useSofa);
 
 	m_orderSelect.addItemList(orderChoices, 1);
 	m_orderSelect.setSelectedItemIndex(0);
 	m_orderSelect.addListener(this);
-	addAndMakeVisible(&m_orderSelect);
+	addAndMakeVisible(m_orderSelect);
 
 	m_sofaFileBrowse.setButtonText("Select SOFA file...");
 	m_sofaFileBrowse.setEnabled(false);
 	m_sofaFileBrowse.addListener(this);
-	addAndMakeVisible(&m_sofaFileBrowse);
+	addAndMakeVisible(m_sofaFileBrowse);
 
 	m_enableRotation.setButtonText("Enable rotation");
 	m_enableRotation.setToggleState(true, dontSendNotification);
 	m_enableRotation.addListener(this);
-	addAndMakeVisible(&m_enableRotation);
+	addAndMakeVisible(m_enableRotation);
 
 	m_rollLabel.setText("Roll: " + String(0.0f, 2) + " deg", dontSendNotification);
-	addAndMakeVisible(&m_rollLabel);
+	addAndMakeVisible(m_rollLabel);
 	m_pitchLabel.setText("Pitch: " + String(0.0f, 2) + " deg", dontSendNotification);
-	addAndMakeVisible(&m_pitchLabel);
+	addAndMakeVisible(m_pitchLabel);
 	m_yawLabel.setText("Yaw: " + String(0.0f, 2) + " deg", dontSendNotification);
-	addAndMakeVisible(&m_yawLabel);
+	addAndMakeVisible(m_yawLabel);
+
+	addAndMakeVisible(m_binauralHeadView);
 }
 
 void BinauralRendererView::deinit()
@@ -66,6 +68,8 @@ void BinauralRendererView::resized()
 	m_rollLabel.setBounds(10, 145, 150, 20);
 	m_pitchLabel.setBounds(10, 165, 150, 20);
 	m_yawLabel.setBounds(10, 185, 150, 20);
+
+	m_binauralHeadView.setBounds(getWidth() - 245, 0, 245, getHeight());
 }
 
 void BinauralRendererView::buttonClicked(Button* buttonClicked)
