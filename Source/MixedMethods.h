@@ -43,9 +43,11 @@ private:
 	void resized() override;
 	void buttonClicked(Button* buttonThatWasClicked) override;
 	void sliderValueChanged(Slider* sliderThatWasChanged) override;
+	void sliderDragStarted(Slider* sliderThatHasBeenStartedDragging) override;
 	void oscMessageReceived(const OSCMessage& message) override;
 	void changeListenerCallback(ChangeBroadcaster* source) override;
 
+	// void triggerConditionPlayback(int buttonIndex);
 	void updateRemoteInterface();
 
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
