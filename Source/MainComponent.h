@@ -36,11 +36,11 @@ public:
     void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
-	AudioSetup as;
+	AudioSetup m_audioSetup;
 	OscTransceiver oscTxRx;
-    StimulusPlayer sp;
-	BinauralRenderer br;
-	BinauralRendererView brv;
+    StimulusPlayer m_stimulusPlayer;
+	BinauralRenderer m_binauralRenderer;
+	BinauralRendererView m_binauralRendererView;
 	MixedMethodsComponent mc;
 
 	TestSession m_testSession;
@@ -58,7 +58,6 @@ private:
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;
 
-	Image logo;
 	ImageComponent imageComponent;
 
 	// save and load settings

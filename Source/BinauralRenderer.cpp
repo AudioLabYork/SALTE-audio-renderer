@@ -249,7 +249,7 @@ void BinauralRenderer::processOscMessage(const OSCMessage& message)
 
 	//		if (sourcePath.existsAsFile())
 	//		{
-	//			brv.loadSofaFile(sourcePath);
+	//			m_binauralRendererView.loadSofaFile(sourcePath);
 	//		}
 	//		else
 	//		{
@@ -448,6 +448,9 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 
 void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
 {
+	if (bufferToFill.buffer->getNumChannels() <= 2)
+		return;
+
 	processBlock(*bufferToFill.buffer);
 }
 

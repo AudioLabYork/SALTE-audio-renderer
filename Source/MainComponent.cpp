@@ -1,21 +1,21 @@
 #include "MainComponent.h"
 
 MainComponent::MainComponent()
-	: as(deviceManager)
+	: m_audioSetup(deviceManager)
 	, m_maxSamplesPerBlock(0)
 	, showOnlyTestInterface(false)
 {
     // add and make visible the stimulus player object
-    addAndMakeVisible(sp);
-    sp.addChangeListener(this);
+    addAndMakeVisible(m_stimulusPlayer);
+    m_stimulusPlayer.addChangeListener(this);
 
 	// setup binaural renderer, pass the osc transceiver
-	br.init(&oscTxRx);
-	br.setUseSHDConv(true);
+	m_binauralRenderer.init(&oscTxRx);
+	m_binauralRenderer.setUseSHDConv(true);
 	
-	brv.init(&br);
-	brv.addChangeListener(this);
-	addAndMakeVisible(brv);
+	m_binauralRendererView.init(&m_binauralRenderer);
+	m_binauralRendererView.addChangeListener(this);
+	addAndMakeVisible(m_binauralRendererView);
 
 	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
 	Result res = sourcePath.createDirectory();
@@ -27,7 +27,7 @@ MainComponent::MainComponent()
 	setSize(1400, 800);
 
 	// add logo
-	logo = ImageFileFormat::loadFrom(BinaryData::logo_180px_png, BinaryData::logo_180px_pngSize);
+	Image logo = ImageFileFormat::loadFrom(BinaryData::logo_180px_png, BinaryData::logo_180px_pngSize);
 	if (logo.isValid()) imageComponent.setImage(logo);
 	addAndMakeVisible(&imageComponent);
 
@@ -71,7 +71,7 @@ MainComponent::MainComponent()
 	m_testSessionForm.addListener(this);
 	addAndMakeVisible(m_testSessionForm);
 
-	mc.init(&oscTxRx, &sp, &br);
+	mc.init(&oscTxRx, &m_stimulusPlayer, &m_binauralRenderer);
 	mc.addListener(this);
 	mc.addChangeListener(this);
 	addChildComponent(mc);
@@ -105,8 +105,8 @@ MainComponent::~MainComponent()
 {
 	saveSettings();
 	oscTxRx.disconnectTxRx();
-	br.deinit();
-	brv.deinit();
+	m_binauralRenderer.deinit();
+	m_binauralRendererView.deinit();
     shutdownAudio();
 }
 
@@ -114,8 +114,8 @@ MainComponent::~MainComponent()
 void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
 	// prepare stimulus player object
-	sp.prepareToPlay(samplesPerBlockExpected, sampleRate);
-	br.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	m_stimulusPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	m_binauralRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
 	if(samplesPerBlockExpected > m_maxSamplesPerBlock)
 	{
@@ -129,10 +129,10 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 	AudioSourceChannelInfo newinfo(processBuffer);
 
 	// pass the buffer into the stimulus player to be filled with required audio
-	sp.getNextAudioBlock(newinfo);
+	m_stimulusPlayer.getNextAudioBlock(newinfo);
 
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
-	if (sp.getNumberOfChannels() > 3) br.getNextAudioBlock(newinfo);
+	m_binauralRenderer.getNextAudioBlock(newinfo);
 
 	AudioBuffer<float>* sourceBuffer = bufferToFill.buffer;
 
@@ -145,8 +145,8 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 void MainComponent::releaseResources()
 {
 	// relese resources taken by stimulus player object
-    sp.releaseResources();
-	br.releaseResources();
+    m_stimulusPlayer.releaseResources();
+	m_binauralRenderer.releaseResources();
 }
 
 //==============================================================================
@@ -187,7 +187,7 @@ void MainComponent::resized()
 {
 	if (showOnlyTestInterface)
 	{
-		sp.setBounds(660, 10, 730, 480);
+		m_stimulusPlayer.setBounds(660, 10, 730, 480);
 		m_testSessionForm.setBounds(10, 10, getWidth() - 20, getHeight() - 20);
 		mc.setBounds(10, 10, 640, 480);
 		showTestInterface.setBounds(getWidth() - 10, getHeight()-10, 10, 10);
@@ -197,9 +197,9 @@ void MainComponent::resized()
 		// imageComponent.setBounds(140, 60, 90, 90);
 		imageComponent.setBounds(20, 20, 75, 75);
 
-		as.setCentrePosition(getWidth() / 2, getHeight() / 2);
-		sp.setBounds(660, 10, 730, 385);
-		brv.setBounds(660, 405, 730, 245);
+		m_audioSetup.setCentrePosition(getWidth() / 2, getHeight() / 2);
+		m_stimulusPlayer.setBounds(660, 10, 730, 385);
+		m_binauralRendererView.setBounds(660, 405, 730, 245);
 		connectOscButton.setBounds(310, 70, 240, 25);
 		openAudioDeviceManager.setBounds(310, 105, 240, 25);
 
@@ -220,7 +220,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &openAudioDeviceManager)
 	{
-		addAndMakeVisible(as);
+		addAndMakeVisible(m_audioSetup);
 	}
 	else if (buttonThatWasClicked == &connectOscButton)
 	{
@@ -253,9 +253,9 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		bool show = showTestInterface.getToggleState();
 		showOnlyTestInterface = show;
 		
-		sp.setShowTest(show);
-		as.setVisible(!show);
-		brv.setVisible(!show);
+		m_stimulusPlayer.setShowTest(show);
+		m_audioSetup.setVisible(!show);
+		m_binauralRendererView.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
 		connectOscButton.setVisible(!show);
 		clientTxIpLabel.setVisible(!show);
@@ -300,15 +300,15 @@ void MainComponent::saveSettings()
 // LOG WINDOW
 void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
-    if(source == &sp)
+    if(source == &m_stimulusPlayer)
     {
-        logWindowMessage += sp.currentMessage;
-        sp.currentMessage.clear();
+        logWindowMessage += m_stimulusPlayer.currentMessage;
+        m_stimulusPlayer.currentMessage.clear();
     }
-	else if (source == &brv)
+	else if (source == &m_binauralRendererView)
 	{
-		logWindowMessage += brv.m_currentLogMessage;
-		brv.m_currentLogMessage.clear();
+		logWindowMessage += m_binauralRendererView.m_currentLogMessage;
+		m_binauralRendererView.m_currentLogMessage.clear();
 	}
 	else if (source == &mc)
 	{
