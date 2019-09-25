@@ -108,6 +108,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		{
 			ratingSliderArray.add(new Slider());
 			ratingSliderArray[i]->getProperties().set("ratingSlider", true);
+			ratingSliderArray[i]->getProperties().set("ratingType", "condition");
 			ratingSliderArray[i]->getProperties().set("sliderIndex", i);
 			ratingSliderArray[i]->setSliderStyle(Slider::LinearBarVertical);
 			ratingSliderArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
@@ -143,6 +144,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		{
 			ratingSliderArray.add(new Slider());
 			ratingSliderArray[i]->getProperties().set("ratingSlider", true);
+			ratingSliderArray[i]->getProperties().set("ratingType", "attribute");
 			ratingSliderArray[i]->getProperties().set("sliderIndex", i);
 			ratingSliderArray[i]->setSliderStyle(Slider::LinearBarVertical);
 			ratingSliderArray[i]->setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
@@ -414,6 +416,12 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 	}
 }
 
+//void MixedMethodsComponent::triggerConditionPlayback(int buttonIndex)
+//{
+//	this probably requires some macros to call the respective methods:
+//	trial->getMCondition(buttonIndex), trial->getTAttribute(buttonIndex), etc.
+//}
+
 void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 {
 	bool rateSampleSliderChanged = sliderThatWasChanged->getProperties()["ratingSlider"];
@@ -423,9 +431,22 @@ void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 		TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 
 		int sliderIndex = sliderThatWasChanged->getProperties()["sliderIndex"];
-		if (trial->getMCondition(sliderIndex) != nullptr) trial->getMCondition(sliderIndex)->score = sliderThatWasChanged->getValue();
-		if (trial->getTAttribute(sliderIndex) != nullptr) trial->getTAttribute(sliderIndex)->score = sliderThatWasChanged->getValue();
+		String ratingType = sliderThatWasChanged->getProperties()["ratingType"];
+		if (ratingType == "condition") trial->getMCondition(sliderIndex)->score = sliderThatWasChanged->getValue();
+		if (ratingType == "attribute") trial->getTAttribute(sliderIndex)->score = sliderThatWasChanged->getValue();
 		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
+	}
+}
+
+void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDragging)
+{
+	bool rateSampleSliderChanged = sliderThatHasBeenStartedDragging->getProperties()["ratingSlider"];
+	String ratingType = sliderThatHasBeenStartedDragging->getProperties()["ratingType"];
+
+	if (rateSampleSliderChanged && ratingType == "condition")
+	{
+		int sliderIndex = sliderThatHasBeenStartedDragging->getProperties()["sliderIndex"];
+		if (selectConditionButtonArray[sliderIndex] != nullptr) selectConditionButtonArray[sliderIndex]->triggerClick();
 	}
 }
 
