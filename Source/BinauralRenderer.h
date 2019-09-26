@@ -30,9 +30,11 @@ public:
 	void setDecodingMatrix(std::vector<float>& decodeMatrix);
 	void updateMatrices();
 
-	void setHeadTrackingData(float yaw, float pitch, float roll);
-	void setUseSHDConv(bool use);
+	void updateDualBandFilters();
 
+	void setHeadTrackingData(float yaw, float pitch, float roll);
+	
+	void enableDualBand(bool enable);
 	void enableRotation(bool enable);
 	void enableTranslation(bool enable);
 
@@ -76,7 +78,7 @@ private:
 	std::vector<AudioBuffer<float>> m_hrirShdBuffers;
 
 	std::vector<float> m_decodeMatrix;
-	std::vector<float> m_encodeMatrix;
+	std::vector<float> m_decodeTransposeMatrix;
 
 	std::vector<float> m_azi;
 	std::vector<float> m_ele;
@@ -85,8 +87,11 @@ private:
 
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_shdConvEngines;
+	
+	IIRFilter lowPassFilters[16][2];
+	IIRFilter highPassFilters[16][2];
 
-	bool m_useSHDConv;
+	bool m_enableDualBand;
 	bool m_enableRotation;
 	bool m_enableTranslation;
 

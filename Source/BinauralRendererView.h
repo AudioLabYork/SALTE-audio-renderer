@@ -60,6 +60,8 @@ private:
 	
 	ComboBox m_orderSelect;
 	TextButton m_sofaFileBrowse;
+
+	ToggleButton m_enableDualBand;
 	
 	String m_sofaFilePath;
 	

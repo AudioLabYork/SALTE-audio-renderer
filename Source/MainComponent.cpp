@@ -11,8 +11,7 @@ MainComponent::MainComponent()
 
 	// setup binaural renderer, pass the osc transceiver
 	m_binauralRenderer.init(&oscTxRx);
-	m_binauralRenderer.setUseSHDConv(true);
-	
+
 	m_binauralRendererView.init(&m_binauralRenderer);
 	m_binauralRendererView.addChangeListener(this);
 	addAndMakeVisible(m_binauralRendererView);

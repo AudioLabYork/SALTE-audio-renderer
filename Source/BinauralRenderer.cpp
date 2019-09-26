@@ -1,20 +1,20 @@
 #include "BinauralRenderer.h"
 
 BinauralRenderer::BinauralRenderer()
-    : m_yaw(0.0f)
-    , m_pitch(0.0f)
-    , m_roll(0.0f)
-    , m_xTrans(0.0f)
-    , m_yTrans(0.0f)
-    , m_zTrans(0.0f)
-    , m_oscTxRx(nullptr)
-    , m_order(0)
+	: m_yaw(0.0f)
+	, m_pitch(0.0f)
+	, m_roll(0.0f)
+	, m_xTrans(0.0f)
+	, m_yTrans(0.0f)
+	, m_zTrans(0.0f)
+	, m_oscTxRx(nullptr)
+	, m_order(0)
 	, m_numAmbiChans(1)
 	, m_numLsChans(0)
 	, m_numHrirLoaded(0)
 	, m_blockSize(0)
 	, m_sampleRate(0.0)
-	, m_useSHDConv(false)
+	, m_enableDualBand(true)
 	, m_enableRotation(true)
 	, m_enableTranslation(true)
 {
@@ -265,6 +265,7 @@ void BinauralRenderer::setOrder(const int order)
 	m_numAmbiChans = (order + 1) * (order + 1);
 
 	m_hrirShdBuffers.resize(m_numAmbiChans);
+	updateDualBandFilters();
 }
 
 void BinauralRenderer::clearLoudspeakerChannels()
@@ -310,8 +311,42 @@ void transpose(std::vector<float>& outmtx, std::vector<float>& inmtx, int rows, 
 void BinauralRenderer::updateMatrices()
 {
 	ScopedLock lock(m_procLock);
-	m_encodeMatrix.resize(m_numLsChans * m_numAmbiChans);
-	transpose(m_encodeMatrix, m_decodeMatrix, m_numLsChans, m_numAmbiChans);
+	m_decodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
+	transpose(m_decodeTransposeMatrix, m_decodeMatrix, m_numLsChans, m_numAmbiChans);
+}
+
+void BinauralRenderer::updateDualBandFilters()
+{
+	double fc = (343.0 * m_order) / (4 * 0.088 * (m_order + 1) * sin(MathConstants<double>::pi / (2 * m_order + 2.0)));
+	
+	if (fc == 0)
+		return;
+
+	double k = tan((MathConstants<double>::pi * fc) / m_sampleRate);
+	double k2 = 2.0 * k;
+
+	double denom = pow(k, 2) + k2 + 1.0;
+
+	double a0 = 1.0;
+	double a1 = (2 * (pow(k, 2.0) - 1.0)) / denom;
+	double a2 = (pow(k, 2.0) - k2 + 1.0) / denom;
+
+	double bLp0 = pow(k, 2.0) / denom;
+	double bLp1 = 2.0 * bLp0;
+	double bLp2 = bLp0;
+
+	double bHp0 = 1.0 / denom;
+	double bHp1 = -2.0 * bHp0;
+	double bHp2 = bHp0;
+
+	for (int i = 0; i < m_numAmbiChans; ++i)
+	{
+		for (int j = 0; j < 2; ++j)
+		{
+			lowPassFilters[i][j].setCoefficients(IIRCoefficients(bLp0, bLp1, bLp2, a0, a1, a2));
+			highPassFilters[i][j].setCoefficients(IIRCoefficients(bHp0, bHp1, bHp2, a0, a1, a2));
+		}
+	}
 }
 
 void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
@@ -324,9 +359,10 @@ void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
 	m_headTrackRotator.updateEulerRPY(m_roll, m_pitch, m_yaw);
 }
 
-void BinauralRenderer::setUseSHDConv(bool use)
+void BinauralRenderer::enableDualBand(bool enable)
 {
-	m_useSHDConv = use;
+	m_enableDualBand = enable;
+	uploadHRIRsToEngine();
 }
 
 void BinauralRenderer::enableRotation(bool enable)
@@ -341,9 +377,15 @@ void BinauralRenderer::enableTranslation(bool enable)
 
 void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-	m_sampleRate = sampleRate;
 
-	if (samplesPerBlockExpected > m_blockSize)
+	if (sampleRate != m_sampleRate)
+	{
+		m_sampleRate = sampleRate;
+
+		updateDualBandFilters();
+	}
+
+	if (samplesPerBlockExpected != m_blockSize)
 	{
 		m_blockSize = samplesPerBlockExpected;
 
@@ -366,82 +408,34 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 
 	m_convBuffer.clear();
 
-	if (m_useSHDConv)
+	buffer.clear();
+
+	if ((m_shdConvEngines.size() != m_numAmbiChans) || (m_shdConvEngines.size() == 0))
 	{
-		buffer.clear();
-
-		if ((m_shdConvEngines.size() != m_numAmbiChans) || (m_shdConvEngines.size() == 0))
-		{
-			// not enough convolution engines to perform this process
-			return;
-		}
-
-		for (int i = 0; i < m_numAmbiChans; ++i)
-		{
-			for (int j = 0; j < 2; ++j)
-				m_convBuffer.copyFrom(j, 0, m_workingBuffer.getReadPointer(i), buffer.getNumSamples());
-
-			m_shdConvEngines[i]->Add(m_convBuffer.getArrayOfWritePointers(), m_convBuffer.getNumSamples(), 2);
-			
-			int availSamples = jmin((int)m_shdConvEngines[i]->Avail(buffer.getNumSamples()), buffer.getNumSamples());
-
-			if (availSamples > 0)
-			{
-				float* convo = nullptr;
-
-				for (int k = 0; k < 2; ++k)
-				{
-					convo = m_shdConvEngines[i]->Get()[k];
-					buffer.addFrom(k, 0, convo, availSamples);
-				}
-
-				m_shdConvEngines[i]->Advance(availSamples);
-			}
-		}
+		// not enough convolution engines to perform this process
+		return;
 	}
-	else
+
+	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
-		if ((m_convEngines.size() != m_numLsChans) || (m_convEngines.size() == 0))
-		{
-			// not enough convolution engines to perform this process
-			buffer.clear();
-			return;
-		}
+		for (int j = 0; j < 2; ++j)
+			m_convBuffer.copyFrom(j, 0, m_workingBuffer.getReadPointer(i), buffer.getNumSamples());
 
-		const float** in = buffer.getArrayOfReadPointers();
-		// float** out = m_workingBuffer.getArrayOfWritePointers();
+		m_shdConvEngines[i]->Add(m_convBuffer.getArrayOfWritePointers(), m_convBuffer.getNumSamples(), 2);
 
-		for (int i = 0; i < m_numLsChans; ++i)
+		int availSamples = jmin((int)m_shdConvEngines[i]->Avail(buffer.getNumSamples()), buffer.getNumSamples());
+
+		if (availSamples > 0)
 		{
-			for (int j = 0; j < m_numAmbiChans; ++j)
+			float* convo = nullptr;
+
+			for (int k = 0; k < 2; ++k)
 			{
-				m_workingBuffer.addFrom(i, 0, in[j], buffer.getNumSamples(), m_decodeMatrix[(i * m_numAmbiChans) + j]);
+				convo = m_shdConvEngines[i]->Get()[k];
+				buffer.addFrom(k, 0, convo, availSamples);
 			}
-		}
 
-		buffer.clear();
-
-		for (int i = 0; i < m_numLsChans; ++i)
-		{
-			for (int j = 0; j < 2; ++j)
-				m_convBuffer.copyFrom(j, 0, m_workingBuffer.getReadPointer(i), buffer.getNumSamples());
-
-			m_convEngines[i]->Add(m_convBuffer.getArrayOfWritePointers(), m_convBuffer.getNumSamples(), 2);
-			
-			int availSamples = jmin((int)m_convEngines[i]->Avail(buffer.getNumSamples()), buffer.getNumSamples());
-
-			if (availSamples > 0)
-			{
-				float* convo = nullptr;
-
-				for (int k = 0; k < 2; ++k)
-				{
-					convo = m_convEngines[i]->Get()[k];
-					buffer.addFrom(k, 0, convo, buffer.getNumSamples());
-				}
-
-				m_convEngines[i]->Advance(availSamples);
-			}
+			m_shdConvEngines[i]->Advance(availSamples);
 		}
 	}
 }
@@ -544,47 +538,24 @@ void BinauralRenderer::uploadHRIRsToEngine()
 {
 	ScopedLock lock(m_procLock);
 
-	if (m_useSHDConv)
+	convertHRIRToSHDHRIR();
+
+	m_shdConvEngines.clear();
+
+	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
-		convertHRIRToSHDHRIR();
+		WDL_ImpulseBuffer impulseBuffer;
+		impulseBuffer.samplerate = m_sampleRate;
+		impulseBuffer.SetNumChannels(2);
 
-		m_shdConvEngines.clear();
+		for (int m = 0; m < impulseBuffer.GetNumChannels(); ++m)
+			impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getReadPointer(m), m_hrirShdBuffers[i].getNumSamples());
 
-		for (int i = 0; i < m_numAmbiChans; ++i)
-		{
-			WDL_ImpulseBuffer impulseBuffer;
-			impulseBuffer.samplerate = m_sampleRate;
-			impulseBuffer.SetNumChannels(2);
+		std::unique_ptr<WDL_ConvolutionEngine> convEngine = std::make_unique<WDL_ConvolutionEngine>();
+		convEngine->SetImpulse(&impulseBuffer, -1, 0, 0, false);
+		convEngine->Reset();
 
-			for (int m = 0; m < impulseBuffer.GetNumChannels(); ++m)
-				impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getReadPointer(m), m_hrirShdBuffers[i].getNumSamples());
-
-			std::unique_ptr<WDL_ConvolutionEngine> convEngine = std::make_unique<WDL_ConvolutionEngine>();
-			convEngine->SetImpulse(&impulseBuffer, -1, 0, 0, false);
-			convEngine->Reset();
-
-			m_shdConvEngines.push_back(std::move(convEngine));
-		}
-	}
-	else
-	{
-		m_convEngines.clear();
-
-		for (int i = 0; i < m_numLsChans; ++i)
-		{
-			WDL_ImpulseBuffer impulseBuffer;
-			impulseBuffer.samplerate = m_sampleRate;
-			impulseBuffer.SetNumChannels(2);
-
-			for (int m = 0; m < impulseBuffer.GetNumChannels(); ++m)
-				impulseBuffer.impulses[m].Set(m_hrirBuffers[i].getReadPointer(m), m_hrirBuffers[i].getNumSamples());
-
-			std::unique_ptr<WDL_ConvolutionEngine> convEngine = std::make_unique<WDL_ConvolutionEngine>();
-			convEngine->SetImpulse(&impulseBuffer, -1, 0, 0, false);
-			convEngine->Reset();
-
-			m_convEngines.push_back(std::move(convEngine));
-		}
+		m_shdConvEngines.push_back(std::move(convEngine));
 	}
 }
 
@@ -593,26 +564,44 @@ void BinauralRenderer::convertHRIRToSHDHRIR()
 	if (m_hrirBuffers.size() <= 0)
 		return;
 
-	int hrirSamples = m_hrirBuffers[0].getNumSamples();
-
-	for (auto& hrirShdBuffer : m_hrirShdBuffers)
-	{
-		hrirShdBuffer.setSize(2, hrirSamples);
-		hrirShdBuffer.clear();
-	}
+	AudioBuffer<float> basicShdBuffer(2, m_hrirBuffers[0].getNumSamples());
+	AudioBuffer<float> maxreShdBuffer(2, m_hrirBuffers[0].getNumSamples());
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
-		float** out = m_hrirShdBuffers[i].getArrayOfWritePointers();
+		m_hrirShdBuffers[i].setSize(2, m_hrirBuffers[0].getNumSamples());
+		m_hrirShdBuffers[i].clear();
+		basicShdBuffer.clear();
+		maxreShdBuffer.clear();
 
 		for (int j = 0; j < m_numLsChans; ++j)
 		{
-			const float** in = m_hrirBuffers[j].getArrayOfReadPointers();
-			int idx = (i * m_numLsChans) + j;
-			const float weight = m_encodeMatrix[idx];
+			const int idx = (i * m_numLsChans) + j;
+			const float basicWeight = m_decodeTransposeMatrix[idx];
+			const float maxreWeight = m_decodeTransposeMatrix[idx];
 
+			// apply the appropriate weights to the buffers before cross over filtering below
 			for (int k = 0; k < m_hrirShdBuffers[i].getNumChannels(); ++k)
-				FloatVectorOperations::addWithMultiply(out[k], in[k], weight, m_hrirShdBuffers[i].getNumSamples());
+			{
+				basicShdBuffer.addFrom(k, 0, m_hrirBuffers[j], k, 0, m_hrirBuffers[j].getNumSamples(), basicWeight);
+				maxreShdBuffer.addFrom(k, 0, m_hrirBuffers[j], k, 0, m_hrirBuffers[j].getNumSamples(), maxreWeight);
+			}
+		}
+
+		for (int k = 0; k < m_hrirShdBuffers[i].getNumChannels(); ++k)
+		{
+			if (m_enableDualBand)
+			{
+				lowPassFilters[i][k].processSamples(basicShdBuffer.getWritePointer(k), basicShdBuffer.getNumSamples());
+				highPassFilters[i][k].processSamples(maxreShdBuffer.getWritePointer(k), maxreShdBuffer.getNumSamples());
+				
+				m_hrirShdBuffers[i].addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
+				m_hrirShdBuffers[i].addFrom(k, 0, maxreShdBuffer, k, 0, maxreShdBuffer.getNumSamples());
+			}
+			else
+			{
+				m_hrirShdBuffers[i].addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
+			}
 		}
 	}
 }

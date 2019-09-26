@@ -32,6 +32,11 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	m_sofaFileBrowse.addListener(this);
 	addAndMakeVisible(m_sofaFileBrowse);
 
+	m_enableDualBand.setButtonText("Enable dual band");
+	m_enableDualBand.setToggleState(true, dontSendNotification);
+	m_enableDualBand.addListener(this);
+	addAndMakeVisible(m_enableDualBand);
+
 	m_enableRotation.setButtonText("Enable rotation");
 	m_enableRotation.setToggleState(true, dontSendNotification);
 	m_enableRotation.addListener(this);
@@ -64,6 +69,8 @@ void BinauralRendererView::resized()
 	m_orderSelect.setBounds(170, 10, 150, 30);
 	m_sofaFileBrowse.setBounds(170, 45, 150, 30);
 
+	m_enableDualBand.setBounds(335, 10, 150, 30);
+
 	m_enableRotation.setBounds(10, 115, 150, 30);
 	m_rollLabel.setBounds(10, 145, 150, 20);
 	m_pitchLabel.setBounds(10, 165, 150, 20);
@@ -85,6 +92,10 @@ void BinauralRendererView::buttonClicked(Button* buttonClicked)
 	else if (buttonClicked == &m_sofaFileBrowse)
 	{
 		browseForSofaFile();
+	}
+	else if (buttonClicked == &m_enableDualBand)
+	{
+		m_renderer->enableDualBand(m_enableDualBand.getToggleState());
 	}
 	else if (buttonClicked == &m_enableRotation)
 	{
@@ -272,6 +283,10 @@ void BinauralRendererView::loadStandardHRTF()
 
 				m_renderer->addHRIR(inputBuffer);
 				sendMsgToLogWindow("Adding HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
+			}
+			else
+			{
+				sendMsgToLogWindow("Could not find HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
 			}
 		}
 
