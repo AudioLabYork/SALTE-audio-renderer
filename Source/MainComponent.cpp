@@ -11,6 +11,7 @@ MainComponent::MainComponent()
 
 	// setup binaural renderer, pass the osc transceiver
 	m_binauralRenderer.init(&oscTxRx);
+	m_binauralRenderer.addChangeListener(this);
 
 	m_binauralRendererView.init(&m_binauralRenderer);
 	m_binauralRendererView.addChangeListener(this);
@@ -299,19 +300,26 @@ void MainComponent::saveSettings()
 // LOG WINDOW
 void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
+	String timeStamp = Time::getCurrentTime().formatted("%H:%M:%S") + ": ";
+
     if(source == &m_stimulusPlayer)
     {
-        logWindowMessage += m_stimulusPlayer.currentMessage;
+        logWindowMessage += timeStamp + m_stimulusPlayer.currentMessage;
         m_stimulusPlayer.currentMessage.clear();
     }
+	else if (source == &m_binauralRenderer)
+	{
+		logWindowMessage += timeStamp + m_binauralRenderer.m_currentLogMessage;
+		m_binauralRenderer.m_currentLogMessage.clear();
+	}
 	else if (source == &m_binauralRendererView)
 	{
-		logWindowMessage += m_binauralRendererView.m_currentLogMessage;
+		logWindowMessage += timeStamp + m_binauralRendererView.m_currentLogMessage;
 		m_binauralRendererView.m_currentLogMessage.clear();
 	}
 	else if (source == &mc)
 	{
-		logWindowMessage += mc.currentMessage;
+		logWindowMessage += timeStamp + mc.currentMessage;
 		mc.currentMessage.clear();
 	}
 

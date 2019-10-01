@@ -33,7 +33,7 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	addAndMakeVisible(m_sofaFileBrowse);
 
 	m_enableDualBand.setButtonText("Enable dual band");
-	m_enableDualBand.setToggleState(true, dontSendNotification);
+	m_enableDualBand.setToggleState(false, dontSendNotification);
 	m_enableDualBand.addListener(this);
 	addAndMakeVisible(m_enableDualBand);
 

@@ -6,7 +6,8 @@
 #include "OscTransceiver.h"
 #include "SOFAReader.h"
 
-class BinauralRenderer :	public OSCReceiver,
+class BinauralRenderer :	public ChangeBroadcaster,
+							public OSCReceiver,
 							public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
 {
 public:
@@ -44,6 +45,8 @@ public:
 	void releaseResources();
 
 	void loadFromSofaFile(const File& file);
+	void sendMsgToLogWindow(String message);
+	String m_currentLogMessage;
 
 	void clearHRIR();
 	void addHRIR(const AudioBuffer<float>& buffer);
@@ -88,8 +91,8 @@ private:
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_shdConvEngines;
 	
-	IIRFilter lowPassFilters[16][2];
-	IIRFilter highPassFilters[16][2];
+	IIRFilter lowPassFilters[64][2];
+	IIRFilter highPassFilters[64][2];
 
 	bool m_enableDualBand;
 	bool m_enableRotation;

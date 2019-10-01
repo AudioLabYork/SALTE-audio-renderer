@@ -14,7 +14,7 @@ BinauralRenderer::BinauralRenderer()
 	, m_numHrirLoaded(0)
 	, m_blockSize(0)
 	, m_sampleRate(0.0)
-	, m_enableDualBand(true)
+	, m_enableDualBand(false)
 	, m_enableRotation(true)
 	, m_enableTranslation(true)
 {
@@ -172,6 +172,13 @@ void BinauralRenderer::loadFromAmbixConfigFile(const File& file)
 	updateMatrices();
 	preprocessHRIRs();
 	uploadHRIRsToEngine();
+	sendMsgToLogWindow("Loaded: " + file.getFileName());
+}
+
+void BinauralRenderer::sendMsgToLogWindow(String message)
+{
+	m_currentLogMessage += message + "\n";
+	sendChangeMessage();  // broadcast change message to inform and update the editor
 }
 
 void BinauralRenderer::oscMessageReceived(const OSCMessage& message)

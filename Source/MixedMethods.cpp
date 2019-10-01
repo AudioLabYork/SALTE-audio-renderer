@@ -304,7 +304,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			m_player->pause();
 
 			// display the condition name in console output
-			sendMsgToLogWindow(trial->getMCondition(i)->name);
+			sendMsgToLogWindow("Condition name: " + trial->getMCondition(i)->name);
 
 			// store the playback head position
 			if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
@@ -333,7 +333,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			return;
 
 		m_player->pause();
-		sendMsgToLogWindow(trial->getMReference(0)->name);
+		sendMsgToLogWindow("Condition name: " + trial->getMReference(0)->name);
 		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(trial->getMReference(0)->filepath);
 		m_player->setGain(trial->getMReference(0)->gain);
@@ -352,7 +352,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			return;
 
 		m_player->pause();
-		sendMsgToLogWindow(trial->getTCondition(0)->name);
+		sendMsgToLogWindow("Condition name: " + trial->getTCondition(0)->name);
 		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(trial->getTCondition(0)->filepath);
 		m_player->setGain(trial->getTCondition(0)->gain);
@@ -371,7 +371,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			return;
 
 		m_player->pause();
-		sendMsgToLogWindow(trial->getTCondition(1)->name);
+		sendMsgToLogWindow("Condition name: " + trial->getTCondition(1)->name);
 		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		m_player->loadFile(trial->getTCondition(1)->filepath);
 		m_player->setGain(trial->getTCondition(1)->gain);
