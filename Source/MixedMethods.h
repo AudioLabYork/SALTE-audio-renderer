@@ -59,7 +59,7 @@ private:
 	OwnedArray<Label> ratingReadouts;
 	OwnedArray<Label> attributeRatingLabels; // used for TS26259
 
-	bool timeSyncPlayback = true;
+	bool timeSyncPlayback = false;
 
 	// references to other SALTE Renderer objects
 	OscTransceiver* m_oscTxRx;

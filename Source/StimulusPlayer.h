@@ -3,6 +3,11 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AmbisonicRotation.h"
 
+//class TransportSourceArray tsArray
+//{
+//
+//};
+
 
 class StimulusPlayer    :   public Component,
                             public AudioSource,
@@ -70,14 +75,25 @@ public:
     
 	void unloadFileFromTransport();
 
+	void cacheAudioFile(String filepath);
+	void clearAudioFileCache();
+
+
 	void setShowTest(bool shouldShow);
 
 	// log window message
     String currentMessage;
 
 private:
-	AudioTransportSource transportSource;
+	// AudioTransportSource transportSource;
 	TransportState state;
+
+	OwnedArray<AudioTransportSource> transportSourceArray;
+	// OwnedArray<TransportState> stateArray;
+	Array<String> fileNameArray;
+	Array<int> numChArray;
+	int m_samplesPerBlockExpected;
+	double m_sampleRate;
 	
 	AudioFormatManager formatManager;
 	File currentlyLoadedFile;
@@ -86,6 +102,7 @@ private:
 
 	bool loopingEnabled = false;
 	int loadedFileChannelCount = 0;
+	int currentTSIndex;
 
 	// METHODS
 	void browseForFile();
