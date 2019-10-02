@@ -78,6 +78,8 @@ public:
 	// log window message
     String currentMessage;
 
+	bool cachingLock;
+
 private:
 	TransportState state;
 

@@ -111,12 +111,12 @@ void StimulusPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRa
 
 void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
-    if (audioFileSourceArray[currentTSIndex] == nullptr)
+	if (audioFileSourceArray[currentTSIndex] == nullptr || cachingLock)
     {
-        bufferToFill.clearActiveBufferRegion();
-        return;
+		bufferToFill.clearActiveBufferRegion();
+		return;
     }
-    
+
 	transportSourceArray[currentTSIndex]->getNextAudioBlock(bufferToFill);
 	ar.process(*bufferToFill.buffer);
 }
@@ -390,7 +390,7 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 			transportSourceArray.getLast()->prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 			transportSourceArray.getLast()->setSource(
 				audioFileSourceArray.getLast(),
-				48000,					// tells it to buffer this many samples ahead
+				24000,					// tells it to buffer this many samples ahead
 				&readAheadThread,		// this is the background thread to use for reading-ahead
 				reader->sampleRate,     // allows for sample rate correction
 				reader->numChannels);   // the maximum number of channels that may need to be played

@@ -90,8 +90,8 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 
 	// prepare the player
 	m_player->unloadFileFromTransport();
+	m_player->cachingLock = true;
 	m_player->clearAudioFileCache();
-
 	for (int i = 0; i < trial->getNumberOfMConditions(); ++i) m_player->cacheAudioFile(trial->getMCondition(i)->filepath);
 	if (trial->isMReferencePresent()) m_player->cacheAudioFile(trial->getMReference(0)->filepath);
 	if (trial->areTConditionsPresent())
@@ -99,6 +99,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		m_player->cacheAudioFile(trial->getTCondition(0)->filepath);
 		m_player->cacheAudioFile(trial->getTCondition(1)->filepath);
 	}
+	m_player->cachingLock = false;
 
 	ratingSliderArray.clear();
 	ratingReadouts.clear();
