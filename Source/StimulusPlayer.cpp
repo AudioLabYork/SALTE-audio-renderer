@@ -379,7 +379,7 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 {
 	File audioFile(filepath);
 
-	if (audioFile.existsAsFile())
+	if (audioFile.existsAsFile() && !fileNameArray.contains(filepath))
 	{
 		if (AudioFormatReader * reader = formatManager.createReaderFor(audioFile))
 		{
@@ -400,8 +400,7 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 			sendMsgToLogWindow("Cached .wav: " + audioFile.getFileName());
 		}
 	}
-	else
-		sendMsgToLogWindow("Can't cache file: " + filepath);
+	else if(!audioFile.existsAsFile()) sendMsgToLogWindow("Can't cache file: " + filepath);
 }
 
 void StimulusPlayer::clearAudioFileCache()
