@@ -4,12 +4,11 @@
 StimulusPlayer::StimulusPlayer() :  state(Stopped),
                                     readAheadThread("transport read ahead"),
 									thumbnailCache(10), // maxNumThumbsToStore parameter lets you specify how many previews should be kept in memory at once.
-									thumbnail(512, formatManager, thumbnailCache),
-									m_shouldShowTest(true)
+									thumbnail(128, formatManager, thumbnailCache),
+									m_shouldShowTest(true),
+									currentTSIndex(0)
 						
 {
-	clearAudioFileCache();
-
 	thumbnail.addChangeListener(this);
 	formatManager.registerBasicFormats();
     readAheadThread.startThread(3);
@@ -100,7 +99,8 @@ StimulusPlayer::StimulusPlayer() :  state(Stopped),
 
 StimulusPlayer::~StimulusPlayer()
 {
-	for (int i = 0; i < transportSourceArray.size(); ++i) transportSourceArray[i]->setSource(nullptr);
+	for (int i = 0; i < transportSourceArray.size(); ++i)
+		transportSourceArray[i]->setSource(nullptr);
 }
 
 void StimulusPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
@@ -123,7 +123,8 @@ void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFi
 
 void StimulusPlayer::releaseResources()
 {
-	for (int i = 0; i < transportSourceArray.size(); ++i) transportSourceArray[i]->releaseResources();
+	for (int i = 0; i < transportSourceArray.size(); ++i)
+		transportSourceArray[i]->releaseResources();
 }
 
 void StimulusPlayer::paint (Graphics& g)
@@ -181,27 +182,30 @@ void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 	if (source == &thumbnail)
 		repaint();
 
-	if (source == transportSourceArray[currentTSIndex])
+	if (transportSourceArray[currentTSIndex] != nullptr)
 	{
-		if (transportSourceArray[currentTSIndex]->isPlaying())
+		if (source == transportSourceArray[currentTSIndex])
 		{
-			changeState(Playing);
-		}
-		else if ((state == Stopping) || (state == Playing))
-		{
-			if (transportSourceArray[currentTSIndex]->hasStreamFinished() && loopingEnabled)
+			if (transportSourceArray[currentTSIndex]->isPlaying())
 			{
-				transportSourceArray[currentTSIndex]->setPosition(0.0);
-				changeState(Starting);
+				changeState(Playing);
 			}
-			else
+			else if ((state == Stopping) || (state == Playing))
 			{
-				changeState(Stopped);
+				if (transportSourceArray[currentTSIndex]->hasStreamFinished() && loopingEnabled)
+				{
+					transportSourceArray[currentTSIndex]->setPosition(0.0);
+					changeState(Starting);
+				}
+				else
+				{
+					changeState(Stopped);
+				}
 			}
-		}
-		else if (state == Pausing)
-		{
-			changeState(Paused);
+			else if (state == Pausing)
+			{
+				changeState(Paused);
+			}
 		}
 	}
 }
@@ -259,17 +263,21 @@ void StimulusPlayer::changeState(TransportState newState)
 		switch (state)
 		{
 		case Stopping:
-			transportSourceArray[currentTSIndex]->stop();
+			if(transportSourceArray[currentTSIndex] != nullptr)
+				transportSourceArray[currentTSIndex]->stop();
 			break;
 		case Stopped:
-			transportSourceArray[currentTSIndex]->setPosition(0.0);
+			if (transportSourceArray[currentTSIndex] != nullptr)
+				transportSourceArray[currentTSIndex]->setPosition(0.0);
+
 			transportSlider.setValue(0.0, juce::dontSendNotification);
 			playButton.setButtonText("Play");
 			playButton.setToggleState(false, NotificationType::dontSendNotification);
 			stopButton.setToggleState(true, NotificationType::dontSendNotification);
 			break;
 		case Starting:
-			transportSourceArray[currentTSIndex]->start();
+			if (transportSourceArray[currentTSIndex] != nullptr)
+				transportSourceArray[currentTSIndex]->start();
 			break;
 		case Playing:
 			playButton.setButtonText("Pause");
@@ -277,7 +285,8 @@ void StimulusPlayer::changeState(TransportState newState)
 			stopButton.setToggleState(false, NotificationType::dontSendNotification);
 			break;
 		case Pausing:
-			transportSourceArray[currentTSIndex]->stop();
+			if (transportSourceArray[currentTSIndex] != nullptr)
+				transportSourceArray[currentTSIndex]->stop();
 			break;
 		case Paused:
 			playButton.setButtonText("Play");
@@ -285,6 +294,7 @@ void StimulusPlayer::changeState(TransportState newState)
 		default:
 			break;
 		}
+
 		sendChangeMessage();
 	}
 }
@@ -300,23 +310,29 @@ void StimulusPlayer::sliderValueChanged(Slider* slider)
 	}
 	else if (slider == &transportSlider)
 	{
-		double value = transportSlider.getValue();
-		double newTime = transportSourceArray[currentTSIndex]->getLengthInSeconds() * value;
-		transportSourceArray[currentTSIndex]->setPosition(newTime);
+		if (transportSourceArray[currentTSIndex] != nullptr)
+		{
+			double value = transportSlider.getValue();
+			double newTime = transportSourceArray[currentTSIndex]->getLengthInSeconds() * value;
+			transportSourceArray[currentTSIndex]->setPosition(newTime);
+		}
 	}
 
 }
 
 void StimulusPlayer::timerCallback()
 {
-    double currentPosition = transportSourceArray[currentTSIndex]->getCurrentPosition();
-    double lengthInSeconds = transportSourceArray[currentTSIndex]->getLengthInSeconds();
-    
-    // update diplayed times in GUI
-    playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
-	
-	if(transportSourceArray[currentTSIndex]->isPlaying())
-		transportSlider.setValue(currentPosition / lengthInSeconds, juce::dontSendNotification);
+	if (transportSourceArray[currentTSIndex] != nullptr)
+	{
+		double currentPosition = transportSourceArray[currentTSIndex]->getCurrentPosition();
+		double lengthInSeconds = transportSourceArray[currentTSIndex]->getLengthInSeconds();
+
+		// update diplayed times in GUI
+		playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
+
+		if (transportSourceArray[currentTSIndex]->isPlaying())
+			transportSlider.setValue(currentPosition / lengthInSeconds, juce::dontSendNotification);
+	}
 }
 
 void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
@@ -349,7 +365,9 @@ void StimulusPlayer::loadFile(String filepath)
 
 void StimulusPlayer::unloadFileFromTransport()
 {
-	transportSourceArray[currentTSIndex]->stop();
+	if(transportSourceArray[currentTSIndex] != nullptr)
+		transportSourceArray[currentTSIndex]->stop();
+
 	thumbnail.setSource(nullptr);
 	loadedFileName.setText("Loaded file: ", dontSendNotification);
 	playButton.setEnabled(false);
@@ -392,11 +410,7 @@ void StimulusPlayer::clearAudioFileCache()
 	audioFileSourceArray.clear();
 	fileNameArray.clear();
 	numChArray.clear();
-
-	transportSourceArray.add(new AudioTransportSource);
 	currentTSIndex = 0;
-	fileNameArray.add("");
-	numChArray.add(0);
 }
 
 void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
@@ -407,7 +421,6 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 
 	if (fileNameArray.contains(fullPath))
 	{
-		
 		currentlyLoadedFile = audioFile;
 		currentTSIndex = fileNameArray.indexOf(fullPath);
 		loadedFileChannelCount = numChArray[currentTSIndex];
@@ -463,12 +476,15 @@ String StimulusPlayer::returnHHMMSS(double lengthInSeconds)
 
 void StimulusPlayer::play()
 {
-	if (transportSourceArray[currentTSIndex]->getLengthInSeconds() > 0.0)
+	if (transportSourceArray[currentTSIndex] != nullptr)
 	{
-		if ((state == Stopped) || (state == Pausing) || (state == Paused))
-			changeState(Starting);
-		else if (state == Playing)
-			changeState(Pausing);
+		if (transportSourceArray[currentTSIndex]->getLengthInSeconds() > 0.0)
+		{
+			if ((state == Stopped) || (state == Pausing) || (state == Paused))
+				changeState(Starting);
+			else if (state == Playing)
+				changeState(Pausing);
+		}
 	}
 }
 
@@ -493,8 +509,11 @@ int StimulusPlayer::getNumberOfChannels()
 
 void StimulusPlayer::setGain(float gainInDB)
 {
-	float gain = Decibels::decibelsToGain(gainInDB);
-	transportSourceArray[currentTSIndex]->setGain(gain);
+	if (transportSourceArray[currentTSIndex] != nullptr)
+	{
+		float gain = Decibels::decibelsToGain(gainInDB);
+		transportSourceArray[currentTSIndex]->setGain(gain);
+	}
 }
 
 void StimulusPlayer::loop(bool looping)
@@ -510,6 +529,9 @@ void StimulusPlayer::loop(bool looping)
 
 bool StimulusPlayer::checkPlaybackStatus()
 {
+	if (transportSourceArray[currentTSIndex] == nullptr)
+		return false;
+
 	return transportSourceArray[currentTSIndex]->isPlaying();
 }
 
@@ -520,10 +542,14 @@ bool StimulusPlayer::checkLoopStatus()
 
 double StimulusPlayer::getPlaybackHeadPosition()
 {
+	if (transportSourceArray[currentTSIndex] == nullptr)
+		return 0.0;
+
 	return transportSourceArray[currentTSIndex]->getCurrentPosition();
 }
 
 void StimulusPlayer::setPlaybackHeadPosition(double time)
 {
-	transportSourceArray[currentTSIndex]->setPosition(time);
+	if (transportSourceArray[currentTSIndex] != nullptr)
+		transportSourceArray[currentTSIndex]->setPosition(time);
 }
