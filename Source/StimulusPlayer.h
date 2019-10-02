@@ -3,12 +3,6 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AmbisonicRotation.h"
 
-//class TransportSourceArray tsArray
-//{
-//
-//};
-
-
 class StimulusPlayer    :   public Component,
                             public AudioSource,
                             public ChangeBroadcaster,
@@ -85,11 +79,12 @@ public:
     String currentMessage;
 
 private:
-	// AudioTransportSource transportSource;
 	TransportState state;
 
+	OwnedArray<AudioFormatReaderSource> audioFileSourceArray;
+	TimeSliceThread readAheadThread;
+
 	OwnedArray<AudioTransportSource> transportSourceArray;
-	// OwnedArray<TransportState> stateArray;
 	Array<String> fileNameArray;
 	Array<int> numChArray;
 	int m_samplesPerBlockExpected;
@@ -120,8 +115,7 @@ private:
 	Label yawSliderLabel, pitchSliderLabel, rollSliderLabel;
 	Slider transportSlider;
 
-    std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
-    TimeSliceThread readAheadThread;
+
     
 	AudioThumbnailCache thumbnailCache;
 	AudioThumbnail thumbnail;

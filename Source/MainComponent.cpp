@@ -304,23 +304,35 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 
     if(source == &m_stimulusPlayer)
     {
-        logWindowMessage += timeStamp + m_stimulusPlayer.currentMessage;
-        m_stimulusPlayer.currentMessage.clear();
+		if (m_stimulusPlayer.currentMessage != "")
+		{
+			logWindowMessage += timeStamp + m_stimulusPlayer.currentMessage;
+			m_stimulusPlayer.currentMessage.clear();
+		}
     }
 	else if (source == &m_binauralRenderer)
 	{
-		logWindowMessage += timeStamp + m_binauralRenderer.m_currentLogMessage;
-		m_binauralRenderer.m_currentLogMessage.clear();
+		if (m_binauralRenderer.m_currentLogMessage != "")
+		{
+			logWindowMessage += timeStamp + m_binauralRenderer.m_currentLogMessage;
+			m_binauralRenderer.m_currentLogMessage.clear();
+		}
 	}
 	else if (source == &m_binauralRendererView)
 	{
-		logWindowMessage += timeStamp + m_binauralRendererView.m_currentLogMessage;
-		m_binauralRendererView.m_currentLogMessage.clear();
+		if (m_binauralRendererView.m_currentLogMessage != "")
+		{
+			logWindowMessage += timeStamp + m_binauralRendererView.m_currentLogMessage;
+			m_binauralRendererView.m_currentLogMessage.clear();
+		}
 	}
 	else if (source == &mc)
 	{
-		logWindowMessage += timeStamp + mc.currentMessage;
-		mc.currentMessage.clear();
+		if (mc.currentMessage != "")
+		{
+			logWindowMessage += timeStamp + mc.currentMessage;
+			mc.currentMessage.clear();
+		}
 	}
 
     logWindow.setText(logWindowMessage);

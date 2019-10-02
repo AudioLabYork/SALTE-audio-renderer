@@ -8,7 +8,6 @@ StimulusPlayer::StimulusPlayer() :  state(Stopped),
 									m_shouldShowTest(true)
 						
 {
-	// transportSource.addChangeListener(this);
 	clearAudioFileCache();
 
 	thumbnail.addChangeListener(this);
@@ -101,19 +100,18 @@ StimulusPlayer::StimulusPlayer() :  state(Stopped),
 
 StimulusPlayer::~StimulusPlayer()
 {
-    // transportSource.setSource(nullptr);
+	for (int i = 0; i < transportSourceArray.size(); ++i) transportSourceArray[i]->setSource(nullptr);
 }
 
 void StimulusPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
 {
-	//m_samplesPerBlockExpected = samplesPerBlockExpected;
-	//m_sampleRate = sampleRate;
-	transportSourceArray[currentTSIndex]->prepareToPlay(samplesPerBlockExpected, sampleRate);
+	m_samplesPerBlockExpected = samplesPerBlockExpected;
+	m_sampleRate = sampleRate;
 }
 
 void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
 {
-    if (currentAudioFileSource.get() == nullptr)
+    if (audioFileSourceArray[currentTSIndex] == nullptr)
     {
         bufferToFill.clearActiveBufferRegion();
         return;
@@ -125,7 +123,7 @@ void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFi
 
 void StimulusPlayer::releaseResources()
 {
-		transportSourceArray[currentTSIndex]->releaseResources();
+	for (int i = 0; i < transportSourceArray.size(); ++i) transportSourceArray[i]->releaseResources();
 }
 
 void StimulusPlayer::paint (Graphics& g)
@@ -351,10 +349,7 @@ void StimulusPlayer::loadFile(String filepath)
 
 void StimulusPlayer::unloadFileFromTransport()
 {
-	// unload the previous file source and delete it
 	transportSourceArray[currentTSIndex]->stop();
-	// transportSourceArray[currentTSIndex]->setSource(nullptr);
-	currentAudioFileSource = nullptr;
 	thumbnail.setSource(nullptr);
 	loadedFileName.setText("Loaded file: ", dontSendNotification);
 	playButton.setEnabled(false);
@@ -370,22 +365,21 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 	{
 		if (AudioFormatReader * reader = formatManager.createReaderFor(audioFile))
 		{
-			currentAudioFileSource = std::make_unique<AudioFormatReaderSource>(reader, true);
-
+			audioFileSourceArray.add(new AudioFormatReaderSource(reader, true));
 			
 			transportSourceArray.add(new AudioTransportSource);
 			transportSourceArray.getLast()->addChangeListener(this);
-			// transportSourceArray.getLast()->prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
+			transportSourceArray.getLast()->prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 			transportSourceArray.getLast()->setSource(
-				currentAudioFileSource.get(),
-				0,						// tells it to buffer this many samples ahead
-				nullptr,				// this is the background thread to use for reading-ahead
+				audioFileSourceArray.getLast(),
+				48000,					// tells it to buffer this many samples ahead
+				&readAheadThread,		// this is the background thread to use for reading-ahead
 				reader->sampleRate,     // allows for sample rate correction
 				reader->numChannels);   // the maximum number of channels that may need to be played
 
 			fileNameArray.add(filepath);
-			DBG(fileNameArray.getLast());
 			numChArray.add(reader->numChannels);
+			sendMsgToLogWindow("Cached .wav: " + audioFile.getFileName());
 		}
 	}
 	else
@@ -395,7 +389,7 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 void StimulusPlayer::clearAudioFileCache()
 {
 	transportSourceArray.clear();
-	// stateArray.clear();
+	audioFileSourceArray.clear();
 	fileNameArray.clear();
 	numChArray.clear();
 
@@ -425,7 +419,7 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 		loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
 
 		// send message to the main log window
-		sendMsgToLogWindow("Loaded: " + audioFile.getFileName());
+		sendMsgToLogWindow("Loaded .wav: " + audioFile.getFileName());
 
 		playButton.setEnabled(true);
 		stopButton.setEnabled(true);

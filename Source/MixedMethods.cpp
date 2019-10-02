@@ -88,8 +88,9 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		return;
 	}
 
-	m_player->clearAudioFileCache();
+	// prepare the player
 	m_player->unloadFileFromTransport();
+	m_player->clearAudioFileCache();
 	for (int i = 0; i < trial->getNumberOfMConditions(); ++i) m_player->cacheAudioFile(trial->getMCondition(i)->filepath);
 	if (trial->isMReferencePresent()) m_player->cacheAudioFile(trial->getMReference(0)->filepath);
 	if (trial->areTConditionsPresent())
@@ -97,7 +98,6 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		m_player->cacheAudioFile(trial->getTCondition(0)->filepath);
 		m_player->cacheAudioFile(trial->getTCondition(1)->filepath);
 	}
-	// for (int i = 0; i < trial->getm(); ++i) m_player->cacheAudioFile(trial->get(i)->filepath);
 
 	ratingSliderArray.clear();
 	ratingReadouts.clear();
