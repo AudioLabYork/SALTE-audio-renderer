@@ -158,10 +158,10 @@ void MainComponent::paint (Graphics& g)
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
 
+	g.setColour(getLookAndFeel().findColour(Label::textColourId));
 	g.setFont(18.0f);
 	g.drawMultiLineText("Spatial\nAudio\nListening\nTest\nEnvironment", 120, 33, 120, Justification::left, 1.2f);
 
-	g.setFont(14.0f);
     
 	if (showOnlyTestInterface)
 	{
@@ -174,6 +174,7 @@ void MainComponent::paint (Graphics& g)
 		juce::Rectangle<int> renderRect(660, 405, 730, 245);    // rendering component
 		juce::Rectangle<int> testRect(10, 170, 640, 480);    // test component
 
+		g.setColour(Colours::black);
 		g.drawRect(oscRect, 1);
 		g.drawRect(tstlogicRect, 1);
 		g.drawRect(renderRect, 1);
@@ -181,7 +182,7 @@ void MainComponent::paint (Graphics& g)
 
 		// OSC WINDOW
 		g.setColour(getLookAndFeel().findColour(Label::textColourId));
-
+		g.setFont(14.0f);
 		g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
 		g.drawText("Send to", 410, 10, 50, 25, Justification::centredLeft, true);
 		g.drawText("Receive at", 490, 10, 75, 25, Justification::centredLeft, true);
@@ -215,8 +216,6 @@ void MainComponent::resized()
 		clientRxPortLabel.setBounds(490, 35, 60, 25);
 
 		logWindow.setBounds(10, 660, 640, 130);
-
-
 
 		showTestInterface.setBounds(560, 70, 80, 60);
 	}

@@ -3,13 +3,10 @@
 
 StimulusPlayer::StimulusPlayer() :  state(Stopped),
                                     readAheadThread("transport read ahead"),
-									thumbnailCache(10), // maxNumThumbsToStore parameter lets you specify how many previews should be kept in memory at once.
-									thumbnail(128, formatManager, thumbnailCache),
 									m_shouldShowTest(true),
 									currentTSIndex(0)
 						
 {
-	thumbnail.addChangeListener(this);
 	formatManager.registerBasicFormats();
     readAheadThread.startThread(3);
     
@@ -87,12 +84,28 @@ StimulusPlayer::StimulusPlayer() :  state(Stopped),
 	yawSliderLabel.attachToComponent(&yawSlider, true);
 	addAndMakeVisible(yawSliderLabel);
 
+	gainSlider.setSliderStyle(Slider::LinearVertical);
+	gainSlider.setRange(-48, 24, 0.1);
+	gainSlider.setValue(0);
+	gainSlider.setDoubleClickReturnValue(true, 0);
+	gainSlider.setTextBoxIsEditable(true);
+	gainSlider.setTextValueSuffix(" dB");
+	gainSlider.setTextBoxStyle(Slider::TextBoxBelow, false, 100, 25);
+	gainSlider.addListener(this);
+	addAndMakeVisible(gainSlider);
+	gainSliderLabel.setText("Gain", dontSendNotification);
+	gainSliderLabel.setJustificationType(Justification::centredBottom);
+	gainSliderLabel.attachToComponent(&gainSlider, false);
+	addAndMakeVisible(gainSliderLabel);
+
 	transportSlider.setSliderStyle(Slider::LinearHorizontal);
 	transportSlider.setRange(0, 1);
 	transportSlider.setValue(0);
 	transportSlider.setTextBoxStyle(Slider::NoTextBox, false, 100, 25);
 	transportSlider.addListener(this);
 	addAndMakeVisible(transportSlider);
+
+	addAndMakeVisible(pt);
 
     startTimer(30);
 }
@@ -152,12 +165,6 @@ void StimulusPlayer::paint (Graphics& g)
     // TEXT
     g.setFont(Font(14.0f));
     g.setColour(Colours::white);
-
-	// PAINT WAVEFORM
-	if (thumbnail.getNumChannels() == 0)
-		paintIfNoFileLoaded(g, wfRect);
-	else
-		paintIfFileLoaded(g, wfRect);
 }
 
 void StimulusPlayer::resized()
@@ -173,15 +180,16 @@ void StimulusPlayer::resized()
 	pitchSlider.setBounds(320, 100, 300, 25);
 	yawSlider.setBounds(320, 125, 300, 25);
 
+	gainSlider.setBounds(630, 30, 80, 120);
+
 	transportSlider.setBounds(10, 260, 710, 115);
 	playbackHeadPosition.setBounds(280, 45, 500, 25);
+
+	pt.setBounds(10, 170, 710, 80);
 }
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 {
-	if (source == &thumbnail)
-		repaint();
-
 	if (transportSourceArray[currentTSIndex] != nullptr)
 	{
 		if (source == transportSourceArray[currentTSIndex])
@@ -208,29 +216,6 @@ void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 			}
 		}
 	}
-}
-
-void StimulusPlayer::paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
-{
-	g.setColour(Colours::darkgrey);
-	g.fillRect(thumbnailBounds);
-	g.setColour(Colours::white);
-	g.drawFittedText("No File Loaded", thumbnailBounds, Justification::centred, 1);
-}
-
-void StimulusPlayer::paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
-{
-	g.setColour(Colours::white);
-	g.fillRect(thumbnailBounds);
-
-	g.setColour(Colours::red);                                     // [8]
-
-	thumbnail.drawChannel(g,                                      // [9]
-		thumbnailBounds,
-		0.0,                                    // start time
-		thumbnail.getTotalLength(),             // end time
-		0,										// channel number
-		1.0f);                                  // vertical zoom
 }
 
 void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
@@ -308,6 +293,10 @@ void StimulusPlayer::sliderValueChanged(Slider* slider)
 		float yaw = yawSlider.getValue();
 		ar.updateEulerRPY(roll, pitch, yaw);
 	}
+	else if (slider == &gainSlider)
+	{
+		setGain(gainSlider.getValue());
+	}
 	else if (slider == &transportSlider)
 	{
 		if (transportSourceArray[currentTSIndex] != nullptr)
@@ -333,11 +322,6 @@ void StimulusPlayer::timerCallback()
 		if (transportSourceArray[currentTSIndex]->isPlaying())
 			transportSlider.setValue(currentPosition / lengthInSeconds, juce::dontSendNotification);
 	}
-}
-
-void StimulusPlayer::oscMessageReceived(const OSCMessage& message)
-{
-
 }
 
 void StimulusPlayer::browseForFile()
@@ -368,7 +352,7 @@ void StimulusPlayer::unloadFileFromTransport()
 	if(transportSourceArray[currentTSIndex] != nullptr)
 		transportSourceArray[currentTSIndex]->stop();
 
-	thumbnail.setSource(nullptr);
+	pt.clearThumbnail();
 	loadedFileName.setText("Loaded file: ", dontSendNotification);
 	playButton.setEnabled(false);
 	stopButton.setEnabled(false);
@@ -425,7 +409,7 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 		loadedFileChannelCount = numChArray[currentTSIndex];
 
 		// create thumbnail
-		thumbnail.setSource(new FileInputSource(currentlyLoadedFile));
+		pt.createThumbnail(currentlyLoadedFile);
 		
 		// update GUI label
 		loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
@@ -448,6 +432,7 @@ void StimulusPlayer::setShowTest(bool shouldShow)
 	rollSlider.setVisible(!shouldShow);
 	pitchSlider.setVisible(!shouldShow);
 	yawSlider.setVisible(!shouldShow);
+	gainSlider.setVisible(!shouldShow);
 
 	resized();
 	repaint();
@@ -512,6 +497,7 @@ void StimulusPlayer::setGain(float gainInDB)
 	{
 		float gain = Decibels::decibelsToGain(gainInDB);
 		transportSourceArray[currentTSIndex]->setGain(gain);
+		gainSlider.setValue(gainInDB, dontSendNotification);
 	}
 }
 

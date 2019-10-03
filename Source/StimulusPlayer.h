@@ -2,13 +2,12 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AmbisonicRotation.h"
+#include "PlayerThumbnail.h"
 
 class StimulusPlayer    :   public Component,
                             public AudioSource,
                             public ChangeBroadcaster,
 							private ChangeListener,
-							public OSCReceiver,
-							public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
                             private Button::Listener,
 							private Slider::Listener,
                             private Timer
@@ -51,8 +50,6 @@ public:
 	void buttonClicked(Button* buttonThatWasClicked) override;
 	void sliderValueChanged(Slider* slider) override;
 	void timerCallback() override;
-
-	void oscMessageReceived(const OSCMessage& message) override;
 
 	// exposing some playback transport functionality
 	void play();
@@ -107,20 +104,14 @@ private:
 	void sendMsgToLogWindow(String message);
 	String returnHHMMSS(double lengthInSeconds);
 
-	void paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
-	void paintIfFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds);
-
 	TextButton openButton, playButton, stopButton, loopButton;
 	Label loadedFileName, playbackHeadPosition;
 
-	Slider yawSlider, pitchSlider, rollSlider;
-	Label yawSliderLabel, pitchSliderLabel, rollSliderLabel;
+	Slider yawSlider, pitchSlider, rollSlider, gainSlider;
+	Label yawSliderLabel, pitchSliderLabel, rollSliderLabel, gainSliderLabel;
 	Slider transportSlider;
 
-
-    
-	AudioThumbnailCache thumbnailCache;
-	AudioThumbnail thumbnail;
+	PlayerThumbnail pt;
 
 	bool m_shouldShowTest;
 
