@@ -153,6 +153,15 @@ void MainComponent::releaseResources()
 void MainComponent::paint (Graphics& g)
 {
     g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+
+	// RECTANGULAR OUTLINE
+	g.setColour(Colours::black);
+	g.drawRect(getLocalBounds(), 1);
+
+	g.setFont(18.0f);
+	g.drawMultiLineText("Spatial\nAudio\nListening\nTest\nEnvironment", 120, 33, 120, Justification::left, 1.2f);
+
+	g.setFont(14.0f);
     
 	if (showOnlyTestInterface)
 	{
@@ -160,9 +169,6 @@ void MainComponent::paint (Graphics& g)
 	}
 	else
 	{
-		// RECTANGULAR OUTLINE
-		g.setColour(Colours::black);
-		g.drawRect(getLocalBounds(), 1);
 		juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
 		juce::Rectangle<int> tstlogicRect(10, 170, 640, 480);   // test logic component
 		juce::Rectangle<int> renderRect(660, 405, 730, 245);    // rendering component
@@ -185,18 +191,19 @@ void MainComponent::paint (Graphics& g)
 
 void MainComponent::resized()
 {
+	// imageComponent.setBounds(140, 60, 90, 90);
+	imageComponent.setBounds(20, 20, 90, 90);
+
+	m_testSessionForm.setBounds(10, 170, 640, 480);
+	mc.setBounds(10, 170, 640, 480);
+
 	if (showOnlyTestInterface)
 	{
-		m_stimulusPlayer.setBounds(660, 10, 730, 480);
-		m_testSessionForm.setBounds(10, 10, getWidth() - 20, getHeight() - 20);
-		mc.setBounds(10, 10, 640, 480);
-		showTestInterface.setBounds(getWidth() - 10, getHeight()-10, 10, 10);
+		m_stimulusPlayer.setBounds(660, 170, 730, 385);
+		showTestInterface.setBounds(getWidth() - 20, getHeight()-20, 10, 10);
 	}
 	else
 	{
-		// imageComponent.setBounds(140, 60, 90, 90);
-		imageComponent.setBounds(20, 20, 75, 75);
-
 		m_audioSetup.setCentrePosition(getWidth() / 2, getHeight() / 2);
 		m_stimulusPlayer.setBounds(660, 10, 730, 385);
 		m_binauralRendererView.setBounds(660, 405, 730, 245);
@@ -209,8 +216,7 @@ void MainComponent::resized()
 
 		logWindow.setBounds(10, 660, 640, 130);
 
-		m_testSessionForm.setBounds(10, 170, 640, 480);
-		mc.setBounds(10, 170, 640, 480);
+
 
 		showTestInterface.setBounds(560, 70, 80, 60);
 	}

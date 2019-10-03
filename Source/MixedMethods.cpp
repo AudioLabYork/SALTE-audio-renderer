@@ -463,56 +463,101 @@ void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDr
 
 void MixedMethodsComponent::updateRemoteInterface()
 {
-	// Transport controls
-	if (m_player->checkPlaybackStatus())
-	{
-		m_oscTxRx->sendOscMessage("/button", (String) "play", (int)1);
-		m_oscTxRx->sendOscMessage("/button", (String) "stop", (int)0);
-	}
-	else
-	{
-		m_oscTxRx->sendOscMessage("/button", (String) "play", (int)0);
-		m_oscTxRx->sendOscMessage("/button", (String) "stop", (int)1);
-	}
-
-	if (m_player->checkLoopStatus())
-	{
-		m_oscTxRx->sendOscMessage("/button", (String) "loop", (int)1);
-	}
-	else
-	{
-		m_oscTxRx->sendOscMessage("/button", (String) "loop", (int)0);
-	}
+	// hide UI
+	m_oscTxRx->sendOscMessage("/showUI", (int)0);
 
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
-
 	if (trial != nullptr)
 	{
 		// send string to display on the screen
 		String screenMessage1 = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
-		m_oscTxRx->sendOscMessage("/screen", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+		m_oscTxRx->sendOscMessage("/screenMessages", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+
+		// rating labels
+		StringArray ratings = trial->getRatingOptions();
+		if (ratings.size() > 0)
+		{
+			m_oscTxRx->sendOscMessage("/numOfRatingLabels", (int)ratings.size());
+			for (int i = 0; i < ratings.size(); ++i)
+			{
+				m_oscTxRx->sendOscMessage("/ratingLabel", (int)i, (String)ratings[i]);
+			}
+		}
 	}
 
-
-	if (selectTConditionAButton.isVisible() && selectTConditionBButton.isVisible() && ratingSliderArray.size() == 4)
+	// Transport controls
+	if (m_player->checkPlaybackStatus())
 	{
-		// update remote sliders
-		for (int i = 0; i < ratingSliderArray.size(); ++i)
-		{
-			if (i < 4) m_oscTxRx->sendOscMessage("/slider", (int)i, (float)ratingSliderArray[i]->getValue());
-		}
-
-		// update A / B buttons
-		m_oscTxRx->sendOscMessage("/button", (String) "A", (int) selectTConditionAButton.getToggleState());
-		m_oscTxRx->sendOscMessage("/button", (String) "B", (int) selectTConditionBButton.getToggleState());
-
-		m_oscTxRx->sendOscMessage("/showUI", (int) 1);
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "play", (int)1);
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "stop", (int)0);
 	}
 	else
 	{
-		m_oscTxRx->sendOscMessage("/showUI", (int)0);
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "play", (int)0);
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "stop", (int)1);
 	}
-	
+
+	if (m_player->checkLoopStatus())
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "loop", (int)1);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "loop", (int)0);
+	}
+
+	// sliders
+	if (ratingSliderArray.size() > 0)
+	{
+		m_oscTxRx->sendOscMessage("/numOfSliders", (int) ratingSliderArray.size());
+		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		{
+			m_oscTxRx->sendOscMessage("/sliderState", (int)i, (float)ratingSliderArray[i]->getValue(), (float)ratingSliderArray[i]->getMinimum(), (float)ratingSliderArray[i]->getMaximum());
+		}
+	}
+
+	// condition trigger buttons
+	if (selectConditionButtonArray.size() > 0)
+	{		m_oscTxRx->sendOscMessage("/numOfCondTrigButtons", (int)selectConditionButtonArray.size());
+		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		{
+			m_oscTxRx->sendOscMessage("/condTrigButtonState", (int)i, (int)selectConditionButtonArray[i]->getToggleState());
+		}
+	}
+
+	// attribute labels
+	if (attributeRatingLabels.size() > 0)
+	{
+		m_oscTxRx->sendOscMessage("/numOfAttributeLabels", (int)attributeRatingLabels.size());
+		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		{
+			m_oscTxRx->sendOscMessage("/attributeLabel", (int)i, (String)attributeRatingLabels[i]->getText());
+		}
+	}
+
+	// A/B buttons
+	if (selectTConditionAButton.isVisible() && selectTConditionBButton.isVisible())
+	{
+		// send number of A/B buttons
+		m_oscTxRx->sendOscMessage("/ABTrigButtonsPresent", (int)1);
+		
+		// update A / B buttons
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "A", (int)selectTConditionAButton.getToggleState());
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "B", (int)selectTConditionBButton.getToggleState());
+	}
+
+	// reference button
+	if (selectReferenceButton.isVisible())
+	{
+		// send number of select reference buttons
+		m_oscTxRx->sendOscMessage("/RefTrigButtonPresent", (int)1);
+
+		// update reference button
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "Reference", (int)selectReferenceButton.getToggleState());
+	}
+
+	// show UI
+	m_oscTxRx->sendOscMessage("/showUI", (int)1);
 }
 
 void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)

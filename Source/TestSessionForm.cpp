@@ -117,6 +117,8 @@ void TestSessionForm::removeListener(Listener* listener)
 
 void TestSessionForm::paint(Graphics& g)
 {
+	g.setColour(Colours::black);
+	g.drawRect(getLocalBounds(), 1);
 }
 
 void TestSessionForm::resized()
