@@ -3,8 +3,9 @@
 
 StimulusPlayer::StimulusPlayer() :  state(Stopped),
                                     readAheadThread("transport read ahead"),
-									m_shouldShowTest(true),
-									currentTSIndex(0)
+                                    currentTSIndex(0),
+									m_shouldShowTest(true)
+
 						
 {
 	formatManager.registerBasicFormats();

@@ -4,9 +4,7 @@
 
 class PlayerThumbnail : public Component,
 						public ChangeListener,
-						public ChangeBroadcaster,
-						public MouseListener
-
+						public ChangeBroadcaster
 {
 public:
 	PlayerThumbnail();
@@ -15,8 +13,8 @@ public:
 	void paint(Graphics&) override;
 	void resized() override;
 
-	virtual void changeListenerCallback(ChangeBroadcaster* source) override;
-	virtual void mouseDown(const MouseEvent& event) override;
+	void changeListenerCallback(ChangeBroadcaster* source) override;
+	void mouseDown(const MouseEvent& event) override;
 
 	void clearThumbnail();
 	void createThumbnail(File audioFile);
