@@ -170,15 +170,10 @@ void MainComponent::paint (Graphics& g)
 	else
 	{
 		juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
-		juce::Rectangle<int> tstlogicRect(10, 170, 640, 480);   // test logic component
-		juce::Rectangle<int> renderRect(660, 405, 730, 245);    // rendering component
-		juce::Rectangle<int> testRect(10, 170, 640, 480);    // test component
 
 		g.setColour(Colours::black);
 		g.drawRect(oscRect, 1);
-		g.drawRect(tstlogicRect, 1);
-		g.drawRect(renderRect, 1);
-		g.drawRect(testRect, 1);
+
 
 		// OSC WINDOW
 		g.setColour(getLookAndFeel().findColour(Label::textColourId));
@@ -200,14 +195,14 @@ void MainComponent::resized()
 
 	if (showOnlyTestInterface)
 	{
-		m_stimulusPlayer.setBounds(660, 170, 730, 385);
+		m_stimulusPlayer.setBounds(660, 170, 730, 330);
 		showTestInterface.setBounds(getWidth() - 20, getHeight()-20, 10, 10);
 	}
 	else
 	{
 		m_audioSetup.setCentrePosition(getWidth() / 2, getHeight() / 2);
-		m_stimulusPlayer.setBounds(660, 10, 730, 385);
-		m_binauralRendererView.setBounds(660, 405, 730, 245);
+		m_stimulusPlayer.setBounds(660, 10, 730, 330);
+		m_binauralRendererView.setBounds(660, 350, 730, 245);
 		connectOscButton.setBounds(310, 70, 240, 25);
 		openAudioDeviceManager.setBounds(310, 105, 240, 25);
 

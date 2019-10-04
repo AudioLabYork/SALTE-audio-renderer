@@ -216,6 +216,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 
 	// set the looping state of the player
 	m_player->loop(trial->getLoopingState());
+	m_player->setPlaybackOffsets(0, 0);
 
 	// update the session navigation buttons' states
 	if (m_testSession->getCurrentTrialIndex() == 0)

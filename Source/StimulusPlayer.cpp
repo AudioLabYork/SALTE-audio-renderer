@@ -98,16 +98,16 @@ StimulusPlayer::StimulusPlayer() :  state(Stopped),
 	gainSliderLabel.attachToComponent(&gainSlider, false);
 	addAndMakeVisible(gainSliderLabel);
 
-	transportSlider.setSliderStyle(Slider::LinearHorizontal);
+	transportSlider.setSliderStyle(Slider::TwoValueHorizontal);
 	transportSlider.setRange(0, 1);
-	transportSlider.setValue(0);
-	transportSlider.setTextBoxStyle(Slider::NoTextBox, false, 100, 25);
+	transportSlider.setMinAndMaxValues(0, 1);
+	transportSlider.setTextBoxStyle(Slider::NoTextBox, true, 0, 0);
 	transportSlider.addListener(this);
 	addAndMakeVisible(transportSlider);
 
 	addAndMakeVisible(pt);
 
-    startTimer(30);
+    startTimerHz(60);
 }
 
 StimulusPlayer::~StimulusPlayer()
@@ -129,6 +129,18 @@ void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFi
 		bufferToFill.clearActiveBufferRegion();
 		return;
     }
+
+	// check if the playback region has not been reduced at the begining
+	if (transportSourceArray[currentTSIndex]->getNextReadPosition() < begOffsetTime * m_sampleRate)
+	{
+		transportSourceArray[currentTSIndex]->setPosition(begOffsetTime);
+	}
+
+	// check if the playback region has not been reduced at the end
+	if (transportSourceArray[currentTSIndex]->getNextReadPosition() > transportSourceArray[currentTSIndex]->getTotalLength() - endOffsetTime * m_sampleRate)
+	{
+		transportSourceArray[currentTSIndex]->setPosition(transportSourceArray[currentTSIndex]->getLengthInSeconds());
+	}
 
 	transportSourceArray[currentTSIndex]->getNextAudioBlock(bufferToFill);
 	ar.process(*bufferToFill.buffer);
@@ -152,15 +164,13 @@ void StimulusPlayer::paint (Graphics& g)
     // INNER RECTANGLES
     Rectangle<int> tcRect(10, 10, 250, 150);        // manual transport control
     Rectangle<int> dispRect(270, 10, 450, 150);        // display state
-    Rectangle<int> wfRect(10, 170, 710, 80);        // waveform
-    Rectangle<int> trgRect(10, 260, 710, 115);        // triggers
+    Rectangle<int> wfRect(10, 170, 710, 120);        // waveform
     
     // DRAW RECTANGLES
     g.setColour(Colours::black);
     g.drawRect(tcRect, 1);
     g.drawRect(dispRect, 1);
     g.drawRect(wfRect, 1);
-    g.drawRect(trgRect, 1);
     
     // TEXT
     g.setFont(Font(14.0f));
@@ -182,10 +192,10 @@ void StimulusPlayer::resized()
 
 	gainSlider.setBounds(630, 30, 80, 120);
 
-	transportSlider.setBounds(10, 260, 710, 115);
+	transportSlider.setBounds(10-3, 295, 710+6, 30);
 	playbackHeadPosition.setBounds(280, 45, 500, 25);
 
-	pt.setBounds(10, 170, 710, 80);
+	pt.setBounds(10, 170, 710, 120);
 }
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
@@ -202,7 +212,7 @@ void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 			{
 				if (transportSourceArray[currentTSIndex]->hasStreamFinished() && loopingEnabled)
 				{
-					transportSourceArray[currentTSIndex]->setPosition(0.0);
+					transportSourceArray[currentTSIndex]->setPosition(begOffsetTime);
 					changeState(Starting);
 				}
 				else
@@ -253,9 +263,8 @@ void StimulusPlayer::changeState(TransportState newState)
 			break;
 		case Stopped:
 			if (transportSourceArray[currentTSIndex] != nullptr)
-				transportSourceArray[currentTSIndex]->setPosition(0.0);
+				transportSourceArray[currentTSIndex]->setPosition(begOffsetTime);
 
-			transportSlider.setValue(0.0, juce::dontSendNotification);
 			playButton.setButtonText("Play");
 			playButton.setToggleState(false, NotificationType::dontSendNotification);
 			stopButton.setToggleState(true, NotificationType::dontSendNotification);
@@ -301,9 +310,8 @@ void StimulusPlayer::sliderValueChanged(Slider* slider)
 	{
 		if (transportSourceArray[currentTSIndex] != nullptr)
 		{
-			double value = transportSlider.getValue();
-			double newTime = transportSourceArray[currentTSIndex]->getLengthInSeconds() * value;
-			transportSourceArray[currentTSIndex]->setPosition(newTime);
+			begOffsetTime = transportSourceArray[currentTSIndex]->getLengthInSeconds() * transportSlider.getMinValue();
+			endOffsetTime = transportSourceArray[currentTSIndex]->getLengthInSeconds() * (1 - transportSlider.getMaxValue());
 		}
 	}
 
@@ -319,8 +327,8 @@ void StimulusPlayer::timerCallback()
 		// update diplayed times in GUI
 		playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
 
-		if (transportSourceArray[currentTSIndex]->isPlaying())
-			transportSlider.setValue(currentPosition / lengthInSeconds, juce::dontSendNotification);
+		pt.setPlaybackCursor(currentPosition / lengthInSeconds);
+		pt.setPlaybackOffsets(begOffsetTime / lengthInSeconds, endOffsetTime / lengthInSeconds);
 	}
 }
 
@@ -537,4 +545,16 @@ void StimulusPlayer::setPlaybackHeadPosition(double time)
 {
 	if (transportSourceArray[currentTSIndex] != nullptr)
 		transportSourceArray[currentTSIndex]->setPosition(time);
+}
+
+void StimulusPlayer::setPlaybackOffsets(double beg, double end)
+{
+	begOffsetTime = beg;
+	endOffsetTime = end;
+
+	if (transportSourceArray[currentTSIndex] != nullptr)
+	{
+		double length = transportSourceArray[currentTSIndex]->getLengthInSeconds();
+		transportSlider.setMinAndMaxValues(beg / length, 1 - end / length, dontSendNotification);
+	}
 }

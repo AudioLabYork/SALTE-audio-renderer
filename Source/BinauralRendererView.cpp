@@ -57,8 +57,14 @@ void BinauralRendererView::deinit()
 	stopTimer();
 }
 
-void BinauralRendererView::paint(Graphics& /*g*/)
+void BinauralRendererView::paint(Graphics& g)
 {
+	// BACKGROUND
+	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
+
+	// RECTANGULAR OUTLINE
+	g.setColour(Colours::black);
+	g.drawRect(getLocalBounds(), 1);
 }
 
 void BinauralRendererView::resized()

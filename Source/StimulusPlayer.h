@@ -63,6 +63,7 @@ public:
 	void loadFile(String filepath);
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
+	void setPlaybackOffsets(double beg, double end);
     
 	void unloadFileFromTransport();
 
@@ -95,6 +96,9 @@ private:
 	AmbisonicRotation ar;
 
 	bool loopingEnabled = false;
+
+	double begOffsetTime = 0.0f, endOffsetTime = 0.0f;
+
 	int loadedFileChannelCount = 0;
 	int currentTSIndex;
 
