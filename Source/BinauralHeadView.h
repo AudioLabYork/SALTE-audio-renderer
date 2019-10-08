@@ -218,7 +218,7 @@ private:
 	{
 		Shape(OpenGLContext& glContext)
 		{
-			if (shapeFile.load(loadEntireAssetIntoString("teapot.obj")).wasOk())
+			if (shapeFile.load(loadEntireAssetIntoString("HUMAN_HEAD.obj")).wasOk())
 				for (auto* shapeVertices : shapeFile.shapes)
 					vertexBuffers.add(new VertexBuffer(glContext, *shapeVertices));
 		}

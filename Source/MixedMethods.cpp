@@ -105,9 +105,17 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 	ratingReadouts.clear();
 	selectConditionButtonArray.clear();
 	attributeRatingLabels.clear();
+	selectReferenceButton.setVisible(false);
+	selectTConditionAButton.setVisible(false);
+	selectTConditionBButton.setVisible(false);
 
 	// MUSHRA Reference
-	selectReferenceButton.setVisible(trial->isMReferencePresent());
+	if (trial->isMReferencePresent())
+	{
+		selectReferenceButton.setVisible(true);
+		selectReferenceButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::red);
+	}
 
 	// MUSHRA Conditions
 	if (trial->getNumberOfMConditions() > 0)
@@ -178,8 +186,16 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 	}
 
 	// TS26259 Conditions
-	selectTConditionAButton.setVisible(trial->areTConditionsPresent());
-	selectTConditionBButton.setVisible(trial->areTConditionsPresent());
+	if (trial->areTConditionsPresent())
+	{
+		selectTConditionAButton.setVisible(true);
+		selectTConditionAButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		selectTConditionAButton.setColour(TextButton::buttonOnColourId, Colours::red);
+
+		selectTConditionBButton.setVisible(true);
+		selectTConditionBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		selectTConditionBButton.setColour(TextButton::buttonOnColourId, Colours::red);
+	}
 
 	// ######################## DISTRIBUTE ELEMENTS IN THE GUI ########################
 	const int topMargin = 50;

@@ -21,6 +21,10 @@ void PlayerThumbnail::paint(Graphics& g)
 		paintIfNoFileLoaded(g, wfRect);
 	else
 		paintIfFileLoaded(g, wfRect);
+
+
+	g.setColour(Colours::black);
+	g.drawRect(wfRect, 1);
 }
 
 void PlayerThumbnail::resized()
@@ -64,7 +68,7 @@ void PlayerThumbnail::setPlaybackOffsets(double beg, double end)
 
 void PlayerThumbnail::paintIfNoFileLoaded(Graphics& g, const Rectangle<int>& thumbnailBounds)
 {
-	g.setColour(Colours::darkgrey);
+	g.setColour(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 	g.fillRect(thumbnailBounds);
 	g.setColour(Colours::white);
 	g.drawFittedText("No File Loaded", thumbnailBounds, Justification::centred, 1);

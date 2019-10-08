@@ -81,7 +81,9 @@ void TestTrial::addTCondition(TS26259Condition* condition)
 
 void TestTrial::randomiseMConditions()
 {
-	std::random_shuffle(m_MConditions.begin(), m_MConditions.end());
+	std::random_device seed;
+	std::mt19937 rng(seed());
+	std::shuffle(m_MConditions.begin(), m_MConditions.end(), rng);
 }
 
 int TestTrial::getNumberOfMConditions() const

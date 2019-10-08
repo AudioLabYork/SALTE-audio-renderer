@@ -27,17 +27,23 @@ void BinauralHeadView::setHeadOrientation(float roll, float pitch, float yaw)
 
 void BinauralHeadView::newOpenGLContextCreated()
 {
+	//Colour bgnd = getLookAndFeel().findColour(ResizableWindow::backgroundColourId);
+	//glClearColor(bgnd.getFloatRed(), bgnd.getFloatGreen(), bgnd.getFloatBlue(), bgnd.getFloatAlpha());
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	createShaders();
 }
 
-void BinauralHeadView::paint(Graphics& g) {}
+void BinauralHeadView::paint(Graphics& g)
+{
+	
+}
 
 void BinauralHeadView::renderOpenGL()
 {
 	jassert(OpenGLHelpers::isContextActive());
 
 	auto desktopScale = (float)m_renderingContext.getRenderingScale();
+
 	OpenGLHelpers::clear(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 	
 	glEnable(GL_DEPTH_TEST);

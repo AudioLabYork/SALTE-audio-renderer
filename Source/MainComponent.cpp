@@ -17,6 +17,9 @@ MainComponent::MainComponent()
 	m_binauralRendererView.addChangeListener(this);
 	addAndMakeVisible(m_binauralRendererView);
 
+	// initialize headphone compensation
+	addAndMakeVisible(m_headphoneCompensation);
+
 	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
 	Result res = sourcePath.createDirectory();
 
@@ -88,17 +91,14 @@ MainComponent::MainComponent()
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
 
-	//LookAndFeel& lookAndFeel = getLookAndFeel();
-	//lookAndFeel.setColour(ResizableWindow::backgroundColourId, Colours::gainsboro);
-	//lookAndFeel.setColour(TextButton::buttonColourId, Colours::gainsboro.darker());
-	//lookAndFeel.setColour(TextButton::textColourOffId, Colours::black);
-	//lookAndFeel.setColour(ComboBox::backgroundColourId, Colours::gainsboro.darker());
-	//lookAndFeel.setColour(ComboBox::textColourId, Colours::black);
-	//lookAndFeel.setColour(TextEditor::backgroundColourId, Colours::gainsboro.darker());
-	//lookAndFeel.setColour(TextEditor::textColourId, Colours::black);
-	//lookAndFeel.setColour(Label::textColourId, Colours::black);
-	//lookAndFeel.setColour(Slider::backgroundColourId, Colours::gainsboro.darker());
-	//lookAndFeel.setColour(Slider::thumbColourId, Colours::white);
+	LookAndFeel& lookAndFeel = getLookAndFeel();
+	Colour bckgnd = Colour(25, 50, 77);
+	lookAndFeel.setColour(ResizableWindow::backgroundColourId, bckgnd);
+	lookAndFeel.setColour(ComboBox::backgroundColourId, bckgnd.darker());
+	lookAndFeel.setColour(TextEditor::backgroundColourId, bckgnd.darker());
+	lookAndFeel.setColour(Slider::backgroundColourId, bckgnd.darker());
+	lookAndFeel.setColour(TextButton::buttonColourId, Colour(12, 25, 39));
+	lookAndFeel.setColour(Slider::trackColourId, Colour(12, 25, 39));
 }
 
 MainComponent::~MainComponent()
@@ -203,6 +203,8 @@ void MainComponent::resized()
 		m_audioSetup.setCentrePosition(getWidth() / 2, getHeight() / 2);
 		m_stimulusPlayer.setBounds(660, 10, 730, 330);
 		m_binauralRendererView.setBounds(660, 350, 730, 245);
+		m_headphoneCompensation.setBounds(660, 605, 730, 185);
+
 		connectOscButton.setBounds(310, 70, 240, 25);
 		openAudioDeviceManager.setBounds(310, 105, 240, 25);
 
@@ -256,6 +258,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		m_stimulusPlayer.setShowTest(show);
 		m_audioSetup.setVisible(!show);
 		m_binauralRendererView.setVisible(!show);
+		m_headphoneCompensation.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
 		connectOscButton.setVisible(!show);
 		clientTxIpLabel.setVisible(!show);

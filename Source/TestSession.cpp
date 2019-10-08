@@ -19,7 +19,9 @@ void TestSession::reset()
 
 void TestSession::randomiseTrials()
 {
-	std::random_shuffle(m_testTrials.begin(), m_testTrials.end());
+	std::random_device seed;
+	std::mt19937 rng(seed());
+	std::shuffle(m_testTrials.begin(), m_testTrials.end(), rng);
 }
 
 String TestSession::getId() const
@@ -159,7 +161,7 @@ void TestSession::loadSession(const File& sessionFile)
 			m_testTrials.add(testTrial);
 		}
 
-		// randomiseTrials(); // randomisation doesn't work, needs to be verified
+		// randomiseTrials(); // randomisation switched off for the presentation purpose
 	}
 }
 

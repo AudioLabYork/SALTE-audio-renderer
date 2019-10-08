@@ -3,6 +3,10 @@
 <JUCERPROJECT id="zmM4K5" name="SALTE" projectType="guiapp" jucerVersion="5.4.4"
               companyName="University of York" companyWebsite="https://audiolab.york.ac.uk">
   <MAINGROUP id="H9ikxc" name="SALTE">
+    <GROUP id="{38B28B71-9D6E-68E2-2653-CC11D6B73ADE}" name="Assets">
+      <FILE id="TYSXpe" name="HUMAN_HEAD.obj" compile="0" resource="1" file="Assets/HUMAN_HEAD.obj"/>
+      <FILE id="f1iu3n" name="logo_180px.png" compile="0" resource="1" file="Assets/logo_180px.png"/>
+    </GROUP>
     <GROUP id="{4F75A548-1CF0-634F-1E14-36BD701C1135}" name="Source">
       <GROUP id="{63E3C94B-474D-4592-AD5A-1246BDB34199}" name="WDL">
         <FILE id="GQdU4k" name="convoengine.cpp" compile="1" resource="0" file="../../Libraries/WDL/convoengine.cpp"/>
@@ -49,10 +53,10 @@
             file="Source/PlayerThumbnail.cpp"/>
       <FILE id="vnlYeG" name="PlayerThumbnail.h" compile="0" resource="0"
             file="Source/PlayerThumbnail.h"/>
-      <FILE id="f9mXxo" name="Rom.cpp" compile="1" resource="0" file="../source/Rom.cpp"/>
-      <FILE id="jZ1le5" name="Rom.h" compile="0" resource="0" file="../source/Rom.h"/>
       <FILE id="RMzaUA" name="SOFAReader.cpp" compile="1" resource="0" file="Source/SOFAReader.cpp"/>
       <FILE id="E0ADir" name="SOFAReader.h" compile="0" resource="0" file="Source/SOFAReader.h"/>
+      <FILE id="QLkJpD" name="ROM.cpp" compile="1" resource="0" file="Source/ROM.cpp"/>
+      <FILE id="CiLfND" name="ROM.h" compile="0" resource="0" file="Source/ROM.h"/>
       <FILE id="tW1uaz" name="StimulusPlayer.cpp" compile="1" resource="0"
             file="Source/StimulusPlayer.cpp"/>
       <FILE id="wqfDrA" name="StimulusPlayer.h" compile="0" resource="0"
@@ -70,7 +74,6 @@
       <FILE id="NkMcMT" name="WavefrontObjParser.h" compile="0" resource="0"
             file="Source/WavefrontObjParser.h"/>
     </GROUP>
-    <FILE id="nNrZIR" name="logo_180px.png" compile="0" resource="1" file="logo_180px.png"/>
   </MAINGROUP>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" externalLibraries="sofa_debug&#10;curl&#10;hdf5_hl&#10;hdf5&#10;netcdf_c++4&#10;netcdf&#10;z">

@@ -97,12 +97,6 @@ void TestSessionForm::init(TestSession* session)
 void TestSessionForm::reset()
 {
 	m_session->reset();
-
-	//m_editName.setText("");
-	//m_editAge.setText("");
-	//m_editGender.setText("");
-
-	//m_btnAgree.setToggleState(false, NotificationType::dontSendNotification);
 }
 
 void TestSessionForm::addListener(Listener* newListener)

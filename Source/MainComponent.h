@@ -9,6 +9,7 @@
 #include "MixedMethods.h"
 #include "TestSession.h"
 #include "TestSessionForm.h"
+#include "HeadphoneCompensation.h"
 
 class MainComponent
 	: public AudioAppComponent
@@ -42,6 +43,7 @@ private:
 	BinauralRenderer m_binauralRenderer;
 	BinauralRendererView m_binauralRendererView;
 	MixedMethodsComponent mc;
+	HeadphoneCompensation m_headphoneCompensation;
 
 	TestSession m_testSession;
 	TestSessionForm m_testSessionForm;

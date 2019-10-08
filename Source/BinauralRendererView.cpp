@@ -80,7 +80,9 @@ void BinauralRendererView::resized()
 	m_pitchLabel.setBounds(10, 165, 150, 20);
 	m_yawLabel.setBounds(10, 185, 150, 20);
 
-	m_binauralHeadView.setBounds(getWidth() - 245, 0, 245, getHeight());
+	const int border = 5;
+	const int headSize = getHeight() - 2 * border;
+	m_binauralHeadView.setBounds(getWidth() - headSize - border, border, headSize, headSize);
 }
 
 void BinauralRendererView::buttonClicked(Button* buttonClicked)

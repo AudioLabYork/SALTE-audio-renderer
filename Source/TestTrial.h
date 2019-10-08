@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include <random>
 
 // MUSHRA or MUSHA (no reference) condition
 struct MushraCondition
