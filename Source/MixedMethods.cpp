@@ -328,8 +328,8 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 			// setup the renderer
 			m_renderer->setOrder(trial->getMCondition(i)->renderingOrder);
-			m_renderer->loadFromAmbixConfigFile(trial->getMCondition(i)->ambixConfig);
-			
+			BinauralRenderer::initialiseFromAmbix(trial->getMCondition(i)->ambixConfig, m_renderer);
+
 			// play the scene
 			m_player->play();
 
@@ -351,7 +351,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		m_player->setGain(trial->getMReference(0)->gain);
 		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
-		m_renderer->loadFromAmbixConfigFile(trial->getMReference(0)->ambixConfig);
+		BinauralRenderer::initialiseFromAmbix(trial->getMReference(0)->ambixConfig, m_renderer);
 		m_player->play();
 
 		selectReferenceButton.setToggleState(true, dontSendNotification);
@@ -370,7 +370,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		m_player->setGain(trial->getTCondition(0)->gain);
 		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
-		m_renderer->loadFromAmbixConfigFile(trial->getTCondition(0)->ambixConfig);
+		BinauralRenderer::initialiseFromAmbix(trial->getTCondition(0)->ambixConfig, m_renderer);
 		m_player->play();
 
 		selectTConditionAButton.setToggleState(true, dontSendNotification);
@@ -389,7 +389,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		m_player->setGain(trial->getTCondition(1)->gain);
 		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
-		m_renderer->loadFromAmbixConfigFile(trial->getTCondition(1)->ambixConfig);
+		BinauralRenderer::initialiseFromAmbix(trial->getTCondition(1)->ambixConfig, m_renderer);
 		m_player->play();
 
 		selectTConditionBButton.setToggleState(true, dontSendNotification);

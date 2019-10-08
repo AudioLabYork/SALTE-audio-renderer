@@ -43,138 +43,6 @@ void BinauralRenderer::deinit()
 {
 }
 
-void BinauralRenderer::loadFromAmbixConfigFile(const File& file)
-{
-	FileInputStream fis(file);
-
-	if (!fis.openedOk())
-		return;
-
-	StringArray lines;
-
-	file.readLines(lines);
-
-	while (!fis.isExhausted())
-	{
-		String line = fis.readNextLine();
-
-		if (line.contains("#GLOBAL"))
-		{
-			while (!fis.isExhausted())
-			{
-				line = fis.readNextLine().trim();
-
-				if (line.contains("#END"))
-					break;
-
-				if (line.startsWithIgnoreCase("/debug_msg"))
-				{
-					String res = line.fromFirstOccurrenceOf("/debug_msg ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/dec_mat_gain"))
-				{
-					String res = line.fromFirstOccurrenceOf("/dec_mat_gain ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/coeff_scale"))
-				{
-					String res = line.fromFirstOccurrenceOf("/coeff_scale ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/coeff_seq"))
-				{
-					String res = line.fromFirstOccurrenceOf("/coeff_seq ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/flip"))
-				{
-					String res = line.fromFirstOccurrenceOf("/flip ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/flop"))
-				{
-					String res = line.fromFirstOccurrenceOf("/flop ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/flap"))
-				{
-					String res = line.fromFirstOccurrenceOf("/flap ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/global_hrtf_gain"))
-				{
-					String res = line.fromFirstOccurrenceOf("/global_hrtf_gain ", false, true);
-					Logger::outputDebugString(res);
-				}
-				else if (line.startsWithIgnoreCase("/invert_condon_shortley"))
-				{
-					String res = line.fromFirstOccurrenceOf("/invert_condon_shortley ", false, true);
-					Logger::outputDebugString(res);
-				}
-			}
-		}
-		else if (line.contains("#HRTF"))
-		{
-			clearLoudspeakerChannels();
-			clearHRIR();
-
-			while (!fis.isExhausted())
-			{
-				line = fis.readNextLine().trim();
-
-				if (line.contains("#END"))
-					break;
-
-				String path = file.getParentDirectory().getFullPathName();
-
-				File hrirFile(path + File::getSeparatorString() + line);
-
-				if (hrirFile.existsAsFile())
-				{
-					AudioFormatManager formatManager;
-					formatManager.registerBasicFormats();
-					std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(hrirFile));
-
-					AudioBuffer<float> inputBuffer(reader->numChannels, static_cast<int>(reader->lengthInSamples));
-
-					reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
-
-					addHRIR(inputBuffer);
-				}
-			}
-		}
-		else if (line.contains("#DECODERMATRIX"))
-		{
-			std::vector<float> decodeMatrix;
-
-			while (!fis.isExhausted())
-			{
-				line = fis.readNextLine().trim();
-
-				if (line.contains("#END"))
-				{
-					setDecodingMatrix(decodeMatrix);
-					break;
-				}
-
-				juce::String::CharPointerType charptr = line.getCharPointer();
-
-				while (charptr != charptr.findTerminatingNull())
-				{
-					float nextval = static_cast<float>(CharacterFunctions::readDoubleValue(charptr));
-					decodeMatrix.push_back(nextval);
-				}
-			}
-		}
-	}
-
-	updateMatrices();
-	preprocessHRIRs();
-	uploadHRIRsToEngine();
-	sendMsgToLogWindow("Loaded: " + file.getFileName());
-}
-
 void BinauralRenderer::sendMsgToLogWindow(String message)
 {
 	m_currentLogMessage += message + "\n";
@@ -194,6 +62,8 @@ void BinauralRenderer::oscBundleReceived(const OSCBundle& bundle)
 
 void BinauralRenderer::processOscMessage(const OSCMessage& message)
 {
+	const float pi = MathConstants<float>::pi;
+	
 	// HEAD TRACKING DATA - QUATERNIONS
 	if (message.size() == 4 && message.getAddressPattern() == "/rendering/quaternions")
 	{
@@ -203,30 +73,31 @@ void BinauralRenderer::processOscMessage(const OSCMessage& message)
 		float qY = message[3].getFloat32();
 		float qZ = message[2].getFloat32();
 
-		float Roll, Pitch, Yaw;
+		float roll, pitch, yaw;
 
 		// roll (x-axis rotation)
-		double sinp = +2.0 * (qW * qY - qZ * qX);
-		if (fabs(sinp) >= 1)
-			Roll = copysign(double_Pi / 2, sinp) * (180 / double_Pi); // use 90 degrees if out of range
+		float sinp = 2.0f * (qW * qY - qZ * qX);
+		
+		if (fabs(sinp) >= 1.0f)
+			roll = copysign(pi / 2, sinp) * (180.0f / pi); // use 90 degrees if out of range
 		else
-			Roll = asin(sinp) * (180 / double_Pi);
+			roll = asin(sinp) * (180 / pi);
 
 		// pitch (y-axis rotation)
-		double sinr_cosp = +2.0 * (qW * qX + qY * qZ);
-		double cosr_cosp = +1.0 - 2.0 * (qX * qX + qY * qY);
-		Pitch = atan2(sinr_cosp, cosr_cosp) * (180 / double_Pi);
+		float sinr_cosp = 2.0f * (qW * qX + qY * qZ);
+		float cosr_cosp = 1.0f - 2.0f * (qX * qX + qY * qY);
+		pitch = atan2(sinr_cosp, cosr_cosp) * (180.0f / pi);
 
 		// yaw (z-axis rotation)
-		double siny_cosp = +2.0 * (qW * qZ + qX * qY);
-		double cosy_cosp = +1.0 - 2.0 * (qY * qY + qZ * qZ);
-		Yaw = atan2(siny_cosp, cosy_cosp) * (180 / double_Pi);
+		float siny_cosp = 2.0f * (qW * qZ + qX * qY);
+		float cosy_cosp = 1.0f - 2.0f * (qY * qY + qZ * qZ);
+		yaw = atan2(siny_cosp, cosy_cosp) * (180.0f / pi);
 
-		// Sign change
-		Roll = Roll * -1;
-		Pitch = Pitch * -1;
+		// sign change
+		roll = roll * -1.0f;
+		pitch = pitch * -1.0f;
 
-		setHeadTrackingData(Roll, Pitch, Yaw);
+		setHeadTrackingData(roll, pitch, yaw);
 	}
 
 	if (message.size() == 1 && message.getAddressPattern() == "/rendering/setorder" && message[0].isInt32())
@@ -275,23 +146,21 @@ void BinauralRenderer::setOrder(const int order)
 	updateDualBandFilters();
 }
 
-void BinauralRenderer::clearLoudspeakerChannels()
+void BinauralRenderer::clearVirtualLoudspeakers()
 {
 	m_azi.clear();
 	m_ele.clear();
 	m_numLsChans = 0;
 }
 
-void BinauralRenderer::setLoudspeakerChannels(std::vector<float>& azi, std::vector<float>& ele, int chans)
+void BinauralRenderer::setVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int chans)
 {
 	m_azi = azi;
 	m_ele = ele;
 	m_numLsChans = chans;
-
-	m_hrirBuffers.resize(m_numLsChans);
 }
 
-void BinauralRenderer::getLoudspeakerChannels(std::vector<float>& azi, std::vector<float>& ele, int& chans)
+void BinauralRenderer::getVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int& chans)
 {
 	azi = m_azi;
 	ele = m_ele;
@@ -384,7 +253,6 @@ void BinauralRenderer::enableTranslation(bool enable)
 
 void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-
 	if (sampleRate != m_sampleRate)
 	{
 		m_sampleRate = sampleRate;
@@ -408,11 +276,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	if (m_enableRotation)
 		m_headTrackRotator.process(buffer);
 
-	m_workingBuffer.clear();
-
-	for (int c = 0; c < buffer.getNumChannels(); ++c)
-		m_workingBuffer.copyFrom(c, 0, buffer.getReadPointer(c), buffer.getNumSamples());
-
+	m_workingBuffer.makeCopyOf(buffer);
 	m_convBuffer.clear();
 
 	buffer.clear();
@@ -459,41 +323,6 @@ void BinauralRenderer::releaseResources()
 {
 }
 
-void BinauralRenderer::loadFromSofaFile(const File& file)
-{
-	String sofaFilePath = file.getFullPathName();
-
-	SOFAReader reader(sofaFilePath.toStdString());
-
-	std::vector<float> HRIRData;
-	std::size_t channels = reader.getNumImpulseChannels();
-	std::size_t samples = reader.getNumImpulseSamples();
-
-	std::vector<float> azi;
-	std::vector<float> ele;
-	int chans = 0;
-
-	getLoudspeakerChannels(azi, ele, chans);
-
-	clearHRIR();
-
-	for (int i = 0; i < chans; ++i)
-	{
-		if (reader.getResponseForSpeakerPosition(HRIRData, azi[i], ele[i]))
-		{
-			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
-
-			for (int c = 0; c < channels; ++c)
-				inputBuffer.copyFrom(c, 0, HRIRData.data(), static_cast<int>(samples));
-
-			addHRIR(inputBuffer);
-		}
-	}
-
-	preprocessHRIRs();
-	uploadHRIRsToEngine();
-}
-
 void BinauralRenderer::clearHRIR()
 {
 	m_hrirBuffers.clear();
@@ -501,44 +330,13 @@ void BinauralRenderer::clearHRIR()
 	for (int i = 0; i < m_hrirShdBuffers.size(); ++i)
 		m_hrirShdBuffers[i].clear();
 
-	m_numLsChans = 0;
 	m_numHrirLoaded = 0;
 }
 
 void BinauralRenderer::addHRIR(const AudioBuffer<float>& buffer)
 {
 	m_hrirBuffers.push_back(buffer);
-	m_numLsChans++;
 	m_numHrirLoaded++;
-}
-
-void BinauralRenderer::preprocessHRIRs()
-{
-	for (int i = 0; i < m_hrirBuffers.size(); ++i)
-	{
-		float weight = 1.0f;
-
-		switch (i)
-		{
-		case 0:
-			break;
-		case 1:
-			break;
-		case 2:
-			break;
-		case 3:
-			break;
-		case 4:
-			break;
-		case 5:
-			break;
-		default:
-			break;
-		}
-
-		for (int j = 0; j < m_hrirBuffers[i].getNumChannels(); ++j)
-			m_hrirBuffers[i].applyGain(weight);
-	}
 }
 
 void BinauralRenderer::uploadHRIRsToEngine()
@@ -611,4 +409,74 @@ void BinauralRenderer::convertHRIRToSHDHRIR()
 			}
 		}
 	}
+}
+
+bool BinauralRenderer::initialiseFromAmbix(const File& ambixFile, BinauralRenderer* renderer)
+{
+	AmbixLoader loader(ambixFile);
+
+	std::vector<float> decodeMatrix;
+	loader.getDecodeMatrix(decodeMatrix);
+	renderer->setDecodingMatrix(decodeMatrix);
+
+	renderer->clearVirtualLoudspeakers();
+
+	std::vector<float> azi;
+	std::vector<float> ele;
+	loader.getSourcePositions(azi, ele);
+	renderer->setVirtualLoudspeakers(azi, ele, static_cast<int>(azi.size()));
+
+	renderer->clearHRIR();
+
+	for (int i = 0; i < loader.getNumHrirs(); ++i)
+	{
+		AudioBuffer<float> hrir;
+		loader.getHrir(i, hrir);
+		renderer->addHRIR(hrir);
+	}
+
+	renderer->updateMatrices();
+	renderer->uploadHRIRsToEngine();
+
+	return true;
+}
+
+bool BinauralRenderer::loadHRIRsFromSofaFile(const File& sofaFile, BinauralRenderer* renderer)
+{
+	String sofaFilePath = sofaFile.getFullPathName();
+
+	SOFAReader reader(sofaFilePath.toStdString());
+
+	std::vector<float> azi;
+	std::vector<float> ele;
+	int chans = 0;
+
+	renderer->getVirtualLoudspeakers(azi, ele, chans);
+	
+	// there need to be some speakers loaded in order to use sofa files
+	if (chans <= 0)
+		return false;
+
+	renderer->clearHRIR();
+
+	std::vector<float> HRIRData;
+	std::size_t channels = reader.getNumImpulseChannels();
+	std::size_t samples = reader.getNumImpulseSamples();
+
+	for (int i = 0; i < chans; ++i)
+	{
+		if (reader.getResponseForSpeakerPosition(HRIRData, azi[i], ele[i]))
+		{
+			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
+
+			for (int c = 0; c < channels; ++c)
+				inputBuffer.copyFrom(c, 0, HRIRData.data(), static_cast<int>(samples));
+
+			renderer->addHRIR(inputBuffer);
+		}
+	}
+
+	renderer->uploadHRIRsToEngine();
+
+	return true;
 }

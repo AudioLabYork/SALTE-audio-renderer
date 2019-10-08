@@ -34,12 +34,14 @@ public:
 	
 	void init(BinauralRenderer* renderer);
 	void deinit();
-	
+
 	void paint(Graphics& g) override;
 	void resized() override;
 	
 	void buttonClicked(Button* buttonClicked) override;
 	void comboBoxChanged(ComboBox* comboBoxChanged) override;
+
+	void setTestInProgress(bool inProgress);
 
 	void changeComboBox(int order);
 	
@@ -53,6 +55,8 @@ public:
 	String m_currentLogMessage;
 	
 private:
+	virtual void timerCallback() override;
+
 	BinauralRenderer* m_renderer;
 	
 	TextButton m_ambixFileBrowse;
@@ -71,6 +75,4 @@ private:
 	Label m_yawLabel;
 	
 	BinauralHeadView m_binauralHeadView;
-
-	virtual void timerCallback() override;
 };

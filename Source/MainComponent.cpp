@@ -273,12 +273,14 @@ void MainComponent::formCompleted()
 {
 	mc.loadTestSession(&m_testSession);
 	mc.setVisible(true);
+	m_binauralRendererView.setTestInProgress(true);
 }
 
 void MainComponent::testCompleted()
 {
 	m_testSessionForm.reset();
 	m_testSessionForm.setVisible(true);
+	m_binauralRendererView.setTestInProgress(false);
 }
 
 void MainComponent::loadSettings()

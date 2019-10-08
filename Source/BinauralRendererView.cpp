@@ -15,7 +15,6 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 
 	m_ambixFileBrowse.setButtonText("Select Ambix Config file...");
 	m_ambixFileBrowse.addListener(this);
-	m_ambixFileBrowse.setEnabled(false);
 	addAndMakeVisible(m_ambixFileBrowse);
 
 	m_useSofa.setButtonText("Should use SOFA file");
@@ -28,7 +27,6 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	addAndMakeVisible(m_orderSelect);
 
 	m_sofaFileBrowse.setButtonText("Select SOFA file...");
-	m_sofaFileBrowse.setEnabled(false);
 	m_sofaFileBrowse.addListener(this);
 	addAndMakeVisible(m_sofaFileBrowse);
 
@@ -190,7 +188,7 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 		{
 			m_renderer->setDecodingMatrix(decodeMatrix);
 			m_renderer->setOrder(m_orderSelect.getSelectedItemIndex() + 1);
-			m_renderer->setLoudspeakerChannels(azi, ele, numChans);
+			m_renderer->setVirtualLoudspeakers(azi, ele, numChans);
 			m_renderer->updateMatrices();
 
 			if (m_useSofa.getToggleState())
@@ -200,7 +198,7 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 
 				// check the file exists, otherwise just use the standard HRTFs
 				if (sofaFile.existsAsFile())
-					m_renderer->loadFromSofaFile(sofaFile);
+					BinauralRenderer::loadHRIRsFromSofaFile(sofaFile, m_renderer);
 				else
 					loadStandardHRTF();
 			}
@@ -210,6 +208,22 @@ void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
 				loadStandardHRTF();
 			}
 		}
+	}
+}
+
+void BinauralRendererView::setTestInProgress(bool inProgress)
+{
+	if (inProgress)
+	{
+		m_sofaFileBrowse.setEnabled(false);
+		m_ambixFileBrowse.setEnabled(false);
+		m_orderSelect.setEnabled(false);
+	}
+	else
+	{
+		m_sofaFileBrowse.setEnabled(true);
+		m_ambixFileBrowse.setEnabled(true);
+		m_orderSelect.setEnabled(true);
 	}
 }
 
@@ -235,7 +249,15 @@ void BinauralRendererView::browseForAmbixConfigFile()
 	if (fc.browseForFileToOpen())
 	{
 		File chosenFile = fc.getResult();
-		m_renderer->loadFromAmbixConfigFile(chosenFile);
+
+		if (BinauralRenderer::initialiseFromAmbix(chosenFile, m_renderer))
+		{
+			sendMsgToLogWindow("Successfully loaded AmbiX file: " + String(chosenFile.getFileName()));
+		}
+		else
+		{
+			sendMsgToLogWindow("Failed to load AmbiX file: " + String(chosenFile.getFileName()));
+		}
 	}
 #endif
 }
@@ -251,7 +273,15 @@ void BinauralRendererView::browseForSofaFile()
 	if (fc.browseForFileToOpen())
 	{
 		File chosenFile = fc.getResult();
-		m_renderer->loadFromSofaFile(chosenFile);
+
+		if (BinauralRenderer::loadHRIRsFromSofaFile(chosenFile, m_renderer))
+		{
+			sendMsgToLogWindow("Successfully loaded SOFA file: " + String(chosenFile.getFileName()));
+		}
+		else
+		{
+			sendMsgToLogWindow("Failed to load SOFA file: " + String(chosenFile.getFileName()));
+		}
 	}
 #endif
 }
@@ -262,7 +292,7 @@ void BinauralRendererView::loadStandardHRTF()
 	std::vector<float> ele;
 	int chans = 0;
 
-	m_renderer->getLoudspeakerChannels(azi, ele, chans);
+	m_renderer->getVirtualLoudspeakers(azi, ele, chans);
 
 	m_renderer->clearHRIR();
 

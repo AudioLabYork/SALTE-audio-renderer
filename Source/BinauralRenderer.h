@@ -5,6 +5,7 @@
 #include "AmbisonicRotation.h"
 #include "OscTransceiver.h"
 #include "SOFAReader.h"
+#include "AmbixLoader.h"
 
 class BinauralRenderer :	public ChangeBroadcaster,
 							public OSCReceiver,
@@ -17,16 +18,14 @@ public:
 	void reset();
 	void deinit();
 
-	void loadFromAmbixConfigFile(const File& file);
-
 	void oscMessageReceived(const OSCMessage& message) override;
 	void oscBundleReceived(const OSCBundle& bundle) override;
 	void processOscMessage(const OSCMessage& message);
 
 	void setOrder(const int order);
-	void clearLoudspeakerChannels();
-	void setLoudspeakerChannels(std::vector<float>& azi, std::vector<float>& ele, int chans);
-	void getLoudspeakerChannels(std::vector<float>& azi, std::vector<float>& ele, int& chans);
+	void clearVirtualLoudspeakers();
+	void setVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int chans);
+	void getVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int& chans);
 
 	void setDecodingMatrix(std::vector<float>& decodeMatrix);
 	void updateMatrices();
@@ -44,14 +43,16 @@ public:
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
 
-	void loadFromSofaFile(const File& file);
+	
 	void sendMsgToLogWindow(String message);
 	String m_currentLogMessage;
 
 	void clearHRIR();
 	void addHRIR(const AudioBuffer<float>& buffer);
-	void preprocessHRIRs();
 	void uploadHRIRsToEngine();
+
+	static bool initialiseFromAmbix(const File& ambixFile, BinauralRenderer* renderer);
+	static bool loadHRIRsFromSofaFile(const File& sofaFile, BinauralRenderer* renderer);
 
 	float m_yaw;
 	float m_pitch;
