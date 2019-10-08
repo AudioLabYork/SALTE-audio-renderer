@@ -14,6 +14,8 @@
             file="Source/AmbisonicRotation.cpp"/>
       <FILE id="g3TxyX" name="AmbisonicRotation.h" compile="0" resource="0"
             file="Source/AmbisonicRotation.h"/>
+      <FILE id="Ne6c9c" name="AmbixLoader.cpp" compile="1" resource="0" file="Source/AmbixLoader.cpp"/>
+      <FILE id="xFjQNP" name="AmbixLoader.h" compile="0" resource="0" file="Source/AmbixLoader.h"/>
       <FILE id="xQvnjH" name="AudioSetup.cpp" compile="1" resource="0" file="Source/AudioSetup.cpp"/>
       <FILE id="wP7O4l" name="AudioSetup.h" compile="0" resource="0" file="Source/AudioSetup.h"/>
       <FILE id="tS7yUz" name="BinauralHeadView.cpp" compile="1" resource="0"
@@ -47,8 +49,8 @@
             file="Source/PlayerThumbnail.cpp"/>
       <FILE id="vnlYeG" name="PlayerThumbnail.h" compile="0" resource="0"
             file="Source/PlayerThumbnail.h"/>
-      <FILE id="EimFep" name="ROM.cpp" compile="1" resource="0" file="Source/ROM.cpp"/>
-      <FILE id="AAshmS" name="ROM.h" compile="0" resource="0" file="Source/ROM.h"/>
+      <FILE id="f9mXxo" name="Rom.cpp" compile="1" resource="0" file="../source/Rom.cpp"/>
+      <FILE id="jZ1le5" name="Rom.h" compile="0" resource="0" file="../source/Rom.h"/>
       <FILE id="RMzaUA" name="SOFAReader.cpp" compile="1" resource="0" file="Source/SOFAReader.cpp"/>
       <FILE id="E0ADir" name="SOFAReader.h" compile="0" resource="0" file="Source/SOFAReader.h"/>
       <FILE id="tW1uaz" name="StimulusPlayer.cpp" compile="1" resource="0"
