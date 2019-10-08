@@ -67,6 +67,8 @@
             file="Source/TestSessionForm.h"/>
       <FILE id="nf8o7P" name="TestTrial.cpp" compile="1" resource="0" file="Source/TestTrial.cpp"/>
       <FILE id="uu02kR" name="TestTrial.h" compile="0" resource="0" file="Source/TestTrial.h"/>
+      <FILE id="NkMcMT" name="WavefrontObjParser.h" compile="0" resource="0"
+            file="Source/WavefrontObjParser.h"/>
     </GROUP>
     <FILE id="nNrZIR" name="logo_180px.png" compile="0" resource="1" file="logo_180px.png"/>
   </MAINGROUP>
