@@ -1,42 +1,26 @@
 #include "BinauralRenderer.h"
 
 BinauralRenderer::BinauralRenderer()
-	: m_yaw(0.0f)
+	: m_order(0)
+	, m_numAmbiChans(1)
+	, m_numLsChans(0)
+	, m_numHrirAdded(0)
+	, m_blockSize(0)
+	, m_sampleRate(0.0)
+	, m_yaw(0.0f)
 	, m_pitch(0.0f)
 	, m_roll(0.0f)
 	, m_xTrans(0.0f)
 	, m_yTrans(0.0f)
 	, m_zTrans(0.0f)
-	, m_oscTxRx(nullptr)
-	, m_order(0)
-	, m_numAmbiChans(1)
-	, m_numLsChans(0)
-	, m_numHrirLoaded(0)
-	, m_blockSize(0)
-	, m_sampleRate(0.0)
 	, m_enableDualBand(false)
 	, m_enableRotation(true)
 	, m_enableTranslation(true)
 {
 }
 
-void BinauralRenderer::init(OscTransceiver* oscTxRx)
+void BinauralRenderer::init()
 {
-	m_oscTxRx = oscTxRx;
-	m_oscTxRx->addListener(this);
-}
-
-void BinauralRenderer::reset()
-{
-	m_order = 0;
-	m_numAmbiChans = 1;
-	m_numLsChans = 0;
-	m_numHrirLoaded = 0;
-	m_blockSize = 0;
-	m_sampleRate = 0.0;
-
-	m_azi.clear();
-	m_ele.clear();
 }
 
 void BinauralRenderer::deinit()
@@ -106,43 +90,45 @@ void BinauralRenderer::processOscMessage(const OSCMessage& message)
 		setOrder(order);
 	}
 
-	// HEAD TRACKING DATA - ROLL PITCH YAW
 	if (message.size() == 3 && message.getAddressPattern() == "/rendering/htrpy")
 	{
-		float Roll = message[0].getFloat32();
-		float Pitch = message[1].getFloat32();
-		float Yaw = message[2].getFloat32();
+		float roll = message[0].getFloat32();
+		float pitch = message[1].getFloat32();
+		float yaw = message[2].getFloat32();
 
-		setHeadTrackingData(Roll, Pitch, Yaw);
+		setHeadTrackingData(roll, pitch, yaw);
 	}
 
-	//if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
-	//{
-	//	File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
+	if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
+	{
+		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
 
-	//	if (sourcePath.exists())
-	//	{
-	//		String filename = message[0].getString();
-	//		sourcePath = sourcePath.getChildFile(filename);
+		if (sourcePath.exists())
+		{
+			String filename = message[0].getString();
+			sourcePath = sourcePath.getChildFile(filename);
 
-	//		if (sourcePath.existsAsFile())
-	//		{
-	//			m_binauralRendererView.loadSofaFile(sourcePath);
-	//		}
-	//		else
-	//		{
-	//			Logger::outputDebugString("SOFA file could not be located, please check that it exists");
-	//		}
-	//	}
-	//}
+			if (sourcePath.existsAsFile())
+			{
+				loadHRIRsFromSofaFile(sourcePath, this);
+			}
+			else
+			{
+				sendMsgToLogWindow("SOFA file could not be found");
+			}
+		}
+	}
+}
+
+int BinauralRenderer::getOrder()
+{
+	return m_order;
 }
 
 void BinauralRenderer::setOrder(const int order)
 {
 	m_order = order;
 	m_numAmbiChans = (order + 1) * (order + 1);
-
-	m_hrirShdBuffers.resize(m_numAmbiChans);
 	updateDualBandFilters();
 }
 
@@ -235,6 +221,21 @@ void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
 	m_headTrackRotator.updateEulerRPY(m_roll, m_pitch, m_yaw);
 }
 
+float BinauralRenderer::getRoll()
+{
+	return m_roll;
+}
+
+float BinauralRenderer::getPitch()
+{
+	return m_pitch;
+}
+
+float BinauralRenderer::getYaw()
+{
+	return m_yaw;
+}
+
 void BinauralRenderer::enableDualBand(bool enable)
 {
 	m_enableDualBand = enable;
@@ -258,6 +259,7 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 		m_sampleRate = sampleRate;
 
 		updateDualBandFilters();
+		uploadHRIRsToEngine();
 	}
 
 	if (samplesPerBlockExpected != m_blockSize)
@@ -326,24 +328,27 @@ void BinauralRenderer::releaseResources()
 void BinauralRenderer::clearHRIR()
 {
 	m_hrirBuffers.clear();
+	m_hrirShdBuffers.clear();
 
-	for (int i = 0; i < m_hrirShdBuffers.size(); ++i)
-		m_hrirShdBuffers[i].clear();
-
-	m_numHrirLoaded = 0;
+	m_numHrirAdded = 0;
 }
 
 void BinauralRenderer::addHRIR(const AudioBuffer<float>& buffer)
 {
 	m_hrirBuffers.push_back(buffer);
-	m_numHrirLoaded++;
+	m_numHrirAdded++;
 }
 
-void BinauralRenderer::uploadHRIRsToEngine()
+bool BinauralRenderer::uploadHRIRsToEngine()
 {
 	ScopedLock lock(m_procLock);
 
-	convertHRIRToSHDHRIR();
+	// convert the discrete HRIRs into SHD HRIRs for improved computational efficiency
+	if (!convertHRIRToSHDHRIR())
+	{
+		sendMsgToLogWindow("could not upload SHD HRIRs to engine as conversion to SHD HRIRs failed");
+		return false;
+	}
 
 	m_shdConvEngines.clear();
 
@@ -364,18 +369,24 @@ void BinauralRenderer::uploadHRIRsToEngine()
 	}
 }
 
-void BinauralRenderer::convertHRIRToSHDHRIR()
+bool BinauralRenderer::convertHRIRToSHDHRIR()
 {
 	if (m_hrirBuffers.size() <= 0)
-		return;
+	{
+		sendMsgToLogWindow("no HRIRs available to convert to SHD HRIRs");
+		return false;
+	}
 
+	// clear the current SHD HRIR as this process will create new ones
+	m_hrirShdBuffers.clear();
+
+	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples());
 	AudioBuffer<float> basicShdBuffer(2, m_hrirBuffers[0].getNumSamples());
 	AudioBuffer<float> maxreShdBuffer(2, m_hrirBuffers[0].getNumSamples());
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
-		m_hrirShdBuffers[i].setSize(2, m_hrirBuffers[0].getNumSamples());
-		m_hrirShdBuffers[i].clear();
+		hrirShdBuffer.clear();
 		basicShdBuffer.clear();
 		maxreShdBuffer.clear();
 
@@ -386,33 +397,41 @@ void BinauralRenderer::convertHRIRToSHDHRIR()
 			const float maxreWeight = m_decodeTransposeMatrix[idx];
 
 			// apply the appropriate weights to the buffers before cross over filtering below
-			for (int k = 0; k < m_hrirShdBuffers[i].getNumChannels(); ++k)
+			for (int k = 0; k < hrirShdBuffer.getNumChannels(); ++k)
 			{
 				basicShdBuffer.addFrom(k, 0, m_hrirBuffers[j], k, 0, m_hrirBuffers[j].getNumSamples(), basicWeight);
 				maxreShdBuffer.addFrom(k, 0, m_hrirBuffers[j], k, 0, m_hrirBuffers[j].getNumSamples(), maxreWeight);
 			}
 		}
 
-		for (int k = 0; k < m_hrirShdBuffers[i].getNumChannels(); ++k)
+		for (int k = 0; k < hrirShdBuffer.getNumChannels(); ++k)
 		{
 			if (m_enableDualBand)
 			{
 				lowPassFilters[i][k].processSamples(basicShdBuffer.getWritePointer(k), basicShdBuffer.getNumSamples());
 				highPassFilters[i][k].processSamples(maxreShdBuffer.getWritePointer(k), maxreShdBuffer.getNumSamples());
 				
-				m_hrirShdBuffers[i].addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
-				m_hrirShdBuffers[i].addFrom(k, 0, maxreShdBuffer, k, 0, maxreShdBuffer.getNumSamples());
+				hrirShdBuffer.addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
+				hrirShdBuffer.addFrom(k, 0, maxreShdBuffer, k, 0, maxreShdBuffer.getNumSamples());
 			}
 			else
 			{
-				m_hrirShdBuffers[i].addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
+				hrirShdBuffer.addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
 			}
 		}
+
+		// add the newly created buffer to the member array
+		m_hrirShdBuffers.push_back(hrirShdBuffer);
 	}
+
+	return true;
 }
 
 bool BinauralRenderer::initialiseFromAmbix(const File& ambixFile, BinauralRenderer* renderer)
 {
+	if (renderer == nullptr)
+		return false;
+
 	AmbixLoader loader(ambixFile);
 
 	std::vector<float> decodeMatrix;
@@ -436,13 +455,20 @@ bool BinauralRenderer::initialiseFromAmbix(const File& ambixFile, BinauralRender
 	}
 
 	renderer->updateMatrices();
-	renderer->uploadHRIRsToEngine();
+	
+	if (!renderer->uploadHRIRsToEngine())
+	{
+		return false;
+	}
 
 	return true;
 }
 
 bool BinauralRenderer::loadHRIRsFromSofaFile(const File& sofaFile, BinauralRenderer* renderer)
 {
+	if (renderer == nullptr)
+		return false;
+
 	String sofaFilePath = sofaFile.getFullPathName();
 
 	SOFAReader reader(sofaFilePath.toStdString());
@@ -453,7 +479,7 @@ bool BinauralRenderer::loadHRIRsFromSofaFile(const File& sofaFile, BinauralRende
 
 	renderer->getVirtualLoudspeakers(azi, ele, chans);
 	
-	// there need to be some speakers loaded in order to use sofa files
+	// there needs to be some speakers loaded in order to use sofa files
 	if (chans <= 0)
 		return false;
 
@@ -476,7 +502,10 @@ bool BinauralRenderer::loadHRIRsFromSofaFile(const File& sofaFile, BinauralRende
 		}
 	}
 
-	renderer->uploadHRIRsToEngine();
+	if (!renderer->uploadHRIRsToEngine())
+	{
+		return false;
+	}
 
 	return true;
 }

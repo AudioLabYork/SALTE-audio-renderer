@@ -10,7 +10,8 @@ MainComponent::MainComponent()
     m_stimulusPlayer.addChangeListener(this);
 
 	// setup binaural renderer, pass the osc transceiver
-	m_binauralRenderer.init(&oscTxRx);
+	m_binauralRenderer.init();
+	oscTxRx.addListener(&m_binauralRenderer);
 	m_binauralRenderer.addChangeListener(this);
 
 	m_binauralRendererView.init(&m_binauralRenderer);

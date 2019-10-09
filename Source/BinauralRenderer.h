@@ -14,14 +14,14 @@ class BinauralRenderer :	public ChangeBroadcaster,
 public:
 	BinauralRenderer();
 
-	void init(OscTransceiver* oscTxRx);
-	void reset();
+	void init();
 	void deinit();
 
 	void oscMessageReceived(const OSCMessage& message) override;
 	void oscBundleReceived(const OSCBundle& bundle) override;
 	void processOscMessage(const OSCMessage& message);
 
+	int getOrder();
 	void setOrder(const int order);
 	void clearVirtualLoudspeakers();
 	void setVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int chans);
@@ -34,6 +34,10 @@ public:
 
 	void setHeadTrackingData(float yaw, float pitch, float roll);
 	
+	float getRoll();
+	float getPitch();
+	float getYaw();
+
 	void enableDualBand(bool enable);
 	void enableRotation(bool enable);
 	void enableTranslation(bool enable);
@@ -43,28 +47,18 @@ public:
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
 
-	
 	void sendMsgToLogWindow(String message);
 	String m_currentLogMessage;
 
 	void clearHRIR();
 	void addHRIR(const AudioBuffer<float>& buffer);
-	void uploadHRIRsToEngine();
+	bool uploadHRIRsToEngine();
 
 	static bool initialiseFromAmbix(const File& ambixFile, BinauralRenderer* renderer);
 	static bool loadHRIRsFromSofaFile(const File& sofaFile, BinauralRenderer* renderer);
 
-	float m_yaw;
-	float m_pitch;
-	float m_roll;
-	float m_xTrans;
-	float m_yTrans;
-	float m_zTrans;
-
 private:
-	OscTransceiver* m_oscTxRx;
-
-	void convertHRIRToSHDHRIR();
+	bool convertHRIRToSHDHRIR();
 
 	CriticalSection m_procLock;
 
@@ -74,9 +68,16 @@ private:
 	int m_order;
 	int m_numAmbiChans;
 	int m_numLsChans;
-	int m_numHrirLoaded;
+	int m_numHrirAdded;
 	int m_blockSize;
 	double m_sampleRate;
+
+	float m_yaw;
+	float m_pitch;
+	float m_roll;
+	float m_xTrans;
+	float m_yTrans;
+	float m_zTrans;
 
 	std::vector<AudioBuffer<float>> m_hrirBuffers;
 	std::vector<AudioBuffer<float>> m_hrirShdBuffers;
@@ -98,6 +99,8 @@ private:
 	bool m_enableDualBand;
 	bool m_enableRotation;
 	bool m_enableTranslation;
+
+
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BinauralRenderer)
 };

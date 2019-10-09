@@ -342,8 +342,9 @@ void BinauralRendererView::timerCallback()
 {
 	if (m_enableRotation.getToggleState())
 	{
-		m_rollLabel.setText("Roll: " + String(m_renderer->m_roll,2) + " deg", dontSendNotification);
-		m_pitchLabel.setText("Pitch: " + String(m_renderer->m_pitch, 2) + " deg", dontSendNotification);
-		m_yawLabel.setText("Yaw: " + String(m_renderer->m_yaw, 2) + " deg", dontSendNotification);
+		m_rollLabel.setText("Roll: " + String(m_renderer->getRoll(), 2) + " deg", dontSendNotification);
+		m_pitchLabel.setText("Pitch: " + String(m_renderer->getPitch(), 2) + " deg", dontSendNotification);
+		m_yawLabel.setText("Yaw: " + String(m_renderer->getYaw(), 2) + " deg", dontSendNotification);
+		m_orderSelect.setSelectedItemIndex(m_renderer->getOrder() - 1, dontSendNotification);
 	}
 }
