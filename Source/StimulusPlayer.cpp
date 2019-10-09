@@ -13,7 +13,7 @@ StimulusPlayer::StimulusPlayer() :  state(Stopped),
     
     //EDITOR
     addAndMakeVisible(&openButton);
-    openButton.setButtonText("Open Ambisonic audio file");
+    openButton.setButtonText("Select Ambisonic file...");
     openButton.addListener(this);
     
     addAndMakeVisible(&playButton);
@@ -185,7 +185,7 @@ void StimulusPlayer::resized()
 	stopButton.setBounds(20, 90, 230, 25);
 	loopButton.setBounds(20, 125, 230, 25);
 
-	loadedFileName.setBounds(280, 20, 500, 25);
+	loadedFileName.setBounds(280, 20, 400, 25);
 
 	rollSlider.setBounds(320, 75, 300, 25);
 	pitchSlider.setBounds(320, 100, 300, 25);
@@ -362,7 +362,7 @@ void StimulusPlayer::unloadFileFromTransport()
 		transportSourceArray[currentTSIndex]->stop();
 
 	pt.clearThumbnail();
-	loadedFileName.setText("Loaded file: ", dontSendNotification);
+	loadedFileName.setText("", dontSendNotification);
 	playButton.setEnabled(false);
 	stopButton.setEnabled(false);
 	loopButton.setEnabled(false);
@@ -421,7 +421,7 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 		pt.createThumbnail(currentlyLoadedFile);
 		
 		// update GUI label
-		loadedFileName.setText("Loaded file: " + currentlyLoadedFile.getFileName(), dontSendNotification);
+		loadedFileName.setText(currentlyLoadedFile.getFileName(), dontSendNotification);
 
 		// send message to the main log window
 		sendMsgToLogWindow("Loaded .wav: " + audioFile.getFileName());
