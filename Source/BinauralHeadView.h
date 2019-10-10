@@ -62,36 +62,37 @@ private:
 
 	Matrix3D<float> getViewMatrix() const
 	{
-		Matrix3D<float> viewMatrix({ 0.0f, -0.5f, -5.0f });
+		Matrix3D<float> viewMatrix({ 0.0f, 0.0f, -5.0f });
 		return viewMatrix;
+	}
+
+	Matrix3D<float> getModelMatrix() const
+	{
+		return Matrix3D<float>::rotation(Vector3D<float>(degreesToRadians(m_pitch), degreesToRadians(m_yaw), degreesToRadians(m_roll)));
 	}
 
 	void createShaders()
 	{
-		vertexShader =
+		m_vertexShader =
 			"attribute vec4 position;\n"
 			"attribute vec4 normal;\n"
 			"\n"
 			"uniform mat4 projectionMatrix;\n"
 			"uniform mat4 viewMatrix;\n"
+			"uniform mat4 modelMatrix;\n"
 			"uniform vec4 lightPosition;\n"
 			"\n"
 			"out float lightIntensity;\n"
 			"\n"
 			"void main()\n"
 			"{\n"
-			"    mat4 model = mat4(vec4(1.0, 0.0, 0.0, 0.0),"
-			"	                   vec4(0.0, 1.0, 0.0, 0.0),"
-			"	                   vec4(0.0, 0.0, 1.0, 0.0),"
-			"	                   vec4(0.0, 0.0, 0.0, 1.0));"
-
 			"    vec4 light = viewMatrix * lightPosition;\n"
 			"    lightIntensity = dot(light, normal);\n"
 			"\n"
-			"    gl_Position = projectionMatrix * viewMatrix * model * position;\n"
+			"    gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;\n"
 			"}\n";
 
-		fragmentShader =
+		m_fragmentShader =
 			"in float lightIntensity;\n"
 			"\n"
 			"void main()\n"
@@ -105,20 +106,20 @@ private:
 		std::unique_ptr<OpenGLShaderProgram> newShader(new OpenGLShaderProgram(m_renderingContext));
 		String statusText;
 
-		if (newShader->addVertexShader(OpenGLHelpers::translateVertexShaderToV3(vertexShader))
-			&& newShader->addFragmentShader(OpenGLHelpers::translateFragmentShaderToV3(fragmentShader))
+		if (newShader->addVertexShader(OpenGLHelpers::translateVertexShaderToV3(m_vertexShader))
+			&& newShader->addFragmentShader(OpenGLHelpers::translateFragmentShaderToV3(m_fragmentShader))
 			&& newShader->link())
 		{
-			shape.reset();
-			attributes.reset();
-			uniforms.reset();
+			m_shape.reset();
+			m_attributes.reset();
+			m_uniforms.reset();
 
-			shader.reset(newShader.release());
-			shader->use();
+			m_shader.reset(newShader.release());
+			m_shader->use();
 
-			shape.reset(new Shape(m_renderingContext));
-			attributes.reset(new Attributes(m_renderingContext, *shader));
-			uniforms.reset(new Uniforms(m_renderingContext, *shader));
+			m_shape.reset(new Shape(m_renderingContext));
+			m_attributes.reset(new Attributes(m_renderingContext, *m_shader));
+			m_uniforms.reset(new Uniforms(m_renderingContext, *m_shader));
 
 			statusText = "GLSL: v" + String(OpenGLShaderProgram::getLanguageVersion(), 2);
 		}
@@ -186,13 +187,13 @@ private:
 
 	private:
 		static OpenGLShaderProgram::Attribute* createAttribute(OpenGLContext& openGLContext,
-			OpenGLShaderProgram& shader,
+			OpenGLShaderProgram& m_shader,
 			const char* attributeName)
 		{
-			if (openGLContext.extensions.glGetAttribLocation(shader.getProgramID(), attributeName) < 0)
+			if (openGLContext.extensions.glGetAttribLocation(m_shader.getProgramID(), attributeName) < 0)
 				return nullptr;
 
-			return new OpenGLShaderProgram::Attribute(shader, attributeName);
+			return new OpenGLShaderProgram::Attribute(m_shader, attributeName);
 		}
 	};
 
@@ -202,10 +203,11 @@ private:
 		{
 			projectionMatrix.reset(createUniform(openGLContext, shaderProgram, "projectionMatrix"));
 			viewMatrix.reset(createUniform(openGLContext, shaderProgram, "viewMatrix"));
+			modelMatrix.reset(createUniform(openGLContext, shaderProgram, "modelMatrix"));
 			lightPosition.reset(createUniform(openGLContext, shaderProgram, "lightPosition"));
 		}
 
-		std::unique_ptr<OpenGLShaderProgram::Uniform> projectionMatrix, viewMatrix, lightPosition;
+		std::unique_ptr<OpenGLShaderProgram::Uniform> projectionMatrix, viewMatrix, modelMatrix, lightPosition;
 
 	private:
 		static OpenGLShaderProgram::Uniform* createUniform(OpenGLContext& openGLContext,
@@ -223,7 +225,7 @@ private:
 	{
 		Shape(OpenGLContext& glContext)
 		{
-			if (shapeFile.load(loadEntireAssetIntoString("HUMAN_HEAD.obj")).wasOk())
+			if (shapeFile.load(loadEntireAssetIntoString("HUMAN_HEAD_2.obj")).wasOk())
 				for (auto* shapeVertices : shapeFile.shapes)
 					vertexBuffers.add(new VertexBuffer(glContext, *shapeVertices));
 		}
@@ -307,16 +309,21 @@ private:
 		}
 	};
 	
-	const char* vertexShader;
-	const char* fragmentShader;
+	const char* m_vertexShader;
+	const char* m_fragmentShader;
 
-	std::unique_ptr<OpenGLShaderProgram> shader;
-	std::unique_ptr<Shape> shape;
-	std::unique_ptr<Attributes> attributes;
-	std::unique_ptr<Uniforms> uniforms;
+	std::unique_ptr<OpenGLShaderProgram> m_shader;
+	std::unique_ptr<Shape> m_shape;
+	std::unique_ptr<Attributes> m_attributes;
+	std::unique_ptr<Uniforms> m_uniforms;
 
-	String newVertexShader, newFragmentShader;
+	String m_newVertexShader;
+	String m_newFragmentShader;
 
 	OpenGLContext m_renderingContext;
-	int frameCounter;
+	int m_frameCounter;
+
+	float m_roll;
+	float m_pitch;
+	float m_yaw;
 };

@@ -346,5 +346,7 @@ void BinauralRendererView::timerCallback()
 		m_pitchLabel.setText("Pitch: " + String(m_renderer->getPitch(), 2) + " deg", dontSendNotification);
 		m_yawLabel.setText("Yaw: " + String(m_renderer->getYaw(), 2) + " deg", dontSendNotification);
 		m_orderSelect.setSelectedItemIndex(m_renderer->getOrder() - 1, dontSendNotification);
+
+		m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), m_renderer->getYaw());
 	}
 }

@@ -1,7 +1,10 @@
 #include "BinauralHeadView.h"
 
 BinauralHeadView::BinauralHeadView()
-	: frameCounter(0)
+	: m_frameCounter(0)
+	, m_roll(0.0f)
+	, m_pitch(0.0f)
+	, m_yaw(0.0f)
 {
 	setOpaque(true);
 
@@ -22,13 +25,13 @@ void BinauralHeadView::deinit()
 
 void BinauralHeadView::setHeadOrientation(float roll, float pitch, float yaw)
 {
-
+	m_roll = roll;
+	m_pitch = pitch;
+	m_yaw = yaw;
 }
 
 void BinauralHeadView::newOpenGLContextCreated()
 {
-	//Colour bgnd = getLookAndFeel().findColour(ResizableWindow::backgroundColourId);
-	//glClearColor(bgnd.getFloatRed(), bgnd.getFloatGreen(), bgnd.getFloatBlue(), bgnd.getFloatAlpha());
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	createShaders();
 }
@@ -53,29 +56,32 @@ void BinauralHeadView::renderOpenGL()
 
 	glViewport(0, 0, roundToInt(desktopScale * getWidth()), roundToInt(desktopScale * getHeight()));
 
-	shader->use();
+	m_shader->use();
 
-	if (uniforms->projectionMatrix.get() != nullptr)
-		uniforms->projectionMatrix->setMatrix4(getProjectionMatrix().mat, 1, false);
+	if (m_uniforms->projectionMatrix.get() != nullptr)
+		m_uniforms->projectionMatrix->setMatrix4(getProjectionMatrix().mat, 1, false);
 
-	if (uniforms->viewMatrix.get() != nullptr)
-		uniforms->viewMatrix->setMatrix4(getViewMatrix().mat, 1, false);
+	if (m_uniforms->viewMatrix.get() != nullptr)
+		m_uniforms->viewMatrix->setMatrix4(getViewMatrix().mat, 1, false);
 
-	if (uniforms->lightPosition.get() != nullptr)
-		uniforms->lightPosition->set(-15.0f, 10.0f, 15.0f, 0.0f);
+	if (m_uniforms->modelMatrix.get() != nullptr)
+		m_uniforms->modelMatrix->setMatrix4(getModelMatrix().mat, 1, false);
 
-	shape->draw(m_renderingContext, *attributes);
+	if (m_uniforms->lightPosition.get() != nullptr)
+		m_uniforms->lightPosition->set(-15.0f, 10.0f, 15.0f, 0.0f);
+
+	m_shape->draw(m_renderingContext, *m_attributes);
 
 	// Reset the element buffers so child Components draw correctly
 	m_renderingContext.extensions.glBindBuffer(GL_ARRAY_BUFFER, 0);
 	m_renderingContext.extensions.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	frameCounter++;
+	m_frameCounter++;
 }
 
 void BinauralHeadView::openGLContextClosing()
 {
-	shader.reset();
-	shape.reset();
-	attributes.reset();
-	uniforms.reset();
+	m_shader.reset();
+	m_shape.reset();
+	m_attributes.reset();
+	m_uniforms.reset();
 }
