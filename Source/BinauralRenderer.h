@@ -93,8 +93,8 @@ private:
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_shdConvEngines;
 	
-	IIRFilter lowPassFilters[64][2];
-	IIRFilter highPassFilters[64][2];
+	IIRFilter lowPassFilters[2];
+	IIRFilter highPassFilters[2];
 
 	bool m_enableDualBand;
 	bool m_enableRotation;

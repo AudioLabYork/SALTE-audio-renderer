@@ -201,13 +201,10 @@ void BinauralRenderer::updateDualBandFilters()
 	double bHp1 = -2.0 * bHp0;
 	double bHp2 = bHp0;
 
-	for (int i = 0; i < m_numAmbiChans; ++i)
+	for (int i = 0; i < 2; ++i)
 	{
-		for (int j = 0; j < 2; ++j)
-		{
-			lowPassFilters[i][j].setCoefficients(IIRCoefficients(bLp0, bLp1, bLp2, a0, a1, a2));
-			highPassFilters[i][j].setCoefficients(IIRCoefficients(bHp0, bHp1, bHp2, a0, a1, a2));
-		}
+		lowPassFilters[i].setCoefficients(IIRCoefficients(bLp0, bLp1, bLp2, a0, a1, a2));
+		highPassFilters[i].setCoefficients(IIRCoefficients(bHp0, bHp1, bHp2, a0, a1, a2));
 	}
 }
 
@@ -390,33 +387,33 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 		basicShdBuffer.clear();
 		maxreShdBuffer.clear();
 
-		for (int j = 0; j < m_numLsChans; ++j)
+		for (int j = 0; j < 2; ++j)
 		{
-			const int idx = (i * m_numLsChans) + j;
-			const float basicWeight = m_decodeTransposeMatrix[idx];
-			const float maxreWeight = m_decodeTransposeMatrix[idx];
-
-			// apply the appropriate weights to the buffers before cross over filtering below
-			for (int k = 0; k < hrirShdBuffer.getNumChannels(); ++k)
+			for (int k = 0; k < m_numLsChans; ++k)
 			{
-				basicShdBuffer.addFrom(k, 0, m_hrirBuffers[j], k, 0, m_hrirBuffers[j].getNumSamples(), basicWeight);
-				maxreShdBuffer.addFrom(k, 0, m_hrirBuffers[j], k, 0, m_hrirBuffers[j].getNumSamples(), maxreWeight);
-			}
-		}
+				const int idx = (i * m_numLsChans) + k;
 
-		for (int k = 0; k < hrirShdBuffer.getNumChannels(); ++k)
-		{
+				// apply the appropriate weights to the buffers before cross over filtering below
+				const float basicWeight = m_decodeTransposeMatrix[idx];
+				basicShdBuffer.addFrom(j, 0, m_hrirBuffers[k], j, 0, m_hrirBuffers[k].getNumSamples(), basicWeight);
+				
+				const float maxreWeight = m_decodeTransposeMatrix[idx];
+				maxreShdBuffer.addFrom(j, 0, m_hrirBuffers[k], j, 0, m_hrirBuffers[k].getNumSamples(), maxreWeight);
+			}
+
 			if (m_enableDualBand)
 			{
-				lowPassFilters[i][k].processSamples(basicShdBuffer.getWritePointer(k), basicShdBuffer.getNumSamples());
-				highPassFilters[i][k].processSamples(maxreShdBuffer.getWritePointer(k), maxreShdBuffer.getNumSamples());
-				
-				hrirShdBuffer.addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
-				hrirShdBuffer.addFrom(k, 0, maxreShdBuffer, k, 0, maxreShdBuffer.getNumSamples());
+				lowPassFilters[j].reset();
+				lowPassFilters[j].processSamples(basicShdBuffer.getWritePointer(j), basicShdBuffer.getNumSamples());
+				hrirShdBuffer.addFrom(j, 0, basicShdBuffer, j, 0, basicShdBuffer.getNumSamples());
+
+				highPassFilters[j].reset();
+				highPassFilters[j].processSamples(maxreShdBuffer.getWritePointer(j), maxreShdBuffer.getNumSamples());
+				hrirShdBuffer.addFrom(j, 0, maxreShdBuffer, j, 0, maxreShdBuffer.getNumSamples());
 			}
 			else
 			{
-				hrirShdBuffer.addFrom(k, 0, basicShdBuffer, k, 0, basicShdBuffer.getNumSamples());
+				hrirShdBuffer.addFrom(j, 0, basicShdBuffer, j, 0, basicShdBuffer.getNumSamples());
 			}
 		}
 
