@@ -82,7 +82,7 @@ private:
 			"uniform mat4 modelMatrix;\n"
 			"uniform vec4 lightPosition;\n"
 			"\n"
-			"out float lightIntensity;\n"
+			"varying float lightIntensity;\n"
 			"\n"
 			"void main()\n"
 			"{\n"
@@ -93,7 +93,7 @@ private:
 			"}\n";
 
 		m_fragmentShader =
-			"in float lightIntensity;\n"
+			"varying float lightIntensity;\n"
 			"\n"
 			"void main()\n"
 			"{\n"
