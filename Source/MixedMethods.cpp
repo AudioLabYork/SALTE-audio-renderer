@@ -222,13 +222,14 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		}
 	}
 
-
 	// position MUSHRA reference / TS26259 conditions button
 	int referencePositionX = ratingSliderArray.getFirst()->getX();
 	int referenceWidth = ratingSliderArray.getLast()->getX() + ratingSliderArray.getLast()->getWidth() - referencePositionX;
 	selectReferenceButton.setBounds(referencePositionX, testArea.getBottom() + 65, referenceWidth, 25);
-	selectTConditionAButton.setBounds(referencePositionX, testArea.getBottom() + 65, referenceWidth / 3, 25);
-	selectTConditionBButton.setBounds(referencePositionX + 2 * referenceWidth / 3, testArea.getBottom() + 65, referenceWidth / 3, 25);
+
+	int selectTCondButtonWidth = testArea.getWidth() / 5;
+	selectTConditionAButton.setBounds(testArea.getX() + selectTCondButtonWidth, testArea.getBottom() + 65, selectTCondButtonWidth, 25);
+	selectTConditionBButton.setBounds(testArea.getX() + 3 * selectTCondButtonWidth, testArea.getBottom() + 65, selectTCondButtonWidth, 25);
 
 	// set the looping state of the player
 	m_player->loop(trial->getLoopingState());
