@@ -48,6 +48,10 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	addAndMakeVisible(m_yawLabel);
 
 	addAndMakeVisible(m_binauralHeadView);
+	m_enableMirrorView.setButtonText("Enable mirror view");
+	m_enableMirrorView.setToggleState(true, dontSendNotification);
+	m_enableMirrorView.addListener(this);
+	if(m_binauralHeadView.isVisible()) addAndMakeVisible(m_enableMirrorView);
 }
 
 void BinauralRendererView::deinit()
@@ -83,6 +87,7 @@ void BinauralRendererView::resized()
 	const int border = 5;
 	const int headSize = getHeight() - 2 * border;
 	m_binauralHeadView.setBounds(getWidth() - headSize - border, border, headSize, headSize);
+	m_enableMirrorView.setBounds(335, 40, 150, 30);
 }
 
 void BinauralRendererView::buttonClicked(Button* buttonClicked)
@@ -347,6 +352,9 @@ void BinauralRendererView::timerCallback()
 		m_yawLabel.setText("Yaw: " + String(m_renderer->getYaw(), 2) + " deg", dontSendNotification);
 		m_orderSelect.setSelectedItemIndex(m_renderer->getOrder() - 1, dontSendNotification);
 
-		m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), m_renderer->getYaw());
+		if(m_enableMirrorView.getToggleState())
+			m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), -m_renderer->getYaw());
+		else
+			m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), m_renderer->getYaw() + 180);
 	}
 }

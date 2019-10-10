@@ -75,4 +75,6 @@ private:
 	Label m_yawLabel;
 	
 	BinauralHeadView m_binauralHeadView;
+
+	ToggleButton m_enableMirrorView;
 };
