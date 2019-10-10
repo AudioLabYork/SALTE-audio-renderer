@@ -54,7 +54,7 @@ private:
 
 	Matrix3D<float> getProjectionMatrix() const
 	{
-		auto w = 1.0f / (0.5f + 0.1f);
+		auto w = 1.0f;
 		auto h = w * getLocalBounds().toFloat().getAspectRatio(false);
 
 		return Matrix3D<float>::fromFrustum(-w, w, -h, h, 4.0f, 30.0f);
@@ -62,7 +62,7 @@ private:
 
 	Matrix3D<float> getViewMatrix() const
 	{
-		Matrix3D<float> viewMatrix({ 0.0f, 0.0f, -10.0f });
+		Matrix3D<float> viewMatrix({ 0.0f, -0.5f, -5.0f });
 		return viewMatrix;
 	}
 
@@ -80,10 +80,15 @@ private:
 			"\n"
 			"void main()\n"
 			"{\n"
+			"    mat4 model = mat4(vec4(1.0, 0.0, 0.0, 0.0),"
+			"	                   vec4(0.0, 1.0, 0.0, 0.0),"
+			"	                   vec4(0.0, 0.0, 1.0, 0.0),"
+			"	                   vec4(0.0, 0.0, 0.0, 1.0));"
+
 			"    vec4 light = viewMatrix * lightPosition;\n"
 			"    lightIntensity = dot(light, normal);\n"
 			"\n"
-			"    gl_Position = projectionMatrix * viewMatrix * position;\n"
+			"    gl_Position = projectionMatrix * viewMatrix * model * position;\n"
 			"}\n";
 
 		fragmentShader =
