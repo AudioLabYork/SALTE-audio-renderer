@@ -7,32 +7,14 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "WavefrontObjParser.h"
 
-inline InputStream* createAssetInputStream(const char* resourcePath)
-{
-#if JUCE_MAC
-	auto assetsDir = File::getSpecialLocation(File::currentExecutableFile)
-		.getParentDirectory().getParentDirectory().getChildFile("Resources").getChildFile("Assets");
-
-	if (!assetsDir.exists())
-		assetsDir = File::getSpecialLocation(File::currentApplicationFile).getChildFile("Assets");
-#else
-	File assetsDir = File::getSpecialLocation(File::currentApplicationFile).getChildFile("Assets");
-#endif
-
-	auto resourceFile = assetsDir.getChildFile(resourcePath);
-	jassert(resourceFile.existsAsFile());
-
-	return resourceFile.createInputStream();
-}
-
 inline String loadEntireAssetIntoString(const char* assetName)
 {
-	std::unique_ptr<InputStream> input(createAssetInputStream(assetName));
+	int size;
+	const char* headModel = BinaryData::getNamedResource("HUMAN_HEAD_obj", size);
 
-	if (input == nullptr)
-		return {};
+	MemoryInputStream mem(headModel, size, false);
 
-	return input->readString();
+	return mem.readString();
 }
 
 class BinauralHeadView
