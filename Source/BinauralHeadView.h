@@ -14,9 +14,9 @@ inline InputStream* createAssetInputStream(const char* resourcePath)
 		.getParentDirectory().getParentDirectory().getChildFile("Resources").getChildFile("Assets");
 
 	if (!assetsDir.exists())
-		assetsDir = File::getSpecialLocation(File::userApplicationDataDirectory).getChildFile("SALTE").getChildFile("Assets");
+		assetsDir = File::getSpecialLocation(File::currentApplicationFile).getChildFile("Assets");
 #else
-	File assetsDir = File::getSpecialLocation(File::userApplicationDataDirectory).getChildFile("SALTE").getChildFile("Assets");
+	File assetsDir = File::getSpecialLocation(File::currentApplicationFile).getChildFile("Assets");
 #endif
 
 	auto resourceFile = assetsDir.getChildFile(resourcePath);

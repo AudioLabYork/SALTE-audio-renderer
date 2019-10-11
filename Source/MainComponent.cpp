@@ -21,12 +21,6 @@ MainComponent::MainComponent()
 	// initialize headphone compensation
 	addAndMakeVisible(m_headphoneCompensation);
 
-	File sourcePath(File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE"));
-	Result res = sourcePath.createDirectory();
-
-	if (res.wasOk())
-		Logger::outputDebugString("application directory created successfully");
-
 	// set size of the main app window
 	setSize(1400, 800);
 

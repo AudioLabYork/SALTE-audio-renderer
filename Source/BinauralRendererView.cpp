@@ -300,7 +300,7 @@ void BinauralRendererView::loadStandardHRTF()
 	m_renderer->clearHRIR();
 
 	String filename;
-	File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE").getChildFile("48K_24bit");
+	File sourcePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getChildFile("48K_24bit");
 
 	if (sourcePath.exists())
 	{

@@ -101,7 +101,7 @@ void BinauralRenderer::processOscMessage(const OSCMessage& message)
 
 	if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
 	{
-		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::userApplicationDataDirectory).getChildFile("SALTE");
+		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getChildFile("SOFA");
 
 		if (sourcePath.exists())
 		{
