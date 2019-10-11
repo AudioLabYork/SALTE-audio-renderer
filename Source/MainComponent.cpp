@@ -118,7 +118,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 	m_stimulusPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_binauralRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
-	if(samplesPerBlockExpected > m_maxSamplesPerBlock)
+	if(samplesPerBlockExpected != m_maxSamplesPerBlock)
 	{
 		m_maxSamplesPerBlock = samplesPerBlockExpected;
 		processBuffer.setSize(64, samplesPerBlockExpected);

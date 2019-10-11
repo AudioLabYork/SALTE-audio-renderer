@@ -121,6 +121,9 @@ void StimulusPlayer::prepareToPlay (int samplesPerBlockExpected, double sampleRa
 {
 	m_samplesPerBlockExpected = samplesPerBlockExpected;
 	m_sampleRate = sampleRate;
+
+	for (int i = 0; i < transportSourceArray.size(); ++i)
+		transportSourceArray[i]->prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 }
 
 void StimulusPlayer::getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill)
@@ -380,20 +383,24 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 			
 			transportSourceArray.add(new AudioTransportSource);
 			transportSourceArray.getLast()->addChangeListener(this);
-			transportSourceArray.getLast()->prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 			transportSourceArray.getLast()->setSource(
 				audioFileSourceArray.getLast(),
 				24000,					// tells it to buffer this many samples ahead
 				&readAheadThread,		// this is the background thread to use for reading-ahead
 				reader->sampleRate,     // allows for sample rate correction
 				reader->numChannels);   // the maximum number of channels that may need to be played
+			
+			transportSourceArray.getLast()->prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 
 			fileNameArray.add(filepath);
 			numChArray.add(reader->numChannels);
-			sendMsgToLogWindow("Cached .wav: " + audioFile.getFileName());
+			sendMsgToLogWindow("Cached: " + audioFile.getFileName());
 		}
 	}
-	else if(!audioFile.existsAsFile()) sendMsgToLogWindow("Can't cache file: " + filepath);
+	else if (!audioFile.existsAsFile())
+	{
+		sendMsgToLogWindow("Can't cache file: " + filepath);
+	}
 }
 
 void StimulusPlayer::clearAudioFileCache()
