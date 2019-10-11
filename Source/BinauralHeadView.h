@@ -9,15 +9,7 @@
 
 inline InputStream* createAssetInputStream(const char* resourcePath)
 {
-#if JUCE_MAC
-	auto assetsDir = File::getSpecialLocation(File::currentExecutableFile)
-		.getParentDirectory().getParentDirectory().getChildFile("Resources").getChildFile("Assets");
-
-	if (!assetsDir.exists())
-		assetsDir = File::getSpecialLocation(File::currentApplicationFile).getChildFile("Assets");
-#else
-	File assetsDir = File::getSpecialLocation(File::currentApplicationFile).getChildFile("Assets");
-#endif
+	File assetsDir = File::getSpecialLocation(File::userHomeDirectory).getChildFile("SALTE");
 
 	auto resourceFile = assetsDir.getChildFile(resourcePath);
 	jassert(resourceFile.existsAsFile());
