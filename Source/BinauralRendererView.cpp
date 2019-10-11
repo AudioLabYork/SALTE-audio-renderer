@@ -258,13 +258,9 @@ void BinauralRendererView::browseForAmbixConfigFile()
 		File chosenFile = fc.getResult();
 
 		if (BinauralRenderer::initialiseFromAmbix(chosenFile, m_renderer))
-		{
-			sendMsgToLogWindow("Successfully loaded AmbiX file: " + String(chosenFile.getFileName()));
-		}
+			sendMsgToLogWindow("Successfully loaded: " + String(chosenFile.getFileName()));
 		else
-		{
-			sendMsgToLogWindow("Failed to load AmbiX file: " + String(chosenFile.getFileName()));
-		}
+			sendMsgToLogWindow("failed to load AmbiX file");
 	}
 #endif
 }

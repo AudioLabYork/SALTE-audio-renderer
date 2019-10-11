@@ -92,13 +92,19 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 	m_player->unloadFileFromTransport();
 	m_player->cachingLock = true;
 	m_player->clearAudioFileCache();
-	for (int i = 0; i < trial->getNumberOfMConditions(); ++i) m_player->cacheAudioFile(trial->getMCondition(i)->filepath);
-	if (trial->isMReferencePresent()) m_player->cacheAudioFile(trial->getMReference(0)->filepath);
+	
+	for (int i = 0; i < trial->getNumberOfMConditions(); ++i)
+		m_player->cacheAudioFile(trial->getMCondition(i)->filepath);
+	
+	if (trial->isMReferencePresent())
+		m_player->cacheAudioFile(trial->getMReference(0)->filepath);
+	
 	if (trial->areTConditionsPresent())
 	{
 		m_player->cacheAudioFile(trial->getTCondition(0)->filepath);
 		m_player->cacheAudioFile(trial->getTCondition(1)->filepath);
 	}
+
 	m_player->cachingLock = false;
 
 	ratingSliderArray.clear();
@@ -345,7 +351,11 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 			// setup the renderer
 			m_renderer->setOrder(trial->getMCondition(i)->renderingOrder);
-			BinauralRenderer::initialiseFromAmbix(trial->getMCondition(i)->ambixConfig, m_renderer);
+			
+			if (BinauralRenderer::initialiseFromAmbix(File(trial->getMCondition(i)->ambixConfig), m_renderer))
+				sendMsgToLogWindow("successfully loaded: " + File(trial->getMCondition(i)->ambixConfig).getFileName());
+			else
+				sendMsgToLogWindow("failed to load AmbiX file");
 
 			// play the scene
 			m_player->play();
@@ -363,17 +373,31 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_player->pause();
 		sendMsgToLogWindow("Condition name: " + trial->getMReference(0)->name);
-		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		
+		if (timeSyncPlayback)
+			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		
 		m_player->loadFile(trial->getMReference(0)->filepath);
 		m_player->setGain(trial->getMReference(0)->gain);
-		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		
+		if (timeSyncPlayback)
+			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		
 		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
-		BinauralRenderer::initialiseFromAmbix(trial->getMReference(0)->ambixConfig, m_renderer);
+
+		if (BinauralRenderer::initialiseFromAmbix(File(trial->getMReference(0)->ambixConfig), m_renderer))
+			sendMsgToLogWindow("successfully loaded: " + File(trial->getMReference(0)->ambixConfig).getFileName());
+		else
+			sendMsgToLogWindow("failed to load AmbiX file");
+
 		m_player->play();
 
 		selectReferenceButton.setToggleState(true, dontSendNotification);
 	}
-	else selectReferenceButton.setToggleState(false, dontSendNotification);
+	else
+	{
+		selectReferenceButton.setToggleState(false, dontSendNotification);
+	}
 
 	if (buttonThatWasClicked == &selectTConditionAButton)
 	{
@@ -382,17 +406,31 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_player->pause();
 		sendMsgToLogWindow("Condition name: " + trial->getTCondition(0)->name);
-		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		
+		if (timeSyncPlayback)
+			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		
 		m_player->loadFile(trial->getTCondition(0)->filepath);
 		m_player->setGain(trial->getTCondition(0)->gain);
-		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		
+		if (timeSyncPlayback)
+			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		
 		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
-		BinauralRenderer::initialiseFromAmbix(trial->getTCondition(0)->ambixConfig, m_renderer);
+
+		if (BinauralRenderer::initialiseFromAmbix(File(trial->getTCondition(0)->ambixConfig), m_renderer))
+			sendMsgToLogWindow("successfully loaded: " + File(trial->getTCondition(0)->ambixConfig).getFileName());
+		else
+			sendMsgToLogWindow("failed to load AmbiX file");
+
 		m_player->play();
 
 		selectTConditionAButton.setToggleState(true, dontSendNotification);
 	}
-	else selectTConditionAButton.setToggleState(false, dontSendNotification);
+	else
+	{
+		selectTConditionAButton.setToggleState(false, dontSendNotification);
+	}
 
 	if (buttonThatWasClicked == &selectTConditionBButton)
 	{
@@ -401,17 +439,31 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_player->pause();
 		sendMsgToLogWindow("Condition name: " + trial->getTCondition(1)->name);
-		if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		
+		if (timeSyncPlayback)
+			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		
 		m_player->loadFile(trial->getTCondition(1)->filepath);
 		m_player->setGain(trial->getTCondition(1)->gain);
-		if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		
+		if (timeSyncPlayback)
+			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
+		
 		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
-		BinauralRenderer::initialiseFromAmbix(trial->getTCondition(1)->ambixConfig, m_renderer);
+
+		if (BinauralRenderer::initialiseFromAmbix(File(trial->getTCondition(1)->ambixConfig), m_renderer))
+			sendMsgToLogWindow("successfully loaded: " + File(trial->getTCondition(1)->ambixConfig).getFileName());
+		else
+			sendMsgToLogWindow("failed to load AmbiX file");
+		
 		m_player->play();
 
 		selectTConditionBButton.setToggleState(true, dontSendNotification);
 	}
-	else selectTConditionBButton.setToggleState(false, dontSendNotification);
+	else
+	{
+		selectTConditionBButton.setToggleState(false, dontSendNotification);
+	}
 
 	if (buttonThatWasClicked == &prevTrialButton)
 	{

@@ -364,6 +364,8 @@ bool BinauralRenderer::uploadHRIRsToEngine()
 
 		m_shdConvEngines.push_back(std::move(convEngine));
 	}
+
+	return true;
 }
 
 bool BinauralRenderer::convertHRIRToSHDHRIR()
@@ -427,6 +429,9 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 bool BinauralRenderer::initialiseFromAmbix(const File& ambixFile, BinauralRenderer* renderer)
 {
 	if (renderer == nullptr)
+		return false;
+
+	if (!ambixFile.existsAsFile())
 		return false;
 
 	AmbixLoader loader(ambixFile);
