@@ -49,22 +49,18 @@ void AmbixLoader::parseFile(const File& file)
 				if (line.startsWithIgnoreCase("/debug_msg"))
 				{
 					String res = line.fromFirstOccurrenceOf("/debug_msg ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/dec_mat_gain"))
 				{
 					String res = line.fromFirstOccurrenceOf("/dec_mat_gain ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/coeff_scale"))
 				{
 					String res = line.fromFirstOccurrenceOf("/coeff_scale ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/coeff_seq"))
 				{
 					String res = line.fromFirstOccurrenceOf("/coeff_seq ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/flip"))
 				{
@@ -74,22 +70,18 @@ void AmbixLoader::parseFile(const File& file)
 				else if (line.startsWithIgnoreCase("/flop"))
 				{
 					String res = line.fromFirstOccurrenceOf("/flop ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/flap"))
 				{
 					String res = line.fromFirstOccurrenceOf("/flap ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/global_hrtf_gain"))
 				{
 					String res = line.fromFirstOccurrenceOf("/global_hrtf_gain ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/invert_condon_shortley"))
 				{
 					String res = line.fromFirstOccurrenceOf("/invert_condon_shortley ", false, true);
-					Logger::outputDebugString(res);
 				}
 			}
 		}
