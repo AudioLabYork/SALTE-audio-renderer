@@ -45,20 +45,19 @@ MixedMethodsComponent::~MixedMethodsComponent()
 {
 }
 
-void MixedMethodsComponent::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer)
-{
-	m_oscTxRx = oscTxRx;
-	m_oscTxRx->addListener(this);
-	
+void MixedMethodsComponent::init(StimulusPlayer* player, BinauralRenderer* renderer)
+{	
 	m_renderer = renderer;
 	
 	m_player = player;
 	m_player->addChangeListener(this);
 }
 
-void MixedMethodsComponent::loadTestSession(TestSession* testSession)
+void MixedMethodsComponent::loadTestSession(TestSession* testSession, OscTransceiver* oscTxRx)
 {
 	m_testSession = testSession;
+	m_oscTxRx = oscTxRx;
+	m_oscTxRx->addListener(this);
 	loadTrial(0);
 }
 
@@ -615,6 +614,10 @@ void MixedMethodsComponent::updateRemoteInterface()
 		m_oscTxRx->sendOscMessage("/buttonState", (String) "A", (int)selectTConditionAButton.getToggleState());
 		m_oscTxRx->sendOscMessage("/buttonState", (String) "B", (int)selectTConditionBButton.getToggleState());
 	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/ABTrigButtonsPresent", (int)0);
+	}
 
 	// reference button
 	if (selectReferenceButton.isVisible())
@@ -623,7 +626,11 @@ void MixedMethodsComponent::updateRemoteInterface()
 		m_oscTxRx->sendOscMessage("/RefTrigButtonPresent", (int)1);
 
 		// update reference button
-		m_oscTxRx->sendOscMessage("/buttonState", (String) "Reference", (int)selectReferenceButton.getToggleState());
+		m_oscTxRx->sendOscMessage("/buttonState", (String) "reference", (int)selectReferenceButton.getToggleState());
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/RefTrigButtonPresent", (int)0);
 	}
 
 	// show UI
@@ -649,15 +656,15 @@ void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 		}
 		else if (message[0].getString() == "A")
 		{
-			selectTConditionAButton.triggerClick();
+			if (selectTConditionAButton.isVisible()) selectTConditionAButton.triggerClick();
 		}
 		else if (message[0].getString() == "B")
 		{
-			selectTConditionBButton.triggerClick();
+			if (selectTConditionBButton.isVisible()) selectTConditionBButton.triggerClick();
 		}
 		else if (message[0].getString() == "reference")
 		{
-			selectReferenceButton.triggerClick();
+			if (selectReferenceButton.isVisible()) selectReferenceButton.triggerClick();
 		}
 		else if (message[0].getString() == "condA") { if (selectConditionButtonArray[0] != nullptr) selectConditionButtonArray[0]->triggerClick(); }
 		else if (message[0].getString() == "condB") { if (selectConditionButtonArray[1] != nullptr) selectConditionButtonArray[1]->triggerClick(); }

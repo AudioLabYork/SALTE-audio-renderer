@@ -69,7 +69,7 @@ MainComponent::MainComponent()
 	m_testSessionForm.addListener(this);
 	addAndMakeVisible(m_testSessionForm);
 
-	mc.init(&oscTxRx, &m_stimulusPlayer, &m_binauralRenderer);
+	mc.init(&m_stimulusPlayer, &m_binauralRenderer);
 	mc.addListener(this);
 	mc.addChangeListener(this);
 	addChildComponent(mc);
@@ -269,7 +269,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 void MainComponent::formCompleted()
 {
-	mc.loadTestSession(&m_testSession);
+	mc.loadTestSession(&m_testSession, &oscTxRx);
 	mc.setVisible(true);
 	m_binauralRendererView.setTestInProgress(true);
 }
