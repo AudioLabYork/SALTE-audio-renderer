@@ -238,7 +238,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 
 	// set the looping state of the player
 	m_player->loop(trial->getLoopingState());
-	m_player->setPlaybackOffsets(0, 0);
+	m_player->setPlaybackOffsets(trial->getLoopStart(), trial->getLoopEnd());
 
 	// update the session navigation buttons' states
 	if (m_testSession->getCurrentTrialIndex() == 0)
@@ -700,5 +700,10 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 	if (source == m_player)
 	{
 		if(m_testSession != nullptr) updateRemoteInterface();
+
+		TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+		trial->setLoopStart(m_player->getPlaybackStartOffset());
+		trial->setLoopEnd(m_player->getPlaybackEndOffset());
+		trial->setLooping(m_player->getLoopingState());
 	}
 }

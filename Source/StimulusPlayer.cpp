@@ -528,6 +528,11 @@ void StimulusPlayer::loop(bool looping)
 	sendChangeMessage();
 }
 
+bool StimulusPlayer::getLoopingState()
+{
+	return loopingEnabled;
+}
+
 bool StimulusPlayer::checkPlaybackStatus()
 {
 	if (transportSourceArray[currentTSIndex] == nullptr)
@@ -564,5 +569,16 @@ void StimulusPlayer::setPlaybackOffsets(double beg, double end)
 	{
 		double length = transportSourceArray[currentTSIndex]->getLengthInSeconds();
 		transportSlider.setMinAndMaxValues(beg / length, 1 - end / length, dontSendNotification);
+		sendChangeMessage();
 	}
+}
+
+double StimulusPlayer::getPlaybackStartOffset()
+{
+	return begOffsetTime;
+}
+
+double StimulusPlayer::getPlaybackEndOffset()
+{
+	return endOffsetTime;
 }

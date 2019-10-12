@@ -16,6 +16,8 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
+	bool m_shouldBeVisible = false;
+
 private:
 
 	void changeListenerCallback(ChangeBroadcaster*) override;

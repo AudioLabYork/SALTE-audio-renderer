@@ -58,13 +58,16 @@ public:
 	int getNumberOfChannels();
 	void setGain(float gainInDB);
 	void loop(bool looping);
+	bool getLoopingState();
 	bool checkPlaybackStatus();
 	bool checkLoopStatus();
 	void loadFile(String filepath);
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
 	void setPlaybackOffsets(double beg, double end);
-    
+	double getPlaybackStartOffset();
+	double getPlaybackEndOffset();
+
 	void unloadFileFromTransport();
 
 	void cacheAudioFile(String filepath);

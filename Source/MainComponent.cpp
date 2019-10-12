@@ -218,6 +218,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	if (buttonThatWasClicked == &openAudioDeviceManager)
 	{
 		addAndMakeVisible(m_audioSetup);
+		m_audioSetup.m_shouldBeVisible = true;
 	}
 	else if (buttonThatWasClicked == &connectOscButton)
 	{
@@ -251,7 +252,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		showOnlyTestInterface = show;
 		
 		m_stimulusPlayer.setShowTest(show);
-		m_audioSetup.setVisible(!show);
+		if(m_audioSetup.m_shouldBeVisible) m_audioSetup.setVisible(!show);
 		m_binauralRendererView.setVisible(!show);
 		m_headphoneCompensation.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
@@ -260,7 +261,6 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		clientTxPortLabel.setVisible(!show);
 		clientRxPortLabel.setVisible(!show);
 		logWindow.setVisible(!show);
-		
 		resized();
 	}
 

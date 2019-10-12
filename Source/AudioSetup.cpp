@@ -34,7 +34,7 @@ AudioSetup::AudioSetup(AudioDeviceManager& deviceManager)
 	addAndMakeVisible(&cpuUsageText);
 
 	closeWindowBtn.setButtonText("Close");
-	closeWindowBtn.onClick = [this] { setVisible(false); };
+	closeWindowBtn.onClick = [this] { setVisible(false); m_shouldBeVisible = false; };
 	addAndMakeVisible(closeWindowBtn);
 
 	setSize(760, 400);
