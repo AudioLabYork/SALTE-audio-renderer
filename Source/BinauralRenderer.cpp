@@ -16,7 +16,10 @@ BinauralRenderer::BinauralRenderer()
 	, m_enableDualBand(false)
 	, m_enableRotation(true)
 	, m_enableTranslation(true)
+	, m_lowPass(new dsp::FIR::Coefficients<float>(lo_band_48, 257))
+	, m_highPass(new dsp::FIR::Coefficients<float>(hi_band_48, 257))
 {
+	init();
 }
 
 void BinauralRenderer::init()
@@ -25,6 +28,7 @@ void BinauralRenderer::init()
 
 void BinauralRenderer::deinit()
 {
+
 }
 
 void BinauralRenderer::sendMsgToLogWindow(String message)
@@ -101,7 +105,7 @@ void BinauralRenderer::processOscMessage(const OSCMessage& message)
 
 	if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
 	{
-		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getChildFile("SOFA");
+		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::commonApplicationDataDirectory).getChildFile("SALTE").getChildFile("SOFA");
 
 		if (sourcePath.exists())
 		{
@@ -156,10 +160,10 @@ void BinauralRenderer::getVirtualLoudspeakers(std::vector<float>& azi, std::vect
 void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
 {
 	ScopedLock lock(m_procLock);
-	m_decodeMatrix = decodeMatrix;
+	m_basicDecodeMatrix = decodeMatrix;
 }
 
-void transpose(std::vector<float>& outmtx, std::vector<float>& inmtx, int rows, int cols)
+void mat_trans(float* outmtx, float* inmtx, int rows, int cols)
 {
 	for (int i = 0; i < rows; ++i)
 	{
@@ -170,11 +174,84 @@ void transpose(std::vector<float>& outmtx, std::vector<float>& inmtx, int rows, 
 	}
 }
 
+void mat_mult(float* out, const float* A, const float* B, int n, int m, int m2, int p)
+{
+	int i;
+	int j;
+	int k;
+	float s;
+
+	for (i = 0; i < n; ++i)
+	{
+		for (j = 0; j < p; ++j)
+		{
+			s = 0.0f;
+
+			for (k = 0; k < m; ++k)
+				s += A[(i * m) + k] * B[(k * p) + j];
+
+			out[(i * p) + j] = s;
+		}
+	}
+}
+
+float BinauralRenderer::legendreP(const int n, const float x)
+{
+	if (n == 0)
+		return 1.0f;
+	else if (n == 1)
+		return x;
+	else
+		return ((((2 * (n - 1)) + 1) * x * legendreP(n - 1, x)) - ((n - 1) * legendreP(n - 2, x))) / n;
+}
+
+void BinauralRenderer::getMaxReWeights(std::vector<float>& weights)
+{
+	weights.resize(m_numAmbiChans * m_numAmbiChans);
+
+	const float x = cosf(137.9f * (MathConstants<float>::pi / 180.0f) / (m_order + 1.51f));
+	int idx = 0;
+	float p;
+	float sum = 0;
+	float sump2 = 0;
+
+	for (int n = 0; n <= m_order; n++)
+	{
+		p = legendreP(n, x);
+
+		for (int i = 0; i < 2 * n + 1; i++)
+		{
+			weights[(idx + i) * m_numAmbiChans + (idx + i)] = p;
+			sum += p;
+			sump2 += (p * p);
+		}
+
+		idx += 2 * n + 1;
+	}
+
+	float preserve = sqrt(m_numLsChans / sump2);
+
+	for (int i = 0; i < weights.size(); ++i)
+		weights[i] = weights[i] * preserve;
+}
+
 void BinauralRenderer::updateMatrices()
 {
 	ScopedLock lock(m_procLock);
-	m_decodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
-	transpose(m_decodeTransposeMatrix, m_decodeMatrix, m_numLsChans, m_numAmbiChans);
+
+	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
+	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
+
+	std::vector<float> maxReWeights;
+	getMaxReWeights(maxReWeights);
+
+	m_weightedDecodeMatrix.resize(m_numLsChans * m_numAmbiChans);
+	mat_mult(m_weightedDecodeMatrix.data(), m_basicDecodeMatrix.data(), maxReWeights.data(), m_numLsChans, m_numAmbiChans, m_numAmbiChans, m_numAmbiChans);
+
+	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
+	m_maxreDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
+	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
+	mat_trans(m_maxreDecodeTransposeMatrix.data(), m_weightedDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
 }
 
 void BinauralRenderer::updateDualBandFilters()
@@ -200,12 +277,6 @@ void BinauralRenderer::updateDualBandFilters()
 	double bHp0 = 1.0 / denom;
 	double bHp1 = -2.0 * bHp0;
 	double bHp2 = bHp0;
-
-	for (int i = 0; i < 2; ++i)
-	{
-		lowPassFilters[i].setCoefficients(IIRCoefficients(bLp0, bLp1, bLp2, a0, a1, a2));
-		highPassFilters[i].setCoefficients(IIRCoefficients(bHp0, bHp1, bHp2, a0, a1, a2));
-	}
 }
 
 void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
@@ -266,6 +337,11 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 		m_workingBuffer.setSize(64, m_blockSize);
 		m_convBuffer.setSize(2, m_blockSize);
 	}
+
+	ProcessSpec spec = { m_sampleRate, m_blockSize, 2 };
+
+	m_lowPass.prepare(spec);
+	m_highPass.prepare(spec);
 }
 
 void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
@@ -376,18 +452,40 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 		return false;
 	}
 
+	int filterTaps = 0;
+
+	if (m_enableDualBand)
+		filterTaps = 257;
+
 	// clear the current SHD HRIR as this process will create new ones
 	m_hrirShdBuffers.clear();
 
-	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples());
-	AudioBuffer<float> basicShdBuffer(2, m_hrirBuffers[0].getNumSamples());
-	AudioBuffer<float> maxreShdBuffer(2, m_hrirBuffers[0].getNumSamples());
+	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
+	AudioBuffer<float> basicShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
+	AudioBuffer<float> maxreShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
 		hrirShdBuffer.clear();
-		basicShdBuffer.clear();
-		maxreShdBuffer.clear();
+		
+		basicShdBuffer.makeCopyOf(m_hrirBuffers[i]);
+
+		if (m_enableDualBand)
+		{
+			dsp::AudioBlock<float> basicShdAudioBlockBuffer(basicShdBuffer);
+			ProcessContextReplacing<float> basicContextReplacing(basicShdAudioBlockBuffer);
+
+			m_lowPass.reset();
+			m_lowPass.process(basicContextReplacing);
+
+			maxreShdBuffer.makeCopyOf(m_hrirBuffers[i]);
+
+			dsp::AudioBlock<float> maxreShdAudioBlockBuffer(maxreShdBuffer);
+			ProcessContextReplacing<float> maxreContextReplacing(maxreShdAudioBlockBuffer);
+
+			m_highPass.reset();
+			m_highPass.process(maxreContextReplacing);
+		}
 
 		for (int j = 0; j < 2; ++j)
 		{
@@ -395,27 +493,14 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 			{
 				const int idx = (i * m_numLsChans) + k;
 
-				// apply the appropriate weights to the buffers before cross over filtering below
-				const float basicWeight = m_decodeTransposeMatrix[idx];
-				basicShdBuffer.addFrom(j, 0, m_hrirBuffers[k], j, 0, m_hrirBuffers[k].getNumSamples(), basicWeight);
-				
-				const float maxreWeight = m_decodeTransposeMatrix[idx];
-				maxreShdBuffer.addFrom(j, 0, m_hrirBuffers[k], j, 0, m_hrirBuffers[k].getNumSamples(), maxreWeight);
-			}
+				const float basicWeight = m_basicDecodeTransposeMatrix[idx];
+				hrirShdBuffer.addFrom(j, 0, basicShdBuffer, j, 0, m_hrirBuffers[k].getNumSamples(), basicWeight);
 
-			if (m_enableDualBand)
-			{
-				lowPassFilters[j].reset();
-				lowPassFilters[j].processSamples(basicShdBuffer.getWritePointer(j), basicShdBuffer.getNumSamples());
-				hrirShdBuffer.addFrom(j, 0, basicShdBuffer, j, 0, basicShdBuffer.getNumSamples());
-
-				highPassFilters[j].reset();
-				highPassFilters[j].processSamples(maxreShdBuffer.getWritePointer(j), maxreShdBuffer.getNumSamples());
-				hrirShdBuffer.addFrom(j, 0, maxreShdBuffer, j, 0, maxreShdBuffer.getNumSamples());
-			}
-			else
-			{
-				hrirShdBuffer.addFrom(j, 0, basicShdBuffer, j, 0, basicShdBuffer.getNumSamples());
+				if (m_enableDualBand)
+				{
+					const float maxreWeight = m_maxreDecodeTransposeMatrix[idx];
+					hrirShdBuffer.addFrom(j, 0, maxreShdBuffer, j, 0, m_hrirBuffers[k].getNumSamples(), maxreWeight);
+				}
 			}
 		}
 
