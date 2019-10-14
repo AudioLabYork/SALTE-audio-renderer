@@ -10,7 +10,7 @@ public:
 	~HeadphoneCompensation();
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
-	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
+	void processBlock(AudioBuffer<float>& buffer);
 	void releaseResources();
 
 	void buttonClicked(Button* buttonClicked) override;
@@ -19,7 +19,9 @@ public:
 	void resized();
 
 private:
-
 	TextButton m_firBrowse;
+	ToggleButton m_btnEnabled;
+	dsp::Convolution m_conv;
 
+	bool m_enableEq;
 };

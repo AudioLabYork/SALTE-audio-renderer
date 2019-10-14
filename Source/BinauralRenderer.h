@@ -47,7 +47,6 @@ public:
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void processBlock(AudioBuffer<float>& buffer);
-	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
 
 	void sendMsgToLogWindow(String message);

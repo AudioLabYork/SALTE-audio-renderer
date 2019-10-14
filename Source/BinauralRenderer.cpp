@@ -348,6 +348,9 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 {
 	ScopedLock lock(m_procLock);
 
+	if (buffer.getNumChannels() <= 2)
+		return;
+
 	if (m_enableRotation)
 		m_headTrackRotator.process(buffer);
 
@@ -384,14 +387,6 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 			m_shdConvEngines[i]->Advance(availSamples);
 		}
 	}
-}
-
-void BinauralRenderer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill)
-{
-	if (bufferToFill.buffer->getNumChannels() <= 2)
-		return;
-
-	processBlock(*bufferToFill.buffer);
 }
 
 void BinauralRenderer::releaseResources()
