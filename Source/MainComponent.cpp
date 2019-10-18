@@ -111,6 +111,7 @@ void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRat
 	// prepare stimulus player object
 	m_stimulusPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_binauralRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	m_headphoneCompensation.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
 	if(samplesPerBlockExpected != m_maxSamplesPerBlock)
 	{
@@ -127,7 +128,9 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 	m_stimulusPlayer.getNextAudioBlock(newinfo);
 
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
-	m_binauralRenderer.getNextAudioBlock(newinfo);
+	m_binauralRenderer.processBlock(*newinfo.buffer);
+
+	m_headphoneCompensation.processBlock(*newinfo.buffer);
 
 	AudioBuffer<float>* sourceBuffer = bufferToFill.buffer;
 
@@ -142,6 +145,7 @@ void MainComponent::releaseResources()
 	// relese resources taken by stimulus player object
     m_stimulusPlayer.releaseResources();
 	m_binauralRenderer.releaseResources();
+	m_headphoneCompensation.releaseResources();
 }
 
 //==============================================================================

@@ -6,6 +6,7 @@
 #include "OscTransceiver.h"
 #include "SOFAReader.h"
 #include "AmbixLoader.h"
+#include "ROM.h"
 
 class BinauralRenderer :	public ChangeBroadcaster,
 							public OSCReceiver,
@@ -28,6 +29,8 @@ public:
 	void getVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int& chans);
 
 	void setDecodingMatrix(std::vector<float>& decodeMatrix);
+	float legendreP(const int n, const float x);
+	void getMaxReWeights(std::vector<float>& weights);
 	void updateMatrices();
 
 	void updateDualBandFilters();
@@ -44,7 +47,6 @@ public:
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void processBlock(AudioBuffer<float>& buffer);
-	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill);
 	void releaseResources();
 
 	void sendMsgToLogWindow(String message);
@@ -82,8 +84,10 @@ private:
 	std::vector<AudioBuffer<float>> m_hrirBuffers;
 	std::vector<AudioBuffer<float>> m_hrirShdBuffers;
 
-	std::vector<float> m_decodeMatrix;
-	std::vector<float> m_decodeTransposeMatrix;
+	std::vector<float> m_basicDecodeMatrix;
+	std::vector<float> m_weightedDecodeMatrix;
+	std::vector<float> m_basicDecodeTransposeMatrix;
+	std::vector<float> m_maxreDecodeTransposeMatrix;
 
 	std::vector<float> m_azi;
 	std::vector<float> m_ele;
@@ -92,15 +96,13 @@ private:
 
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_shdConvEngines;
-	
-	IIRFilter lowPassFilters[2];
-	IIRFilter highPassFilters[2];
+
+	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_lowPass;
+	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_highPass;
 
 	bool m_enableDualBand;
 	bool m_enableRotation;
 	bool m_enableTranslation;
-
-
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BinauralRenderer)
 };
