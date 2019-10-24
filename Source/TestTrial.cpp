@@ -104,6 +104,12 @@ bool TestTrial::areTConditionsPresent()
 		return false;
 }
 
+void TestTrial::randomiseTConditions()
+{
+	std::random_device seed;
+	std::mt19937 rng(seed());
+	std::shuffle(m_TConditions.begin(), m_TConditions.end(), rng);
+}
 
 void TestTrial::setRatingOptions(const StringArray ratings)
 {

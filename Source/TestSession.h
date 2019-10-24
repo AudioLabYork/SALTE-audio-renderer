@@ -38,5 +38,8 @@ private:
 
 	File m_exportFile;
 
+	bool m_randTrials;
+	bool m_randConditions;
+
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TestSession)
 };

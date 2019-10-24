@@ -241,14 +241,6 @@ void TestSessionForm::buttonClicked(Button* button)
 		{
 			m_exportFile = fc.getResult();
 
-			if (!m_exportFile.exists())
-			{
-				m_exportFile.create();
-
-				FileOutputStream fos(m_exportFile);
-				fos << "ses_date,sub_id,sub_name,sub_age,sub_gen,trial_id,con_name,con_score\n";
-			}
-
 			m_labelExportFile.setText("Results File: " + m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
 		}
 #endif

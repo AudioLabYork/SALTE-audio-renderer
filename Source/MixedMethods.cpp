@@ -48,7 +48,6 @@ MixedMethodsComponent::~MixedMethodsComponent()
 void MixedMethodsComponent::init(StimulusPlayer* player, BinauralRenderer* renderer)
 {	
 	m_renderer = renderer;
-	
 	m_player = player;
 	m_player->addChangeListener(this);
 }
@@ -699,11 +698,16 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_player)
 	{
-		if(m_testSession != nullptr) updateRemoteInterface();
-
-		TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
-		trial->setLoopStart(m_player->getPlaybackStartOffset());
-		trial->setLoopEnd(m_player->getPlaybackEndOffset());
-		trial->setLooping(m_player->getLoopingState());
+		if (m_testSession != nullptr)
+		{
+			TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+			if (trial != nullptr)
+			{
+				trial->setLoopStart(m_player->getPlaybackStartOffset());
+				trial->setLoopEnd(m_player->getPlaybackEndOffset());
+				trial->setLooping(m_player->getLoopingState());
+				updateRemoteInterface();
+			}
+		}
 	}
 }

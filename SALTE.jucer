@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="zmM4K5" name="SALTE" projectType="guiapp" jucerVersion="5.4.4"
+<JUCERPROJECT id="zmM4K5" name="SALTE" projectType="guiapp" jucerVersion="5.4.5"
               companyName="University of York" companyWebsite="https://audiolab.york.ac.uk">
   <MAINGROUP id="H9ikxc" name="SALTE">
     <GROUP id="{38B28B71-9D6E-68E2-2653-CC11D6B73ADE}" name="Assets">

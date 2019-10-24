@@ -5,6 +5,8 @@ TestSession::TestSession()
 	, m_subjectData(nullptr)
 	, m_startTimeOfTest(0)
 	, m_currentTrialIndex(0)
+	, m_randTrials(true)
+	, m_randConditions(true)
 {
 
 }
@@ -108,18 +110,17 @@ void TestSession::loadSession(const File& sessionFile)
 					}
 
 					// randomise MUSHRA conditions
-					testTrial->randomiseMConditions();
+					if (m_randConditions) testTrial->randomiseMConditions();
 				}
 
 				// TS26259 ATTRIBUTES
-				if (auto stimuli = trial.getProperty("TS26259Attributes", "").getArray())
+				if (auto attributes = trial.getProperty("TS26259Attributes", "").getArray())
 				{
-					for (auto stimulus : *stimuli)
+					for (auto attribute : *attributes)
 					{
 						TS26259Attribute* con = new TS26259Attribute;
 
-						con->name = stimulus.getProperty("name", "");
-
+						con->name = attribute.getProperty("name", "");
 						testTrial->addTAttribute(con);
 					}
 				}
@@ -148,8 +149,8 @@ void TestSession::loadSession(const File& sessionFile)
 						testTrial->addTCondition(con);
 					}
 
-					// randomise MUSHRA conditions
-					testTrial->randomiseMConditions();
+					// randomise 3GPP conditions
+					if (m_randConditions) testTrial->randomiseTConditions();
 				}
 
 				// read rating scale for the trial
@@ -161,7 +162,7 @@ void TestSession::loadSession(const File& sessionFile)
 			m_testTrials.add(testTrial);
 		}
 
-		// randomiseTrials(); // randomisation switched off for the presentation purpose
+		if (m_randTrials) randomiseTrials();
 	}
 }
 
@@ -172,6 +173,13 @@ void TestSession::setExportFile(const File& exportFile)
 
 void TestSession::exportResults()
 {
+	if (!m_exportFile.exists())
+	{
+		m_exportFile.create();
+		FileOutputStream fos(m_exportFile);
+		fos << "ses_date,sub_id,sub_name,sub_age,sub_gender,trial_id,attribute,condition_id,condB_id,score\n";
+	}
+
 	if (m_exportFile.exists())
 	{
 		FileOutputStream fos(m_exportFile.getFullPathName());
@@ -205,8 +213,46 @@ void TestSession::exportResults()
 				{
 					fos << "-,-,-,-,";
 				}
+				fos << testTrial->getId() << ","
+					<< "-,"
+					<< testTrial->getMCondition(i)->name << ","
+					<< "-,"
+					<< testTrial->getMCondition(i)->score << "\n";
+			}
 
-				fos << testTrial->getId() << "," << testTrial->getMCondition(i)->name << "," << testTrial->getMCondition(i)->score << "\n";
+			for (int i = 0; i < testTrial->getNumberOfTAttributes(); ++i)
+			{
+				fos << m_sessionId << ",";
+
+				if (m_subjectData != nullptr)
+				{
+					fos << m_subjectData->m_id << ",";
+
+					if (m_subjectData->m_name.isNotEmpty())
+						fos << m_subjectData->m_name << ",";
+					else
+						fos << "-,";
+
+					if (m_subjectData->m_age > 0)
+						fos << m_subjectData->m_age << ",";
+					else
+						fos << "-,";
+
+					if (m_subjectData->m_gender.isNotEmpty())
+						fos << m_subjectData->m_gender << ",";
+					else
+						fos << "-,";
+				}
+				else
+				{
+					fos << "-,-,-,-,";
+				}
+
+				fos << testTrial->getId() << ","
+					<< testTrial->getTAttribute(i)->name << ","
+					<< testTrial->getTCondition(0)->name << ","
+					<< testTrial->getTCondition(1)->name << ","
+					<< testTrial->getTAttribute(i)->score << "\n";
 			}
 		}
 	}

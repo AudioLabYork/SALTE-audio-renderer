@@ -104,6 +104,7 @@ public:
 	bool isMReferencePresent();
 	int getNumberOfTAttributes() const;
 	bool areTConditionsPresent();
+	void randomiseTConditions();
 
 	void setRatingOptions(const StringArray ratings);
 	StringArray getRatingOptions() const;
