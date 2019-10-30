@@ -456,45 +456,48 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 	m_hrirShdBuffers.clear();
 
 	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
-	AudioBuffer<float> basicShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
-	AudioBuffer<float> maxreShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
+	AudioBuffer<float> basicBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
+	AudioBuffer<float> weightedBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
 		hrirShdBuffer.clear();
-		
-		basicShdBuffer.makeCopyOf(m_hrirBuffers[i]);
 
-		if (m_enableDualBand)
+		for (int j = 0; j < m_numLsChans; ++j)
 		{
-			dsp::AudioBlock<float> basicShdAudioBlockBuffer(basicShdBuffer);
-			ProcessContextReplacing<float> basicContextReplacing(basicShdAudioBlockBuffer);
+			basicBuffer.clear();
+			weightedBuffer.clear();
 
-			m_lowPass.reset();
-			m_lowPass.process(basicContextReplacing);
-
-			maxreShdBuffer.makeCopyOf(m_hrirBuffers[i]);
-
-			dsp::AudioBlock<float> maxreShdAudioBlockBuffer(maxreShdBuffer);
-			ProcessContextReplacing<float> maxreContextReplacing(maxreShdAudioBlockBuffer);
-
-			m_highPass.reset();
-			m_highPass.process(maxreContextReplacing);
-		}
-
-		for (int j = 0; j < 2; ++j)
-		{
-			for (int k = 0; k < m_numLsChans; ++k)
+			for (int n = 0; n < m_hrirBuffers[j].getNumChannels(); ++n)
 			{
-				const int idx = (i * m_numLsChans) + k;
+				basicBuffer.copyFrom(n, 0, m_hrirBuffers[j].getReadPointer(n), m_hrirBuffers[j].getNumSamples());
+				weightedBuffer.copyFrom(n, 0, m_hrirBuffers[j].getReadPointer(n), m_hrirBuffers[j].getNumSamples());
+			}
 
-				const float basicWeight = m_basicDecodeTransposeMatrix[idx];
-				hrirShdBuffer.addFrom(j, 0, basicShdBuffer, j, 0, m_hrirBuffers[k].getNumSamples(), basicWeight);
+			if (m_enableDualBand)
+			{
+				dsp::AudioBlock<float> basicAudioBlock(basicBuffer);
+				dsp::ProcessContextReplacing<float> basicContextReplacing(basicAudioBlock);
+				m_lowPass.reset();
+				m_lowPass.process(basicContextReplacing);
+
+				dsp::AudioBlock<float> weightedAudioBlock(weightedBuffer);
+				dsp::ProcessContextReplacing<float> weightedContextReplacing(weightedAudioBlock);
+				m_highPass.reset();
+				m_highPass.process(weightedContextReplacing);
+			}
+
+			for (int k = 0; k < 2; ++k)
+			{
+				const int idx = (i * m_numLsChans) + j;
+
+				const float basicMatrixIdx = m_basicDecodeTransposeMatrix[idx];
+				hrirShdBuffer.addFrom(k, 0, basicBuffer.getWritePointer(k), basicBuffer.getNumSamples(), basicMatrixIdx);
 
 				if (m_enableDualBand)
 				{
-					const float maxreWeight = m_maxreDecodeTransposeMatrix[idx];
-					hrirShdBuffer.addFrom(j, 0, maxreShdBuffer, j, 0, m_hrirBuffers[k].getNumSamples(), maxreWeight);
+					const float weightedMatrixIdx = m_weightedDecodeMatrix[idx];
+					hrirShdBuffer.addFrom(k, 0, weightedBuffer.getWritePointer(k), weightedBuffer.getNumSamples(), weightedMatrixIdx);
 				}
 			}
 		}
