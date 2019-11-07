@@ -74,11 +74,6 @@ MainComponent::MainComponent()
 	mc.addChangeListener(this);
 	addChildComponent(mc);
 
-	// localisation component temporarily on top of the session form and mixed methods
-	m_localisationComponent.init(&m_stimulusPlayer, &m_binauralRenderer);
-	m_localisationComponent.addChangeListener(this);
-	addAndMakeVisible(m_localisationComponent);
-
 	// log window
     logWindow.setMultiLine(true);
     logWindow.setReadOnly(true);
@@ -196,7 +191,6 @@ void MainComponent::resized()
 
 	m_testSessionForm.setBounds(10, 170, 640, 480);
 	mc.setBounds(10, 170, 640, 480);
-	m_localisationComponent.setBounds(10, 170, 640, 480);
 
 	if (showOnlyTestInterface)
 	{

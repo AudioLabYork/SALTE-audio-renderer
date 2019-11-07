@@ -7,7 +7,6 @@
 #include "BinauralRenderer.h"
 #include "BinauralRendererView.h"
 #include "MixedMethods.h"
-#include "AuditoryLocalisation.h"
 #include "TestSession.h"
 #include "TestSessionForm.h"
 #include "HeadphoneCompensation.h"
@@ -44,7 +43,6 @@ private:
 	BinauralRenderer m_binauralRenderer;
 	BinauralRendererView m_binauralRendererView;
 	MixedMethodsComponent mc;
-	AuditoryLocalisation m_localisationComponent;
 	HeadphoneCompensation m_headphoneCompensation;
 
 	TestSession m_testSession;

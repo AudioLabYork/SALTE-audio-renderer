@@ -14,10 +14,6 @@
         <FILE id="A9l0hz" name="fft.c" compile="1" resource="0" file="../../Libraries/WDL/fft.c"/>
         <FILE id="ufAhKz" name="fft.h" compile="0" resource="0" file="../../Libraries/WDL/fft.h"/>
       </GROUP>
-      <FILE id="f6ysAp" name="AuditoryLocalisation.cpp" compile="1" resource="0"
-            file="Source/AuditoryLocalisation.cpp"/>
-      <FILE id="hG6NmD" name="AuditoryLocalisation.h" compile="0" resource="0"
-            file="Source/AuditoryLocalisation.h"/>
       <FILE id="ARAEsH" name="AmbisonicRotation.cpp" compile="1" resource="0"
             file="Source/AmbisonicRotation.cpp"/>
       <FILE id="g3TxyX" name="AmbisonicRotation.h" compile="0" resource="0"
