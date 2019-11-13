@@ -61,13 +61,13 @@ public:
 	bool getLoopingState();
 	bool checkPlaybackStatus();
 	bool checkLoopStatus();
-	void loadFile(String filepath);
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
 	void setPlaybackOffsets(double beg, double end);
 	double getPlaybackStartOffset();
 	double getPlaybackEndOffset();
 
+	void loadFileIntoTransport(String fullPath);
 	void unloadFileFromTransport();
 
 	void cacheAudioFile(String filepath);
@@ -84,12 +84,13 @@ public:
 private:
 	TransportState state;
 
-	OwnedArray<AudioFormatReaderSource> audioFileSourceArray;
 	TimeSliceThread readAheadThread;
-
+	// Cache arrays
+	OwnedArray<AudioFormatReaderSource> audioFileSourceArray;
 	OwnedArray<AudioTransportSource> transportSourceArray;
 	Array<String> fileNameArray;
 	Array<int> numChArray;
+
 	int m_samplesPerBlockExpected;
 	double m_sampleRate;
 	
@@ -107,7 +108,6 @@ private:
 
 	// METHODS
 	void browseForFile();
-	void loadFileIntoTransport(const File& audioFile);
 	void sendMsgToLogWindow(String message);
 	String returnHHMMSS(double lengthInSeconds);
 

@@ -345,31 +345,27 @@ void StimulusPlayer::browseForFile()
 	if (chooser.browseForFileToOpen())
 	{
 		auto file = chooser.getResult();
-		loadFileIntoTransport(file);
+		loadFileIntoTransport(file.getFullPathName());
 	}
 }
 
-void StimulusPlayer::loadFile(String filepath)
-{
-	File audiofile(filepath);
+//void StimulusPlayer::loadFile(String filepath)
+//{
+//	File audiofile(filepath);
+//
+//	if (audiofile.existsAsFile())
+//	{
+//		if (!fileNameArray.contains(filepath))
+//		{
+//			cacheAudioFile(filepath);
+//		}
+//		loadFileIntoTransport(audiofile);
+//	}
+//	else
+//		sendMsgToLogWindow("Can't load file: " + filepath);
+//}
 
-	if (audiofile.existsAsFile())
-		loadFileIntoTransport(audiofile);
-	else
-		sendMsgToLogWindow("Can't load file: " + filepath);
-}
 
-void StimulusPlayer::unloadFileFromTransport()
-{
-	if(transportSourceArray[currentTSIndex] != nullptr)
-		transportSourceArray[currentTSIndex]->stop();
-
-	pt.clearThumbnail();
-	loadedFileName.setText("", dontSendNotification);
-	playButton.setEnabled(false);
-	stopButton.setEnabled(false);
-	loopButton.setEnabled(false);
-}
 
 void StimulusPlayer::cacheAudioFile(String filepath)
 {
@@ -377,10 +373,11 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 
 	if (audioFile.existsAsFile() && !fileNameArray.contains(filepath))
 	{
+		cachingLock = true;
 		if (AudioFormatReader * reader = formatManager.createReaderFor(audioFile))
 		{
 			audioFileSourceArray.add(new AudioFormatReaderSource(reader, true));
-			
+
 			transportSourceArray.add(new AudioTransportSource);
 			transportSourceArray.getLast()->addChangeListener(this);
 			transportSourceArray.getLast()->setSource(
@@ -396,6 +393,7 @@ void StimulusPlayer::cacheAudioFile(String filepath)
 			numChArray.add(reader->numChannels);
 			sendMsgToLogWindow("Cached: " + audioFile.getFileName());
 		}
+		cachingLock = false;
 	}
 	else if (!audioFile.existsAsFile())
 	{
@@ -412,15 +410,23 @@ void StimulusPlayer::clearAudioFileCache()
 	currentTSIndex = 0;
 }
 
-void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
+void StimulusPlayer::loadFileIntoTransport(String fullPath)
 {
 	unloadFileFromTransport();
 
-	String fullPath = audioFile.getFullPathName();
+	auto audiofile = File(fullPath);
+
+	if (audiofile.existsAsFile())
+	{
+		if (!fileNameArray.contains(fullPath))
+		{
+			cacheAudioFile(fullPath);
+		}
+	}
 
 	if (fileNameArray.contains(fullPath))
 	{
-		currentlyLoadedFile = audioFile;
+		currentlyLoadedFile = File(fullPath);
 		currentTSIndex = fileNameArray.indexOf(fullPath);
 		loadedFileChannelCount = numChArray[currentTSIndex];
 
@@ -431,12 +437,28 @@ void StimulusPlayer::loadFileIntoTransport(const File& audioFile)
 		loadedFileName.setText(currentlyLoadedFile.getFileName(), dontSendNotification);
 
 		// send message to the main log window
-		sendMsgToLogWindow("Loaded .wav: " + audioFile.getFileName());
+		sendMsgToLogWindow("Loaded .wav: " + currentlyLoadedFile.getFileName());
 
 		playButton.setEnabled(true);
 		stopButton.setEnabled(true);
 		loopButton.setEnabled(true);
 	}
+	else
+	{
+		sendMsgToLogWindow("File " + File(fullPath).getFileName() + "is not chached.");
+	}
+}
+
+void StimulusPlayer::unloadFileFromTransport()
+{
+	if (transportSourceArray[currentTSIndex] != nullptr)
+		transportSourceArray[currentTSIndex]->stop();
+
+	pt.clearThumbnail();
+	loadedFileName.setText("", dontSendNotification);
+	playButton.setEnabled(false);
+	stopButton.setEnabled(false);
+	loopButton.setEnabled(false);
 }
 
 void StimulusPlayer::setShowTest(bool shouldShow)

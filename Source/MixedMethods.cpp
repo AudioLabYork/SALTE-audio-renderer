@@ -88,7 +88,6 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 
 	// prepare the player
 	m_player->unloadFileFromTransport();
-	m_player->cachingLock = true;
 	m_player->clearAudioFileCache();
 	
 	for (int i = 0; i < trial->getNumberOfMConditions(); ++i)
@@ -102,8 +101,6 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		m_player->cacheAudioFile(trial->getTCondition(0)->filepath);
 		m_player->cacheAudioFile(trial->getTCondition(1)->filepath);
 	}
-
-	m_player->cachingLock = false;
 
 	ratingSliderArray.clear();
 	ratingReadouts.clear();
@@ -343,7 +340,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			if (timeSyncPlayback) trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 			
 			// setup the player
-			m_player->loadFile(trial->getMCondition(i)->filepath);
+			m_player->loadFileIntoTransport(trial->getMCondition(i)->filepath);
 			m_player->setGain(trial->getMCondition(i)->gain);
 			if (timeSyncPlayback) m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 
@@ -375,7 +372,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (timeSyncPlayback)
 			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		
-		m_player->loadFile(trial->getMReference(0)->filepath);
+		m_player->loadFileIntoTransport(trial->getMReference(0)->filepath);
 		m_player->setGain(trial->getMReference(0)->gain);
 		
 		if (timeSyncPlayback)
@@ -408,7 +405,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (timeSyncPlayback)
 			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		
-		m_player->loadFile(trial->getTCondition(0)->filepath);
+		m_player->loadFileIntoTransport(trial->getTCondition(0)->filepath);
 		m_player->setGain(trial->getTCondition(0)->gain);
 		
 		if (timeSyncPlayback)
@@ -441,7 +438,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (timeSyncPlayback)
 			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
 		
-		m_player->loadFile(trial->getTCondition(1)->filepath);
+		m_player->loadFileIntoTransport(trial->getTCondition(1)->filepath);
 		m_player->setGain(trial->getTCondition(1)->gain);
 		
 		if (timeSyncPlayback)
