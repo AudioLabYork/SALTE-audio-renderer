@@ -131,7 +131,6 @@ void AuditoryLocalisation::indexAudioFiles()
 			auto* reader = formatManager.createReaderFor(audioFilesArray[i]);
 			totalTimeOfAudioFiles += reader->lengthInSamples / reader->sampleRate;
 			reader->~AudioFormatReader();
-			m_player->cacheAudioFile(audioFilesArray[currentTrialIndex].getFullPathName());
 		}
 
 		// shuffle the audio file array

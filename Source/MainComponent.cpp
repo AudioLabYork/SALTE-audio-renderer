@@ -132,10 +132,9 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 	// pass the buffer into the stimulus player to be filled with required audio
 	m_stimulusPlayer.getNextAudioBlock(newinfo);
 
-	//// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
-	//m_binauralRenderer.processBlock(*newinfo.buffer);
-
-	//m_headphoneCompensation.processBlock(*newinfo.buffer);
+	// // pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
+	// m_binauralRenderer.processBlock(*newinfo.buffer);
+	// m_headphoneCompensation.processBlock(*newinfo.buffer);
 
 	AudioBuffer<float>* sourceBuffer = bufferToFill.buffer;
 
@@ -195,7 +194,7 @@ void MainComponent::resized()
 
 	m_testSessionForm.setBounds(10, 170, 640, 480);
 	mc.setBounds(10, 170, 640, 480);
-	// m_localisationComponent.setBounds(10, 170, 640, 480); // uncomment to show the localisation component
+	m_localisationComponent.setBounds(10, 170, 640, 480); // uncomment to show the localisation component
 
 	if (showOnlyTestInterface)
 	{
