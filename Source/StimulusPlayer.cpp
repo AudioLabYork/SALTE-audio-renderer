@@ -499,7 +499,11 @@ void StimulusPlayer::setPlaybackOffsets(double beg, double end)
 	endOffsetTime = end;
 
 	double length = transportSource.getLengthInSeconds();
-	transportSlider.setMinAndMaxValues(beg / length, 1 - end / length, dontSendNotification);
+	if (length > 0)
+		transportSlider.setMinAndMaxValues(beg / length, 1 - end / length, dontSendNotification);
+	else
+		transportSlider.setMinAndMaxValues(0, 1, dontSendNotification);
+
 	sendChangeMessage();
 }
 
