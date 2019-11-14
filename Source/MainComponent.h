@@ -59,6 +59,7 @@ private:
 	TextButton openAudioDeviceManager, connectOscButton;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
+	TextButton showMixedComp, showLocComp;
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;
 

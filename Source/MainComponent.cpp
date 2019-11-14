@@ -86,6 +86,14 @@ MainComponent::MainComponent()
     logWindow.setScrollbarsShown(true);
 	addAndMakeVisible(logWindow);
 
+	showMixedComp.setButtonText("Mixed Methods");
+	showMixedComp.addListener(this);
+	addAndMakeVisible(showMixedComp);
+
+	showLocComp.setButtonText("Localisation");
+	showLocComp.addListener(this);
+	addAndMakeVisible(showLocComp);
+
 	showTestInterface.setButtonText("Show test interface");
 	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
@@ -194,7 +202,7 @@ void MainComponent::resized()
 
 	m_testSessionForm.setBounds(10, 170, 640, 480);
 	mc.setBounds(10, 170, 640, 480);
-	m_localisationComponent.setBounds(10, 170, 640, 480); // uncomment to show the localisation component
+	m_localisationComponent.setBounds(10, 170, 640, 480);
 
 	if (showOnlyTestInterface)
 	{
@@ -208,8 +216,8 @@ void MainComponent::resized()
 		m_binauralRendererView.setBounds(660, 350, 730, 245);
 		m_headphoneCompensation.setBounds(660, 605, 730, 185);
 
-		connectOscButton.setBounds(310, 70, 240, 25);
-		openAudioDeviceManager.setBounds(310, 105, 240, 25);
+		connectOscButton.setBounds(560, 20, 80, 40);
+		openAudioDeviceManager.setBounds(310, 70, 240, 25);
 
 		clientTxIpLabel.setBounds(310, 35, 80, 25);
 		clientTxPortLabel.setBounds(410, 35, 60, 25);
@@ -217,6 +225,8 @@ void MainComponent::resized()
 
 		logWindow.setBounds(10, 660, 640, 130);
 
+		showMixedComp.setBounds(310, 105, 115, 25);
+		showLocComp.setBounds(435, 105, 115, 25);
 		showTestInterface.setBounds(560, 70, 80, 60);
 	}
 }
@@ -253,6 +263,16 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 			connectOscButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 			connectOscButton.setButtonText("Connect OSC");
 		}
+	}
+	else if (buttonThatWasClicked == &showMixedComp)
+	{
+		m_testSessionForm.setVisible(true);
+		m_localisationComponent.setVisible(false);
+	}
+	else if (buttonThatWasClicked == &showLocComp)
+	{
+		m_testSessionForm.setVisible(false);
+		m_localisationComponent.setVisible(true);
 	}
 	else if (buttonThatWasClicked == &showTestInterface)
 	{
