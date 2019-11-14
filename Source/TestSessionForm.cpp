@@ -256,13 +256,11 @@ void TestSessionForm::createRandomSubjectID()
 void TestSessionForm::initSettings()
 {
 	PropertiesFile::Options options;
-	// options.applicationName = ProjectInfo::projectName;
 	options.applicationName = "SALTETestSessionFormSettings";
 	options.filenameSuffix = ".conf";
 	options.osxLibrarySubFolder = "Application Support";
 	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
 	options.storageFormat = PropertiesFile::storeAsXML;
-	//    PropertiesFile::reload();
 	TestSessionFormSettings.setStorageParameters(options);
 }
 

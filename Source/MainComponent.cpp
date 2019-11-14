@@ -29,8 +29,11 @@ MainComponent::MainComponent()
 	if (logo.isValid()) imageComponent.setImage(logo);
 	addAndMakeVisible(&imageComponent);
 
-    // set number of output channels to 2 (binaural rendering case)
-    setAudioChannels (0, 2);
+    //// set number of output channels to 2 (binaural rendering case)
+    //setAudioChannels (0, 2);
+
+	// set number of output channels to 50 (rendering using loudspeaker rig)
+	setAudioChannels(0, 50);
 
 	// OSC labels
 	clientTxIpLabel.setEditable(false, true, false);

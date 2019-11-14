@@ -24,11 +24,18 @@ AuditoryLocalisation::AuditoryLocalisation()
 	g_confirmPointer.setButtonText("Confirm Pointer Direction");
 	g_confirmPointer.addListener(this);
 	addAndMakeVisible(g_confirmPointer);
+
+	// load settings
+	initSettings();
+	if (TestSessionFormSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
+	{
+		loadSettings();
+	}
 }
 
 AuditoryLocalisation::~AuditoryLocalisation()
 {
-
+	saveSettings();
 }
 
 void AuditoryLocalisation::init(StimulusPlayer* player, BinauralRenderer* renderer)
@@ -46,7 +53,7 @@ void AuditoryLocalisation::paint(Graphics& g)
 	g.drawRect(getLocalBounds(), 1);
 
 	g.setColour(Colours::white);
-	g.drawText(audioFilesSrcPath, 180, 20, 440, 25, Justification::centredLeft);
+	g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
 	g.drawText("Number of files: " + String(audioFilesArray.size()) + ", total length (s): " + String(totalTimeOfAudioFiles,2), 180, 50, 440, 25, Justification::centredLeft);
 	g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
 }
@@ -63,11 +70,11 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &g_chooseStimuliFolder)
 	{
-		indexAudioFiles();
+		selectSrcPath();
 	}
 	else if (buttonThatWasClicked == &g_startTest)
 	{
-
+		loadFile();
 	}
 	else if (buttonThatWasClicked == &g_prevTrial)
 	{
@@ -102,23 +109,28 @@ void AuditoryLocalisation::changeListenerCallback(ChangeBroadcaster* source)
 
 }
 
-void AuditoryLocalisation::indexAudioFiles()
+void AuditoryLocalisation::selectSrcPath()
 {
-	audioFilesArray.clear();
-	File audioFilesDir;
-	FileChooser fc("Wybierz katalog z plikami audio...",
+	FileChooser fc("Select the stimuli folder...",
 		File::getSpecialLocation(File::userHomeDirectory));
 	if (fc.browseForDirectory())
 	{
 		audioFilesDir = fc.getResult();
-		DirectoryIterator iter(audioFilesDir, true, "*.wav");
-		while (iter.next())
-		{
-			File theFileItFound(iter.getFile());
-			audioFilesArray.add(theFileItFound);
-		}
-		audioFilesSrcPath = audioFilesDir.getFullPathName();
+		indexAudioFiles();
+		saveSettings();
 	}
+}
+
+void AuditoryLocalisation::indexAudioFiles()
+{
+	audioFilesArray.clear();
+	DirectoryIterator iter(audioFilesDir, true, "*.wav");
+	while (iter.next())
+	{
+		File theFileItFound(iter.getFile());
+		audioFilesArray.add(theFileItFound);
+	}
+
 
 	if (audioFilesArray.size() > 0)
 	{
@@ -137,18 +149,40 @@ void AuditoryLocalisation::indexAudioFiles()
 		std::random_device seed;
 		std::mt19937 rng(seed());
 		std::shuffle(audioFilesArray.begin(), audioFilesArray.end(), rng);
-		
-		loadFile();
 	}
 }
 
 void AuditoryLocalisation::loadFile()
 {
 	m_player->loadFileIntoTransport(audioFilesArray[currentTrialIndex].getFullPathName());
+	m_player->play(); // sometimes play is not triggering (called too soon?)
 }
 
 void AuditoryLocalisation::sendMsgToLogWindow(String message)
 {
 	currentMessage += message + "\n";
 	sendChangeMessage();  // broadcast change message to inform and update the editor
+}
+
+void AuditoryLocalisation::initSettings()
+{
+	PropertiesFile::Options options;
+	options.applicationName = "SALTELocalisationTestSettings";
+	options.filenameSuffix = ".conf";
+	options.osxLibrarySubFolder = "Application Support";
+	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
+	options.storageFormat = PropertiesFile::storeAsXML;
+	TestSessionFormSettings.setStorageParameters(options);
+}
+
+void AuditoryLocalisation::loadSettings()
+{
+	audioFilesDir = TestSessionFormSettings.getUserSettings()->getValue("audioFilesSrcPath");
+	indexAudioFiles();
+}
+
+void AuditoryLocalisation::saveSettings()
+{
+	TestSessionFormSettings.getUserSettings()->setValue("audioFilesSrcPath", audioFilesDir.getFullPathName());
+	TestSessionFormSettings.getUserSettings()->setValue("loadSettingsFile", true);
 }

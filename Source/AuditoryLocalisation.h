@@ -37,8 +37,9 @@ private:
 	TextButton g_prevTrial, g_nextTrial;
 	TextButton g_confirmPointer;
 
+	void selectSrcPath();
 	void indexAudioFiles();
-	String audioFilesSrcPath = "*** no path selected ***";
+	File audioFilesDir;
 	Array<File> audioFilesArray;
 	double totalTimeOfAudioFiles = 0;
 
@@ -46,5 +47,10 @@ private:
 
 	void loadFile();
 	void sendMsgToLogWindow(String message);
+
+	void initSettings();
+	void loadSettings();
+	void saveSettings();
+	ApplicationProperties TestSessionFormSettings;
 };
 
