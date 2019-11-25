@@ -40,7 +40,10 @@ public:
 	float getRoll();
 	float getPitch();
 	float getYaw();
+	
+	bool isRendererEnabled();
 
+	void enableRenderer(bool enable);
 	void enableDualBand(bool enable);
 	void enableRotation(bool enable);
 	void enableTranslation(bool enable);
@@ -100,6 +103,7 @@ private:
 	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_lowPass;
 	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_highPass;
 
+	bool m_enableRenderer;
 	bool m_enableDualBand;
 	bool m_enableRotation;
 	bool m_enableTranslation;

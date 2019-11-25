@@ -59,6 +59,8 @@ private:
 
 	BinauralRenderer* m_renderer;
 	
+	ToggleButton m_enableRenderer;
+
 	TextButton m_ambixFileBrowse;
 	ToggleButton m_useSofa;
 	

@@ -13,6 +13,11 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	
 	startTimer(50);
 
+	m_enableRenderer.setButtonText("Enable Binaural Renderer");
+	m_enableRenderer.setToggleState(m_renderer->isRendererEnabled(), dontSendNotification);
+	m_enableRenderer.addListener(this);
+	addAndMakeVisible(m_enableRenderer);
+
 	m_ambixFileBrowse.setButtonText("Select Ambix Config file...");
 	m_ambixFileBrowse.addListener(this);
 	addAndMakeVisible(m_ambixFileBrowse);
@@ -71,6 +76,8 @@ void BinauralRendererView::paint(Graphics& g)
 
 void BinauralRendererView::resized()
 {
+	m_enableRenderer.setBounds(10, 75, 200, 30);
+
 	m_ambixFileBrowse.setBounds(10, 10, 150, 30);
 	m_useSofa.setBounds(10, 45, 150, 30);
 
@@ -111,6 +118,10 @@ void BinauralRendererView::buttonClicked(Button* buttonClicked)
 	else if (buttonClicked == &m_enableRotation)
 	{
 		m_renderer->enableRotation(m_enableRotation.getToggleState());
+	}
+	else if (buttonClicked == &m_enableRenderer)
+	{
+		m_renderer->enableRenderer(m_enableRenderer.getToggleState());
 	}
 }
 

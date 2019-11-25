@@ -13,6 +13,7 @@ BinauralRenderer::BinauralRenderer()
 	, m_xTrans(0.0f)
 	, m_yTrans(0.0f)
 	, m_zTrans(0.0f)
+	, m_enableRenderer(true)
 	, m_enableDualBand(false)
 	, m_enableRotation(true)
 	, m_enableTranslation(true)
@@ -304,6 +305,16 @@ float BinauralRenderer::getYaw()
 	return m_yaw;
 }
 
+bool BinauralRenderer::isRendererEnabled()
+{
+	return m_enableRenderer;
+}
+
+void BinauralRenderer::enableRenderer(bool enable)
+{
+	m_enableRenderer = enable;
+}
+
 void BinauralRenderer::enableDualBand(bool enable)
 {
 	m_enableDualBand = enable;
@@ -348,7 +359,7 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 {
 	ScopedLock lock(m_procLock);
 
-	if (buffer.getNumChannels() <= 2)
+	if (!m_enableRenderer || buffer.getNumChannels() <= 2)
 		return;
 
 	if (m_enableRotation)
