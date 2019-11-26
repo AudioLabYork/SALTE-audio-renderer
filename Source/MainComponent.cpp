@@ -72,15 +72,15 @@ MainComponent::MainComponent()
 	m_testSessionForm.addListener(this);
 	addAndMakeVisible(m_testSessionForm);
 
-	mc.init(&m_stimulusPlayer, &m_binauralRenderer);
-	mc.addListener(this);
-	mc.addChangeListener(this);
-	addChildComponent(mc);
+	m_mixedMethods.init(&oscTxRx, &m_testSession, &m_stimulusPlayer, &m_binauralRenderer);
+	m_mixedMethods.addListener(this);
+	m_mixedMethods.addChangeListener(this);
+	addChildComponent(m_mixedMethods);
 
 	// localisation component temporarily on top of the session form and mixed methods
 	m_localisationComponent.init(&m_stimulusPlayer, &m_binauralRenderer);
 	m_localisationComponent.addChangeListener(this);
-	addAndMakeVisible(m_localisationComponent);
+	addChildComponent(m_localisationComponent);
 
 	// log window
     logWindow.setMultiLine(true);
@@ -206,7 +206,7 @@ void MainComponent::resized()
 	imageComponent.setBounds(20, 20, 90, 90);
 
 	m_testSessionForm.setBounds(10, 170, 640, 480);
-	mc.setBounds(10, 170, 640, 480);
+	m_mixedMethods.setBounds(10, 170, 640, 480);
 	m_localisationComponent.setBounds(10, 170, 640, 480);
 
 	if (showOnlyTestInterface)
@@ -302,8 +302,8 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 void MainComponent::formCompleted()
 {
-	mc.loadTestSession(&m_testSession, &oscTxRx);
-	mc.setVisible(true);
+	m_mixedMethods.loadTestSession();
+	m_mixedMethods.setVisible(true);
 	m_binauralRendererView.setTestInProgress(true);
 }
 
@@ -359,12 +359,12 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 			m_binauralRendererView.m_currentLogMessage.clear();
 		}
 	}
-	else if (source == &mc)
+	else if (source == &m_mixedMethods)
 	{
-		if (mc.currentMessage != "")
+		if (m_mixedMethods.currentMessage != "")
 		{
-			logWindowMessage += timeStamp + mc.currentMessage;
-			mc.currentMessage.clear();
+			logWindowMessage += timeStamp + m_mixedMethods.currentMessage;
+			m_mixedMethods.currentMessage.clear();
 		}
 	}
 

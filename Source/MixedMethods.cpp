@@ -45,18 +45,19 @@ MixedMethodsComponent::~MixedMethodsComponent()
 {
 }
 
-void MixedMethodsComponent::init(StimulusPlayer* player, BinauralRenderer* renderer)
+void MixedMethodsComponent::init(OscTransceiver* oscTxRx, TestSession* testSession, StimulusPlayer* player, BinauralRenderer* renderer)
 {	
+	m_testSession = testSession;
 	m_renderer = renderer;
 	m_player = player;
 	m_player->addChangeListener(this);
-}
-
-void MixedMethodsComponent::loadTestSession(TestSession* testSession, OscTransceiver* oscTxRx)
-{
-	m_testSession = testSession;
 	m_oscTxRx = oscTxRx;
 	m_oscTxRx->addListener(this);
+}
+
+void MixedMethodsComponent::loadTestSession()
+{
+	// loads the session with first trial
 	loadTrial(0);
 }
 

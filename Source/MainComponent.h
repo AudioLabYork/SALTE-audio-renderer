@@ -43,7 +43,7 @@ private:
     StimulusPlayer m_stimulusPlayer;
 	BinauralRenderer m_binauralRenderer;
 	BinauralRendererView m_binauralRendererView;
-	MixedMethodsComponent mc;
+	MixedMethodsComponent m_mixedMethods;
 	AuditoryLocalisation m_localisationComponent;
 	HeadphoneCompensation m_headphoneCompensation;
 

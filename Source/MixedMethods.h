@@ -19,8 +19,9 @@ public:
 	MixedMethodsComponent();
 	~MixedMethodsComponent();
 
-	void init(StimulusPlayer* player, BinauralRenderer* renderer);
-	void loadTestSession(TestSession* testSession, OscTransceiver* oscTxRx);
+	void init(OscTransceiver* oscTxRx, TestSession* testSession, StimulusPlayer* player, BinauralRenderer* renderer);
+
+	void loadTestSession();
 
 	class Listener
 	{

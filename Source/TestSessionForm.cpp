@@ -50,7 +50,6 @@ TestSessionForm::TestSessionForm()
 	// show name / age / gender fields
 	if (!m_anonymizeSubject)
 	{
-
 		addAndMakeVisible(m_labelName);
 		addAndMakeVisible(m_labelAge);
 		addAndMakeVisible(m_labelGender);
