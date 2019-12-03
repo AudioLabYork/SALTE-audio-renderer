@@ -29,11 +29,6 @@ AuditoryLocalisation::AuditoryLocalisation()
 	// osc logging
 	startTimerHz(60);
 
-	loggingButton.setButtonText("Activate OSC Logging");
-	loggingButton.setToggleState(false, dontSendNotification);
-	loggingButton.addListener(this);
-	addAndMakeVisible(loggingButton);
-
 	saveLogButton.setButtonText("Save Log");
 	saveLogButton.addListener(this);
 	saveLogButton.setEnabled(false);
@@ -54,11 +49,12 @@ AuditoryLocalisation::~AuditoryLocalisation()
 	saveSettings();
 }
 
-void AuditoryLocalisation::init(StimulusPlayer* player, BinauralRenderer* renderer)
+void AuditoryLocalisation::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer)
 {
 	m_renderer = renderer;
 	m_player = player;
 	m_player->addChangeListener(this);
+	m_oscTxRx = oscTxRx;
 }
 
 void AuditoryLocalisation::paint(Graphics& g)
@@ -81,7 +77,6 @@ void AuditoryLocalisation::resized()
 	g_nextTrial.setBounds(140, 420, 100, 25);
 	g_confirmPointer.setBounds(320, 320, 150, 25);
 
-	loggingButton.setBounds(20, 80, 150, 25);
 	saveLogButton.setBounds(20, 110, 150, 25);
 	messageCounter.setBounds(20, 140, 150, 25);
 }
@@ -95,17 +90,20 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 	{
 		if (!g_startTest.getToggleState())
 		{
-			loggingButton.triggerClick();
+			oscMessageList.clear();
+			m_oscTxRx->addListener(this);
+			activationTime = Time::getMillisecondCounterHiRes();
+
 			loadFile();
 			g_startTest.setToggleState(true, dontSendNotification);
 			g_startTest.setButtonText("Stop Test");
 		}
 		else
 		{
-			loggingButton.triggerClick();
 			currentTrialIndex = 0;
 			g_startTest.setToggleState(false, dontSendNotification);
 			g_startTest.setButtonText("Start Test");
+			m_oscTxRx->removeListener(this);
 		}
 	}
 	else if (buttonThatWasClicked == &g_prevTrial)
@@ -123,30 +121,11 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 			currentTrialIndex++;
 			loadFile();
 		}
+		else g_startTest.triggerClick();
 	}
 	else if (buttonThatWasClicked == &g_confirmPointer)
 	{
 
-	}
-	else if (buttonThatWasClicked == &loggingButton)
-	{
-		if (!loggingButton.getToggleState())
-		{
-			connect(port);
-			addListener(this);
-			activationTime = Time::getMillisecondCounterHiRes();
-			saveLogButton.setEnabled(false);
-			loggingButton.setToggleState(true, dontSendNotification);
-			loggingButton.setButtonText("Deactivate Logging");
-		}
-		else
-		{
-			removeListener(this);
-			disconnect();
-			saveLogButton.setEnabled(true);
-			loggingButton.setToggleState(false, dontSendNotification);
-			loggingButton.setButtonText("Activate OSC Logging");
-		}
 	}
 	else if (buttonThatWasClicked == &saveLogButton)
 	{
@@ -158,6 +137,11 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 void AuditoryLocalisation::timerCallback()
 {
 	messageCounter.setText(String(oscMessageList.size()), dontSendNotification);
+
+	if(oscMessageList.size() > 0)
+		saveLogButton.setEnabled(true);
+	else
+		saveLogButton.setEnabled(false);
 }
 
 void AuditoryLocalisation::oscMessageReceived(const OSCMessage& message)
@@ -176,7 +160,9 @@ void AuditoryLocalisation::processOscMessage(const OSCMessage& message)
 	String arguments;
 	for (int i = 0; i < message.size(); ++i)
 	{
-		arguments += "," + String(message[i].getFloat32());
+		if (message[i].isString()) arguments += "," + message[i].getString();
+		else if (message[i].isFloat32()) arguments += "," + String(message[i].getFloat32());
+		else if (message[i].isInt32()) arguments += "," + String(message[i].getInt32());
 	}
 
 	double time = Time::getMillisecondCounterHiRes() - activationTime;
