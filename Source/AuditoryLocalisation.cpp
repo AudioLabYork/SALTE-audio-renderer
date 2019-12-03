@@ -10,6 +10,7 @@ AuditoryLocalisation::AuditoryLocalisation()
 	addAndMakeVisible(g_chooseStimuliFolder);
 
 	g_startTest.setButtonText("Start Test");
+	g_startTest.setToggleState(false, dontSendNotification);
 	g_startTest.addListener(this);
 	addAndMakeVisible(g_startTest);
 
@@ -24,6 +25,21 @@ AuditoryLocalisation::AuditoryLocalisation()
 	g_confirmPointer.setButtonText("Confirm Pointer Direction");
 	g_confirmPointer.addListener(this);
 	addAndMakeVisible(g_confirmPointer);
+
+	// osc logging
+	startTimerHz(60);
+
+	loggingButton.setButtonText("Activate OSC Logging");
+	loggingButton.setToggleState(false, dontSendNotification);
+	loggingButton.addListener(this);
+	addAndMakeVisible(loggingButton);
+
+	saveLogButton.setButtonText("Save Log");
+	saveLogButton.addListener(this);
+	saveLogButton.setEnabled(false);
+	addAndMakeVisible(saveLogButton);
+
+	addAndMakeVisible(messageCounter);
 
 	// load settings
 	initSettings();
@@ -65,6 +81,9 @@ void AuditoryLocalisation::resized()
 	g_nextTrial.setBounds(140, 420, 100, 25);
 	g_confirmPointer.setBounds(320, 320, 150, 25);
 
+	loggingButton.setBounds(20, 80, 150, 25);
+	saveLogButton.setBounds(20, 110, 150, 25);
+	messageCounter.setBounds(20, 140, 150, 25);
 }
 void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 {
@@ -74,7 +93,20 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 	}
 	else if (buttonThatWasClicked == &g_startTest)
 	{
-		loadFile();
+		if (!g_startTest.getToggleState())
+		{
+			loggingButton.triggerClick();
+			loadFile();
+			g_startTest.setToggleState(true, dontSendNotification);
+			g_startTest.setButtonText("Stop Test");
+		}
+		else
+		{
+			loggingButton.triggerClick();
+			currentTrialIndex = 0;
+			g_startTest.setToggleState(false, dontSendNotification);
+			g_startTest.setButtonText("Start Test");
+		}
 	}
 	else if (buttonThatWasClicked == &g_prevTrial)
 	{
@@ -96,17 +128,106 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 	{
 
 	}
+	else if (buttonThatWasClicked == &loggingButton)
+	{
+		if (!loggingButton.getToggleState())
+		{
+			connect(port);
+			addListener(this);
+			activationTime = Time::getMillisecondCounterHiRes();
+			saveLogButton.setEnabled(false);
+			loggingButton.setToggleState(true, dontSendNotification);
+			loggingButton.setButtonText("Deactivate Logging");
+		}
+		else
+		{
+			removeListener(this);
+			disconnect();
+			saveLogButton.setEnabled(true);
+			loggingButton.setToggleState(false, dontSendNotification);
+			loggingButton.setButtonText("Activate OSC Logging");
+		}
+	}
+	else if (buttonThatWasClicked == &saveLogButton)
+	{
+		if (oscMessageList.size() > 0) saveLog();
+	}
 	repaint();
+}
+
+void AuditoryLocalisation::timerCallback()
+{
+	messageCounter.setText(String(oscMessageList.size()), dontSendNotification);
 }
 
 void AuditoryLocalisation::oscMessageReceived(const OSCMessage& message)
 {
+	processOscMessage(message);
+}
 
+void AuditoryLocalisation::oscBundleReceived(const OSCBundle& bundle)
+{
+	OSCBundle::Element elem = bundle[0];
+	processOscMessage(elem.getMessage());
+}
+
+void AuditoryLocalisation::processOscMessage(const OSCMessage& message)
+{
+	String arguments;
+	for (int i = 0; i < message.size(); ++i)
+	{
+		arguments += "," + String(message[i].getFloat32());
+	}
+
+	double time = Time::getMillisecondCounterHiRes() - activationTime;
+	String messageText = String(time) + ",";
+	if (audioFilesArray[currentTrialIndex].exists() && m_player->checkPlaybackStatus())
+	{
+		messageText += audioFilesArray[currentTrialIndex].getFileName() + "," + message.getAddressPattern().toString() + arguments + "\n";
+	}
+	else
+	{
+		messageText += "no stimulus present," + message.getAddressPattern().toString() + arguments + "\n";
+	}
+	oscMessageList.add(messageText);
+}
+
+void AuditoryLocalisation::saveLog()
+{
+	File logFile;
+	FileChooser fc("Select or create results export file...",
+		File::getCurrentWorkingDirectory(),
+		"*.csv",
+		true);
+
+	if (fc.browseForFileToSave(true))
+	{
+		logFile = fc.getResult();
+
+
+		if (!logFile.exists())
+		{
+			logFile.create();
+			// logFile.replaceWithText("time,address,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12\n");
+		}
+
+		FileOutputStream fos(logFile);
+		for (int i = 0; i < oscMessageList.size(); ++i)
+		{
+			fos << oscMessageList[i];
+		}
+	}
 }
 
 void AuditoryLocalisation::changeListenerCallback(ChangeBroadcaster* source)
 {
-
+	if (source == m_player)
+	{
+		if (!m_player->checkPlaybackStatus() && g_startTest.getToggleState())
+		{
+			g_nextTrial.triggerClick();
+		}
+	}
 }
 
 void AuditoryLocalisation::selectSrcPath()
@@ -131,11 +252,9 @@ void AuditoryLocalisation::indexAudioFiles()
 		audioFilesArray.add(theFileItFound);
 	}
 
-
+	// process the audio file array
 	if (audioFilesArray.size() > 0)
 	{
-		// read and verify audio files properties
-		bool filesVerified = true;
 		AudioFormatManager formatManager;
 		formatManager.registerBasicFormats();
 		for (int i = 0; i < audioFilesArray.size(); ++i)
@@ -155,7 +274,7 @@ void AuditoryLocalisation::indexAudioFiles()
 void AuditoryLocalisation::loadFile()
 {
 	m_player->loadFileIntoTransport(audioFilesArray[currentTrialIndex].getFullPathName());
-	m_player->play(); // sometimes play is not triggering (called too soon?)
+	m_player->play();
 }
 
 void AuditoryLocalisation::sendMsgToLogWindow(String message)

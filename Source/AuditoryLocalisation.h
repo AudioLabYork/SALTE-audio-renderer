@@ -7,12 +7,13 @@
 #include <vector>
 #include <random>
 
-class AuditoryLocalisation : public Component,
-								public OSCReceiver,
-								public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
-								private Button::Listener,
-								private ChangeListener,
-								public ChangeBroadcaster
+class AuditoryLocalisation	:	public Component
+							,	public OSCReceiver
+							,	public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
+							,	private Button::Listener
+							,	private ChangeListener
+							,	public ChangeBroadcaster
+							,	public Timer
 {
 public:
 	AuditoryLocalisation();
@@ -24,7 +25,9 @@ public:
 	void resized() override;
 	void buttonClicked(Button* buttonThatWasClicked) override;
 	void oscMessageReceived(const OSCMessage& message) override;
+	void oscBundleReceived(const OSCBundle& bundle) override;
 	void changeListenerCallback(ChangeBroadcaster* source) override;
+	void timerCallback() override;
 
 	String currentMessage;
 private:
@@ -48,6 +51,16 @@ private:
 	void loadFile();
 	void sendMsgToLogWindow(String message);
 
+	// OSC logging
+	void processOscMessage(const OSCMessage& message);
+	void saveLog();
+	int port = 9000;
+	double activationTime = 0.0f;
+	TextButton loggingButton, saveLogButton;
+	Label messageCounter;
+	StringArray oscMessageList;
+
+	// settings
 	void initSettings();
 	void loadSettings();
 	void saveSettings();
