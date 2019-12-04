@@ -230,12 +230,26 @@ void AuditoryLocalisation::selectSrcPath()
 
 void AuditoryLocalisation::indexAudioFiles()
 {
-	audioFilesArray.clear();
+	Array<File> audioFilesInDir;
+	audioFilesInDir.clear();
+
 	DirectoryIterator iter(audioFilesDir, true, "*.wav");
 	while (iter.next())
 	{
 		File theFileItFound(iter.getFile());
-		audioFilesArray.add(theFileItFound);
+		audioFilesInDir.add(theFileItFound);
+	}
+
+	// create the test audio file array
+	audioFilesArray.clear();
+	for (int i = 0; i < 10; ++i)
+	{
+		// shuffle the audio file array
+		std::random_device seed;
+		std::mt19937 rng(seed());
+		std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
+
+		audioFilesArray.addArray(audioFilesInDir);
 	}
 
 	// process the audio file array
@@ -249,11 +263,6 @@ void AuditoryLocalisation::indexAudioFiles()
 			totalTimeOfAudioFiles += reader->lengthInSamples / reader->sampleRate;
 			reader->~AudioFormatReader();
 		}
-
-		// shuffle the audio file array
-		std::random_device seed;
-		std::mt19937 rng(seed());
-		std::shuffle(audioFilesArray.begin(), audioFilesArray.end(), rng);
 	}
 }
 
