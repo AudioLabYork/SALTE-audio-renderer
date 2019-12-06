@@ -5,13 +5,14 @@ MainComponent::MainComponent()
 	, m_maxSamplesPerBlock(0)
 	, showOnlyTestInterface(false)
 {
-    // add and make visible the stimulus player object
-    addAndMakeVisible(m_stimulusPlayer);
-    m_stimulusPlayer.addChangeListener(this);
+	// add and make visible the stimulus player object
+	addAndMakeVisible(m_stimulusPlayer);
+	m_stimulusPlayer.addChangeListener(this);
 
 	// setup binaural renderer, pass the osc transceiver
-	m_binauralRenderer.init();
 	oscTxRx.addListener(&m_binauralRenderer);
+
+	m_binauralRenderer.addListener(&m_binauralRendererView);
 	m_binauralRenderer.addChangeListener(this);
 
 	m_binauralRendererView.init(&m_binauralRenderer);
@@ -26,11 +27,14 @@ MainComponent::MainComponent()
 
 	// add logo
 	Image logo = ImageFileFormat::loadFrom(BinaryData::logo_180px_png, BinaryData::logo_180px_pngSize);
-	if (logo.isValid()) imageComponent.setImage(logo);
+
+	if (logo.isValid())
+		imageComponent.setImage(logo);
+
 	addAndMakeVisible(&imageComponent);
 
-    //// set number of output channels to 2 (binaural rendering case)
-    //setAudioChannels (0, 2);
+	//// set number of output channels to 2 (binaural rendering case)
+	//setAudioChannels (0, 2);
 
 	// set number of output channels to 50 (rendering using loudspeaker rig)
 	setAudioChannels(0, 50);
@@ -42,7 +46,7 @@ MainComponent::MainComponent()
 	clientTxIpLabel.setText("127.0.0.1", dontSendNotification);
 	clientTxPortLabel.setText("6000", dontSendNotification);
 	clientRxPortLabel.setText("9000", dontSendNotification);
-	clientTxIpLabel.setColour(Label::outlineColourId,Colours::black);
+	clientTxIpLabel.setColour(Label::outlineColourId, Colours::black);
 	clientTxPortLabel.setColour(Label::outlineColourId, Colours::black);
 	clientRxPortLabel.setColour(Label::outlineColourId, Colours::black);
 	clientTxIpLabel.setJustificationType(Justification::centred);
@@ -51,7 +55,7 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
-	
+
 	connectOscButton.setButtonText("Connect OSC");
 	connectOscButton.addListener(this);
 	connectOscButton.triggerClick(); // connect on startup
@@ -64,10 +68,10 @@ MainComponent::MainComponent()
 	// load settings file if available
 	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
 	audioSettingsFile = File(filePath + "/" + "SALTEAudioSettings.conf");
-	
+
 	if (audioSettingsFile.existsAsFile())
 		loadSettings();
-	
+
 	m_testSessionForm.init(&m_testSession);
 	m_testSessionForm.addListener(this);
 	addAndMakeVisible(m_testSessionForm);
@@ -83,10 +87,10 @@ MainComponent::MainComponent()
 	addChildComponent(m_localisationComponent);
 
 	// log window
-    logWindow.setMultiLine(true);
-    logWindow.setReadOnly(true);
-    logWindow.setCaretVisible(false);
-    logWindow.setScrollbarsShown(true);
+	logWindow.setMultiLine(true);
+	logWindow.setReadOnly(true);
+	logWindow.setCaretVisible(false);
+	logWindow.setScrollbarsShown(true);
 	addAndMakeVisible(logWindow);
 
 	showMixedComp.setButtonText("Mixed Methods");
@@ -116,20 +120,19 @@ MainComponent::~MainComponent()
 {
 	saveSettings();
 	oscTxRx.disconnectTxRx();
-	m_binauralRenderer.deinit();
 	m_binauralRendererView.deinit();
-    shutdownAudio();
+	shutdownAudio();
 }
 
 //==============================================================================
-void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
+void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
 	// prepare stimulus player object
 	m_stimulusPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_binauralRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_headphoneCompensation.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
-	if(samplesPerBlockExpected != m_maxSamplesPerBlock)
+	if (samplesPerBlockExpected != m_maxSamplesPerBlock)
 	{
 		m_maxSamplesPerBlock = samplesPerBlockExpected;
 		processBuffer.setSize(64, samplesPerBlockExpected);
@@ -158,15 +161,15 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 void MainComponent::releaseResources()
 {
 	// relese resources taken by stimulus player object
-    m_stimulusPlayer.releaseResources();
+	m_stimulusPlayer.releaseResources();
 	m_binauralRenderer.releaseResources();
 	m_headphoneCompensation.releaseResources();
 }
 
 //==============================================================================
-void MainComponent::paint (Graphics& g)
+void MainComponent::paint(Graphics& g)
 {
-    g.fillAll (getLookAndFeel().findColour (ResizableWindow::backgroundColourId));
+	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 
 	// RECTANGULAR OUTLINE
 	g.setColour(Colours::black);
@@ -174,11 +177,11 @@ void MainComponent::paint (Graphics& g)
 
 	g.setColour(getLookAndFeel().findColour(Label::textColourId));
 	g.drawMultiLineText(String("Build date and time:\n" + String(__DATE__) + " " + String(__TIME__)), 10, 140, 150, Justification::left);
-	
+
 	g.setFont(18.0f);
 	g.drawMultiLineText("Spatial\nAudio\nListening\nTest\nEnvironment", 120, 33, 120, Justification::left, 1.2f);
 
-    
+
 	if (showOnlyTestInterface)
 	{
 
@@ -212,7 +215,7 @@ void MainComponent::resized()
 	if (showOnlyTestInterface)
 	{
 		m_stimulusPlayer.setBounds(660, 170, 730, 330);
-		showTestInterface.setBounds(getWidth() - 20, getHeight()-20, 10, 10);
+		showTestInterface.setBounds(getWidth() - 20, getHeight() - 20, 10, 10);
 	}
 	else
 	{
@@ -257,7 +260,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		{
 			oscTxRx.disconnectTxRx();
 		}
-		
+
 		if (oscTxRx.isConnected())
 		{
 			connectOscButton.setColour(TextButton::buttonColourId, Colours::green);
@@ -283,9 +286,9 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		bool show = showTestInterface.getToggleState();
 		showOnlyTestInterface = show;
-		
+
 		m_stimulusPlayer.setShowTest(show);
-		if(m_audioSetup.m_shouldBeVisible) m_audioSetup.setVisible(!show);
+		if (m_audioSetup.m_shouldBeVisible) m_audioSetup.setVisible(!show);
 		m_binauralRendererView.setVisible(!show);
 		m_headphoneCompensation.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
@@ -297,7 +300,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		resized();
 	}
 
-    repaint();
+	repaint();
 }
 
 void MainComponent::formCompleted()
@@ -317,7 +320,7 @@ void MainComponent::testCompleted()
 void MainComponent::loadSettings()
 {
 	XmlDocument asxmldoc(audioSettingsFile);
-	std::unique_ptr<XmlElement> audioDeviceSettings (asxmldoc.getDocumentElement());
+	std::unique_ptr<XmlElement> audioDeviceSettings(asxmldoc.getDocumentElement());
 	deviceManager.initialise(0, 2, audioDeviceSettings.get(), true);
 }
 
@@ -335,14 +338,14 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
 	String timeStamp = Time::getCurrentTime().formatted("%H:%M:%S") + ": ";
 
-    if(source == &m_stimulusPlayer)
-    {
+	if (source == &m_stimulusPlayer)
+	{
 		if (m_stimulusPlayer.currentMessage != "")
 		{
 			logWindowMessage += timeStamp + m_stimulusPlayer.currentMessage;
 			m_stimulusPlayer.currentMessage.clear();
 		}
-    }
+	}
 	else if (source == &m_binauralRenderer)
 	{
 		if (m_binauralRenderer.m_currentLogMessage != "")
@@ -368,6 +371,6 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 		}
 	}
 
-    logWindow.setText(logWindowMessage);
-    logWindow.moveCaretToEnd();
+	logWindow.setText(logWindowMessage);
+	logWindow.moveCaretToEnd();
 }

@@ -338,7 +338,7 @@ void StimulusPlayer::loadFileIntoTransport(String fullPath)
 
 	if (audiofile.existsAsFile())
 	{
-		if (AudioFormatReader * reader = formatManager.createReaderFor(audiofile))
+		if (AudioFormatReader* reader = formatManager.createReaderFor(audiofile))
 		{
 			audioFileSource = std::make_unique<AudioFormatReaderSource>(reader, true);
 			transportSource.addChangeListener(this);
