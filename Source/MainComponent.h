@@ -7,6 +7,7 @@
 #include "BinauralRenderer.h"
 #include "BinauralRendererView.h"
 #include "MixedMethods.h"
+#include "AuditoryLocalisation.h"
 #include "TestSession.h"
 #include "TestSessionForm.h"
 #include "HeadphoneCompensation.h"
@@ -19,30 +20,31 @@ class MainComponent
 	, public ChangeListener
 {
 public:
-    //==============================================================================
-    MainComponent();
-    ~MainComponent();
+	//==============================================================================
+	MainComponent();
+	~MainComponent();
 
-    //==============================================================================
-    void prepareToPlay (int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock (const AudioSourceChannelInfo& bufferToFill) override;
-    void releaseResources() override;
+	//==============================================================================
+	void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
+	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override;
+	void releaseResources() override;
 
-    //==============================================================================
-    void paint (Graphics& g) override;
-    void resized() override;
-    void buttonClicked(Button* buttonThatWasClicked) override;
+	//==============================================================================
+	void paint(Graphics& g) override;
+	void resized() override;
+	void buttonClicked(Button* buttonThatWasClicked) override;
 	void formCompleted() override;
 	void testCompleted() override;
-    void changeListenerCallback(ChangeBroadcaster* source) override;
+	void changeListenerCallback(ChangeBroadcaster* source) override;
 
 private:
 	AudioSetup m_audioSetup;
 	OscTransceiver oscTxRx;
-    StimulusPlayer m_stimulusPlayer;
+	StimulusPlayer m_stimulusPlayer;
 	BinauralRenderer m_binauralRenderer;
 	BinauralRendererView m_binauralRendererView;
-	MixedMethodsComponent mc;
+	MixedMethodsComponent m_mixedMethods;
+	AuditoryLocalisation m_localisationComponent;
 	HeadphoneCompensation m_headphoneCompensation;
 
 	TestSession m_testSession;
@@ -57,6 +59,7 @@ private:
 	TextButton openAudioDeviceManager, connectOscButton;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 
+	TextButton showMixedComp, showLocComp;
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;
 
@@ -67,5 +70,5 @@ private:
 	void loadSettings();
 	void saveSettings();
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
+	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

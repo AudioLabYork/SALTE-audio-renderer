@@ -50,7 +50,6 @@ TestSessionForm::TestSessionForm()
 	// show name / age / gender fields
 	if (!m_anonymizeSubject)
 	{
-
 		addAndMakeVisible(m_labelName);
 		addAndMakeVisible(m_labelAge);
 		addAndMakeVisible(m_labelGender);
@@ -58,12 +57,12 @@ TestSessionForm::TestSessionForm()
 		addAndMakeVisible(m_editAge);
 		addAndMakeVisible(m_editGender);
 	}
-	
+
 	m_btnAnon.setButtonText("Anonymize subject");
 	m_btnAnon.setToggleState(m_anonymizeSubject, NotificationType::dontSendNotification);
 	m_btnAnon.addListener(this);
 	addAndMakeVisible(m_btnAnon);
-	
+
 	m_btnAgree.setButtonText("Consent Form Signed");
 	m_btnAgree.setToggleState(true, NotificationType::dontSendNotification);
 	addAndMakeVisible(m_btnAgree);
@@ -88,7 +87,7 @@ void TestSessionForm::init(TestSession* session)
 		jassertfalse;
 		return;
 	}
-	
+
 	m_session = session;
 
 	createRandomSubjectID();
@@ -117,7 +116,6 @@ void TestSessionForm::paint(Graphics& g)
 
 void TestSessionForm::resized()
 {
-
 	m_labelSession.setBounds(20, 20, 100, 25);
 
 	m_labelSessionFile.setBounds(30, 50, 500, 25);
@@ -136,7 +134,7 @@ void TestSessionForm::resized()
 	m_editName.setBounds(155, 180, 250, 25);
 	m_editAge.setBounds(155, 210, 250, 25);
 	m_editGender.setBounds(155, 240, 250, 25);
-	
+
 	m_createRndSubjectIDButton.setBounds(410, 150, 200, 25);
 	m_btnAnon.setBounds(410, 180, 200, 25);
 
@@ -195,8 +193,8 @@ void TestSessionForm::buttonClicked(Button* button)
 		m_session->setExportFile(m_exportFile);
 
 		std::unique_ptr<SubjectData> subject = std::make_unique<SubjectData>();
-		
-		
+
+
 		// get subject ID
 		subject->m_id = m_editSubjectID.getText();;
 
@@ -225,7 +223,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		if (fc.browseForFileToOpen())
 		{
 			m_sessionFile = fc.getResult();
-			m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
+			m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFileName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}
@@ -240,8 +238,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		if (fc.browseForFileToSave(true))
 		{
 			m_exportFile = fc.getResult();
-
-			m_labelExportFile.setText("Results File: " + m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
+			m_labelExportFile.setText("Results File: " + m_exportFile.getFileName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}
@@ -256,13 +253,11 @@ void TestSessionForm::createRandomSubjectID()
 void TestSessionForm::initSettings()
 {
 	PropertiesFile::Options options;
-	// options.applicationName = ProjectInfo::projectName;
 	options.applicationName = "SALTETestSessionFormSettings";
 	options.filenameSuffix = ".conf";
 	options.osxLibrarySubFolder = "Application Support";
 	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
 	options.storageFormat = PropertiesFile::storeAsXML;
-	//    PropertiesFile::reload();
 	TestSessionFormSettings.setStorageParameters(options);
 }
 

@@ -61,18 +61,14 @@ public:
 	bool getLoopingState();
 	bool checkPlaybackStatus();
 	bool checkLoopStatus();
-	void loadFile(String filepath);
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
 	void setPlaybackOffsets(double beg, double end);
 	double getPlaybackStartOffset();
 	double getPlaybackEndOffset();
 
+	void loadFileIntoTransport(String fullPath);
 	void unloadFileFromTransport();
-
-	void cacheAudioFile(String filepath);
-	void clearAudioFileCache();
-
 
 	void setShowTest(bool shouldShow);
 
@@ -84,12 +80,10 @@ public:
 private:
 	TransportState state;
 
-	OwnedArray<AudioFormatReaderSource> audioFileSourceArray;
 	TimeSliceThread readAheadThread;
+	std::unique_ptr<AudioFormatReaderSource> audioFileSource;
+	AudioTransportSource transportSource;
 
-	OwnedArray<AudioTransportSource> transportSourceArray;
-	Array<String> fileNameArray;
-	Array<int> numChArray;
 	int m_samplesPerBlockExpected;
 	double m_sampleRate;
 	
@@ -103,11 +97,9 @@ private:
 	double begOffsetTime = 0.0f, endOffsetTime = 0.0f;
 
 	int loadedFileChannelCount = 0;
-	int currentTSIndex;
 
 	// METHODS
 	void browseForFile();
-	void loadFileIntoTransport(const File& audioFile);
 	void sendMsgToLogWindow(String message);
 	String returnHHMMSS(double lengthInSeconds);
 

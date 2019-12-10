@@ -95,9 +95,9 @@ void AmbixLoader::parseFile(const File& file)
 
 				if (line.contains("#END"))
 					break;
-				
+
 				parseDirection(line);
-				
+
 				String path = file.getParentDirectory().getFullPathName();
 
 				File hrirFile(path + File::getSeparatorString() + line);

@@ -4,34 +4,35 @@
 BinauralRendererView::BinauralRendererView()
 	: m_renderer(nullptr)
 {
-	
+
 }
 
 void BinauralRendererView::init(BinauralRenderer* renderer)
 {
 	m_renderer = renderer;
-	
-	startTimer(50);
 
-	m_ambixFileBrowse.setButtonText("Select Ambix Config file...");
+	m_enableRenderer.setButtonText("Enable Binaural Renderer");
+	m_enableRenderer.setToggleState(m_renderer->isRendererEnabled(), dontSendNotification);
+	m_enableRenderer.addListener(this);
+	addAndMakeVisible(m_enableRenderer);
+
+	m_ambixFileLabel.setText("AmbiX Config File:", dontSendNotification);
+	addAndMakeVisible(m_ambixFileLabel);
+
+	m_ambixFileBrowse.setButtonText("Select file...");
 	m_ambixFileBrowse.addListener(this);
 	addAndMakeVisible(m_ambixFileBrowse);
 
-	m_useSofa.setButtonText("Should use SOFA file");
-	m_useSofa.addListener(this);
-	addAndMakeVisible(m_useSofa);
+	m_sofaFileLabel.setText("SOFA File:", dontSendNotification);
+	addAndMakeVisible(m_sofaFileLabel);
 
-	m_orderSelect.addItemList(orderChoices, 1);
-	m_orderSelect.setSelectedItemIndex(0);
-	m_orderSelect.addListener(this);
-	addAndMakeVisible(m_orderSelect);
-
-	m_sofaFileBrowse.setButtonText("Select SOFA file...");
+	m_sofaFileBrowse.setButtonText("Select file...");
+	m_sofaFileBrowse.setEnabled(false);
 	m_sofaFileBrowse.addListener(this);
 	addAndMakeVisible(m_sofaFileBrowse);
 
 	m_enableDualBand.setButtonText("Enable dual band");
-	m_enableDualBand.setToggleState(false, dontSendNotification);
+	m_enableDualBand.setToggleState(true, dontSendNotification);
 	m_enableDualBand.addListener(this);
 	addAndMakeVisible(m_enableDualBand);
 
@@ -40,18 +41,22 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	m_enableRotation.addListener(this);
 	addAndMakeVisible(m_enableRotation);
 
-	m_rollLabel.setText("Roll: " + String(0.0f, 2) + " deg", dontSendNotification);
-	addAndMakeVisible(m_rollLabel);
-	m_pitchLabel.setText("Pitch: " + String(0.0f, 2) + " deg", dontSendNotification);
-	addAndMakeVisible(m_pitchLabel);
-	m_yawLabel.setText("Yaw: " + String(0.0f, 2) + " deg", dontSendNotification);
-	addAndMakeVisible(m_yawLabel);
-
 	addAndMakeVisible(m_binauralHeadView);
 	m_enableMirrorView.setButtonText("Enable mirror view");
 	m_enableMirrorView.setToggleState(true, dontSendNotification);
 	m_enableMirrorView.addListener(this);
-	if(m_binauralHeadView.isVisible()) addAndMakeVisible(m_enableMirrorView);
+
+	if (m_binauralHeadView.isVisible())
+		addAndMakeVisible(m_enableMirrorView);
+
+	m_rollLabel.setText("R: 0.0 deg", dontSendNotification);
+	addAndMakeVisible(m_rollLabel);
+	m_pitchLabel.setText("P: 0.0 deg", dontSendNotification);
+	addAndMakeVisible(m_pitchLabel);
+	m_yawLabel.setText("Y: 0.0 deg", dontSendNotification);
+	addAndMakeVisible(m_yawLabel);
+
+	startTimer(50);
 }
 
 void BinauralRendererView::deinit()
@@ -67,27 +72,36 @@ void BinauralRendererView::paint(Graphics& g)
 	// RECTANGULAR OUTLINE
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
+
+	const int border = 5;
+	const int headSize = getHeight() - 2 * border;
+
+	juce::Rectangle<int>headbox(getWidth() - headSize - border, border, headSize, headSize);
+
+	g.drawRect(headbox, 1);
 }
 
 void BinauralRendererView::resized()
 {
-	m_ambixFileBrowse.setBounds(10, 10, 150, 30);
-	m_useSofa.setBounds(10, 45, 150, 30);
+	m_ambixFileLabel.setBounds(10, 10, 390, 25);
+	m_ambixFileBrowse.setBounds(400, 10, 80, 25);
 
-	m_orderSelect.setBounds(170, 10, 150, 30);
-	m_sofaFileBrowse.setBounds(170, 45, 150, 30);
+	m_sofaFileLabel.setBounds(10, 40, 390, 25);
+	m_sofaFileBrowse.setBounds(400, 40, 80, 25);
 
-	m_enableDualBand.setBounds(335, 10, 150, 30);
-
-	m_enableRotation.setBounds(10, 115, 150, 30);
-	m_rollLabel.setBounds(10, 145, 150, 20);
-	m_pitchLabel.setBounds(10, 165, 150, 20);
-	m_yawLabel.setBounds(10, 185, 150, 20);
+	m_enableRenderer.setBounds(10, 70, 200, 25);
+	m_enableDualBand.setBounds(10, 100, 200, 25);
+	m_enableRotation.setBounds(10, 130, 200, 25);
+	m_enableMirrorView.setBounds(10, 160, 200, 25);
 
 	const int border = 5;
 	const int headSize = getHeight() - 2 * border;
+
 	m_binauralHeadView.setBounds(getWidth() - headSize - border, border, headSize, headSize);
-	m_enableMirrorView.setBounds(335, 40, 150, 30);
+
+	m_rollLabel.setBounds(400, 175, 150, 20);
+	m_pitchLabel.setBounds(400, 195, 150, 20);
+	m_yawLabel.setBounds(400, 215, 150, 20);
 }
 
 void BinauralRendererView::buttonClicked(Button* buttonClicked)
@@ -95,10 +109,6 @@ void BinauralRendererView::buttonClicked(Button* buttonClicked)
 	if (buttonClicked == &m_ambixFileBrowse)
 	{
 		browseForAmbixConfigFile();
-	}
-	else if (buttonClicked == &m_useSofa)
-	{
-		m_sofaFileBrowse.setEnabled(m_useSofa.getToggleState());
 	}
 	else if (buttonClicked == &m_sofaFileBrowse)
 	{
@@ -112,110 +122,20 @@ void BinauralRendererView::buttonClicked(Button* buttonClicked)
 	{
 		m_renderer->enableRotation(m_enableRotation.getToggleState());
 	}
+	else if (buttonClicked == &m_enableRenderer)
+	{
+		m_renderer->enableRenderer(m_enableRenderer.getToggleState());
+	}
 }
 
-void BinauralRendererView::comboBoxChanged(ComboBox* comboBoxChanged)
+void BinauralRendererView::ambixFileLoaded(const File& file)
 {
-	if (comboBoxChanged == &m_orderSelect)
-	{
-		sendMsgToLogWindow("Changed to Ambisonic order " + String(m_orderSelect.getSelectedItemIndex() + 1));
+	m_ambixFileLabel.setText("AmbiX Config File: " + file.getFileName(), NotificationType::dontSendNotification);
+}
 
-		std::vector<float> decodeMatrix;
-		std::vector<float> azi;
-		std::vector<float> ele;
-		int numChans = 0;
-
-		bool isValidChoice = false;
-
-		switch (m_orderSelect.getSelectedItemIndex() + 1)
-		{
-		case 0:
-			break;
-		case 1:
-			for (int i = 0; i < 6; ++i)
-			{
-				for (int j = 0; j < 4; ++j)
-				{
-					decodeMatrix.push_back(mtx1order[i][j]);
-				}
-
-				azi.push_back(az1order[i]);
-				ele.push_back(el1order[i]);
-			}
-
-			numChans = 6;
-
-			isValidChoice = true;
-			break;
-		case 2:
-			break;
-		case 3:
-			for (int i = 0; i < 26; ++i)
-			{
-				for (int j = 0; j < 16; ++j)
-				{
-					decodeMatrix.push_back(mtx3order[i][j]);
-				}
-
-				azi.push_back(az3order[i]);
-				ele.push_back(el3order[i]);
-			}
-
-			numChans = 26;
-
-			isValidChoice = true;
-			break;
-		case 4:
-			break;
-		case 5:
-			for (int i = 0; i < 50; ++i)
-			{
-				for (int j = 0; j < 36; ++j)
-				{
-					decodeMatrix.push_back(mtx5order[i][j]);
-				}
-
-				azi.push_back(az5order[i]);
-				ele.push_back(el5order[i]);
-			}
-
-			numChans = 50;
-
-			isValidChoice = true;
-			break;
-		case 6:
-			break;
-		case 7:
-			break;
-		default:
-			break;
-		}
-
-		if (isValidChoice)
-		{
-			m_renderer->setDecodingMatrix(decodeMatrix);
-			m_renderer->setOrder(m_orderSelect.getSelectedItemIndex() + 1);
-			m_renderer->setVirtualLoudspeakers(azi, ele, numChans);
-			m_renderer->updateMatrices();
-
-			if (m_useSofa.getToggleState())
-			{
-				// use from sofa file that is currently selected
-				File sofaFile(m_sofaFilePath);
-
-				// check the file exists, otherwise just use the standard HRTFs
-				if (sofaFile.existsAsFile())
-					BinauralRenderer::loadHRIRsFromSofaFile(sofaFile, m_renderer);
-				else
-					loadStandardHRTF();
-			}
-			else
-			{
-				// use from standard HRTFs
-				loadStandardHRTF();
-			}
-		}
-	}
+void BinauralRendererView::sofaFileLoaded(const File& file)
+{
+	m_sofaFileLabel.setText("SOFA File: " + file.getFileName(), NotificationType::dontSendNotification);
 }
 
 void BinauralRendererView::setTestInProgress(bool inProgress)
@@ -224,25 +144,12 @@ void BinauralRendererView::setTestInProgress(bool inProgress)
 	{
 		m_sofaFileBrowse.setEnabled(false);
 		m_ambixFileBrowse.setEnabled(false);
-		m_orderSelect.setEnabled(false);
 	}
 	else
 	{
 		m_sofaFileBrowse.setEnabled(true);
 		m_ambixFileBrowse.setEnabled(true);
-		m_orderSelect.setEnabled(true);
 	}
-}
-
-void BinauralRendererView::changeComboBox(int order)
-{
-	m_orderSelect.setSelectedItemIndex(order - 1);
-}
-
-void BinauralRendererView::sendMsgToLogWindow(const String& message)
-{
-	m_currentLogMessage += message + "\n";
-	sendChangeMessage();
 }
 
 void BinauralRendererView::browseForAmbixConfigFile()
@@ -257,10 +164,9 @@ void BinauralRendererView::browseForAmbixConfigFile()
 	{
 		File chosenFile = fc.getResult();
 
-		if (BinauralRenderer::initialiseFromAmbix(chosenFile, m_renderer))
-			sendMsgToLogWindow("Successfully loaded: " + String(chosenFile.getFileName()));
-		else
-			sendMsgToLogWindow("failed to load AmbiX file");
+		m_renderer->initialiseFromAmbix(chosenFile);
+
+		m_sofaFileBrowse.setEnabled(true);
 	}
 #endif
 }
@@ -277,78 +183,20 @@ void BinauralRendererView::browseForSofaFile()
 	{
 		File chosenFile = fc.getResult();
 
-		if (BinauralRenderer::loadHRIRsFromSofaFile(chosenFile, m_renderer))
-		{
-			sendMsgToLogWindow("Successfully loaded SOFA file: " + String(chosenFile.getFileName()));
-		}
-		else
-		{
-			sendMsgToLogWindow("Failed to load SOFA file: " + String(chosenFile.getFileName()));
-		}
+		m_renderer->loadHRIRsFromSofaFile(chosenFile);
 	}
 #endif
-}
-
-void BinauralRendererView::loadStandardHRTF()
-{
-	std::vector<float> azi;
-	std::vector<float> ele;
-	int chans = 0;
-
-	m_renderer->getVirtualLoudspeakers(azi, ele, chans);
-
-	m_renderer->clearHRIR();
-
-	String filename;
-	File sourcePath = File::getSpecialLocation(File::userHomeDirectory).getChildFile("SALTE").getChildFile("KU100_HRTFs");
-
-	if (sourcePath.exists())
-	{
-		for (int i = 0; i < chans; ++i)
-		{
-			filename = "azi_" + String(azi[i], 1).replaceCharacter('.', ',') + "_ele_" + String(ele[i], 1).replaceCharacter('.', ',') + ".wav";
-
-			File hrirFile(sourcePath.getChildFile(filename));
-
-			if (hrirFile.existsAsFile())
-			{
-				AudioFormatManager formatManager;
-				formatManager.registerBasicFormats();
-				std::unique_ptr<AudioFormatReader> reader(formatManager.createReaderFor(hrirFile));
-
-				AudioBuffer<float> inputBuffer(reader->numChannels, static_cast<int>(reader->lengthInSamples));
-
-				reader->read(&inputBuffer, 0, static_cast<int>(reader->lengthInSamples), 0, true, true);
-
-				m_renderer->addHRIR(inputBuffer);
-				sendMsgToLogWindow("Adding HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
-			}
-			else
-			{
-				sendMsgToLogWindow("Could not find HRIR for azi:" + String(azi[i]) + ", ele: " + String(ele[i]));
-			}
-		}
-
-		m_renderer->uploadHRIRsToEngine();
-
-		sendMsgToLogWindow("Standard HRIRs were loaded");
-	}
-	else
-	{
-		sendMsgToLogWindow("Standard HRIRs folder could not be located");
-	}
 }
 
 void BinauralRendererView::timerCallback()
 {
 	if (m_enableRotation.getToggleState())
 	{
-		m_rollLabel.setText("Roll: " + String(m_renderer->getRoll(), 2) + " deg", dontSendNotification);
-		m_pitchLabel.setText("Pitch: " + String(m_renderer->getPitch(), 2) + " deg", dontSendNotification);
-		m_yawLabel.setText("Yaw: " + String(m_renderer->getYaw(), 2) + " deg", dontSendNotification);
-		m_orderSelect.setSelectedItemIndex(m_renderer->getOrder() - 1, dontSendNotification);
+		m_rollLabel.setText("R: " + String(m_renderer->getRoll(), 1) + " deg", dontSendNotification);
+		m_pitchLabel.setText("P: " + String(m_renderer->getPitch(), 1) + " deg", dontSendNotification);
+		m_yawLabel.setText("Y: " + String(m_renderer->getYaw(), 1) + " deg", dontSendNotification);
 
-		if(m_enableMirrorView.getToggleState())
+		if (m_enableMirrorView.getToggleState())
 			m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), -m_renderer->getYaw());
 		else
 			m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), m_renderer->getYaw() + 180);

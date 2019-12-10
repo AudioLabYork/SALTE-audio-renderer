@@ -8,42 +8,36 @@
 #include "AmbixLoader.h"
 #include "ROM.h"
 
-class BinauralRenderer :	public ChangeBroadcaster,
-							public OSCReceiver,
-							public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
+class BinauralRenderer
+	: public ChangeBroadcaster
+	, public OSCReceiver
+	, public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
 {
 public:
 	BinauralRenderer();
-
-	void init();
-	void deinit();
 
 	void oscMessageReceived(const OSCMessage& message) override;
 	void oscBundleReceived(const OSCBundle& bundle) override;
 	void processOscMessage(const OSCMessage& message);
 
-	int getOrder();
 	void setOrder(const int order);
+	int getOrder() const;
+
 	void clearVirtualLoudspeakers();
-	void setVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int chans);
+	void setVirtualLoudspeakers(const std::vector<float>& azi, const std::vector<float>& ele, const int chans);
 	void getVirtualLoudspeakers(std::vector<float>& azi, std::vector<float>& ele, int& chans);
 
-	void setDecodingMatrix(std::vector<float>& decodeMatrix);
-	float legendreP(const int n, const float x);
-	void getMaxReWeights(std::vector<float>& weights);
-	void updateMatrices();
-
-	void updateDualBandFilters();
-
 	void setHeadTrackingData(float yaw, float pitch, float roll);
-	
+
 	float getRoll();
 	float getPitch();
 	float getYaw();
 
+	bool isRendererEnabled();
+
+	void enableRenderer(bool enable);
 	void enableDualBand(bool enable);
 	void enableRotation(bool enable);
-	void enableTranslation(bool enable);
 
 	void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
 	void processBlock(AudioBuffer<float>& buffer);
@@ -56,11 +50,29 @@ public:
 	void addHRIR(const AudioBuffer<float>& buffer);
 	bool uploadHRIRsToEngine();
 
-	static bool initialiseFromAmbix(const File& ambixFile, BinauralRenderer* renderer);
-	static bool loadHRIRsFromSofaFile(const File& sofaFile, BinauralRenderer* renderer);
+	void loadStandardDefault();
+	void initialiseFromAmbix(const File& ambixFile);
+	void loadHRIRsFromSofaFile(const File& sofaFile);
+
+	class Listener
+	{
+	public:
+		virtual ~Listener() = default;
+		virtual void ambixFileLoaded(const File& file) = 0;
+		virtual void sofaFileLoaded(const File& file) = 0;
+	};
+
+	void addListener(Listener* newListener);
+	void removeListener(Listener* listener);
 
 private:
+	void setDecodingMatrix(std::vector<float>& decodeMatrix);
+	void updateMatrices();
+
 	bool convertHRIRToSHDHRIR();
+
+	float legendreP(const int n, const float x);
+	void getMaxReWeights(std::vector<float>& weights);
 
 	CriticalSection m_procLock;
 
@@ -77,9 +89,6 @@ private:
 	float m_yaw;
 	float m_pitch;
 	float m_roll;
-	float m_xTrans;
-	float m_yTrans;
-	float m_zTrans;
 
 	std::vector<AudioBuffer<float>> m_hrirBuffers;
 	std::vector<AudioBuffer<float>> m_hrirShdBuffers;
@@ -95,14 +104,15 @@ private:
 	AmbisonicRotation m_headTrackRotator;
 
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
-	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_shdConvEngines;
 
 	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_lowPass;
 	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_highPass;
 
+	bool m_enableRenderer;
 	bool m_enableDualBand;
 	bool m_enableRotation;
-	bool m_enableTranslation;
+
+	ListenerList<Listener> listeners;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BinauralRenderer)
 };

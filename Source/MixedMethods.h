@@ -6,21 +6,23 @@
 #include "BinauralRenderer.h"
 #include "TestSession.h"
 
-class MixedMethodsComponent : public Component,
-						public OSCReceiver,
-						public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>,
-						private Button::Listener,
-						private Slider::Listener,
-						private ChangeListener,
-						public ChangeBroadcaster
+class MixedMethodsComponent
+	: public Component
+	, public OSCReceiver
+	, public OSCReceiver::Listener<OSCReceiver::MessageLoopCallback>
+	, private Button::Listener
+	, private Slider::Listener
+	, private ChangeListener
+	, public ChangeBroadcaster
 {
 public:
 	//==============================================================================
 	MixedMethodsComponent();
 	~MixedMethodsComponent();
 
-	void init(StimulusPlayer* player, BinauralRenderer* renderer);
-	void loadTestSession(TestSession* testSession, OscTransceiver* oscTxRx);
+	void init(OscTransceiver* oscTxRx, TestSession* testSession, StimulusPlayer* player, BinauralRenderer* renderer);
+
+	void loadTestSession();
 
 	class Listener
 	{
@@ -51,7 +53,7 @@ private:
 	void updateRemoteInterface();
 
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
-	
+
 	TextButton selectReferenceButton;
 	TextButton selectTConditionAButton, selectTConditionBButton; // used for TS26259
 	OwnedArray<TextButton> selectConditionButtonArray;
