@@ -15,7 +15,7 @@
  * Armstrong, C.; Thresh, L.; Murphy, D.; Kearney, G. A Perceptual Evaluation of Individual and Non-Individual HRTFs: A Case Study of the SADIE II Database. Appl. Sci. 2018, 8, 2029.
  */
 
- // octo virtual loudspeaker positions
+// octo virtual loudspeaker positions
 extern const float octo[2][6];
 
 // icos virtual loudspeaker positions
@@ -50,18 +50,18 @@ extern const float leb26_hi_dec_mat[416];
 extern const float leb50_lo_dec_mat[1250];
 extern const float leb50_hi_dec_mat[1250];
 
-// order 1 low band, high band filters Fc = 1500.00Hz
+// order 1 low band, high band filters Fc = 757.93Hz
 extern const float order_1_lo_band_48[257];
 extern const float order_1_hi_band_48[257];
 
-// order 2 low band, high band filters Fc = 1500.00Hz
+// order 2 low band, high band filters Fc = 1429.17Hz
 extern const float order_2_lo_band_48[257];
 extern const float order_2_hi_band_48[257];
 
-// order 3 low band, high band filters Fc = 1500.00Hz
+// order 3 low band, high band filters Fc = 2100.71Hz
 extern const float order_3_lo_band_48[257];
 extern const float order_3_hi_band_48[257];
 
-// order 4 low band, high band filters Fc = 1500.00Hz
-extern const float order_4_lo_band_48[257];
-extern const float order_4_hi_band_48[257];
+// order 5 low band, high band filters Fc = 3451.17Hz
+extern const float order_5_lo_band_48[257];
+extern const float order_5_hi_band_48[257];
