@@ -5,34 +5,34 @@ AuditoryLocalisation::AuditoryLocalisation()
 					, m_player(nullptr)
 					, m_renderer(nullptr)
 {
-	g_chooseStimuliFolder.setButtonText("Select Stimuli Folder");
-	g_chooseStimuliFolder.addListener(this);
-	addAndMakeVisible(g_chooseStimuliFolder);
+	m_chooseStimuliFolder.setButtonText("Select Stimuli Folder");
+	m_chooseStimuliFolder.addListener(this);
+	addAndMakeVisible(m_chooseStimuliFolder);
 
-	g_startTest.setButtonText("Start Test");
-	g_startTest.setToggleState(false, dontSendNotification);
-	g_startTest.addListener(this);
-	addAndMakeVisible(g_startTest);
+	m_startTest.setButtonText("Start Test");
+	m_startTest.setToggleState(false, dontSendNotification);
+	m_startTest.addListener(this);
+	addAndMakeVisible(m_startTest);
 
-	g_prevTrial.setButtonText("Previous Trial");
-	g_prevTrial.addListener(this);
-	addAndMakeVisible(g_prevTrial);
+	m_prevTrial.setButtonText("Previous Trial");
+	m_prevTrial.addListener(this);
+	addAndMakeVisible(m_prevTrial);
 
-	g_nextTrial.setButtonText("Next Trial");
-	g_nextTrial.addListener(this);
-	addAndMakeVisible(g_nextTrial);
+	m_nextTrial.setButtonText("Next Trial");
+	m_nextTrial.addListener(this);
+	addAndMakeVisible(m_nextTrial);
 
-	g_confirmPointer.setButtonText("Confirm Pointer Direction");
-	g_confirmPointer.addListener(this);
-	addAndMakeVisible(g_confirmPointer);
+	m_confirmPointer.setButtonText("Confirm Pointer Direction");
+	m_confirmPointer.addListener(this);
+	addAndMakeVisible(m_confirmPointer);
 
 	// osc logging
 	startTimerHz(60);
 
-	saveLogButton.setButtonText("Save Log");
-	saveLogButton.addListener(this);
-	saveLogButton.setEnabled(false);
-	addAndMakeVisible(saveLogButton);
+	m_saveLogButton.setButtonText("Save Log");
+	m_saveLogButton.addListener(this);
+	m_saveLogButton.setEnabled(false);
+	addAndMakeVisible(m_saveLogButton);
 
 	addAndMakeVisible(messageCounter);
 
@@ -71,42 +71,42 @@ void AuditoryLocalisation::paint(Graphics& g)
 }
 void AuditoryLocalisation::resized()
 {
-	g_chooseStimuliFolder.setBounds(20, 20, 150, 25);
-	g_startTest.setBounds(20, 50, 150, 25);
-	g_prevTrial.setBounds(20, 420, 100, 25);
-	g_nextTrial.setBounds(140, 420, 100, 25);
-	g_confirmPointer.setBounds(320, 320, 150, 25);
+	m_chooseStimuliFolder.setBounds(20, 20, 150, 25);
+	m_startTest.setBounds(20, 50, 150, 25);
+	m_prevTrial.setBounds(20, 420, 100, 25);
+	m_nextTrial.setBounds(140, 420, 100, 25);
+	m_confirmPointer.setBounds(320, 320, 150, 25);
 
-	saveLogButton.setBounds(20, 110, 150, 25);
+	m_saveLogButton.setBounds(20, 110, 150, 25);
 	messageCounter.setBounds(20, 140, 150, 25);
 }
 void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 {
-	if (buttonThatWasClicked == &g_chooseStimuliFolder)
+	if (buttonThatWasClicked == &m_chooseStimuliFolder)
 	{
 		selectSrcPath();
 	}
-	else if (buttonThatWasClicked == &g_startTest)
+	else if (buttonThatWasClicked == &m_startTest)
 	{
-		if (!g_startTest.getToggleState())
+		if (m_startTest.getToggleState())
+		{
+			currentTrialIndex = 0;
+			m_startTest.setToggleState(false, dontSendNotification);
+			m_startTest.setButtonText("Start Test");
+			m_oscTxRx->removeListener(this);
+		}
+		else
 		{
 			oscMessageList.clear();
 			m_oscTxRx->addListener(this);
 			activationTime = Time::getMillisecondCounterHiRes();
 
 			loadFile();
-			g_startTest.setToggleState(true, dontSendNotification);
-			g_startTest.setButtonText("Stop Test");
-		}
-		else
-		{
-			currentTrialIndex = 0;
-			g_startTest.setToggleState(false, dontSendNotification);
-			g_startTest.setButtonText("Start Test");
-			m_oscTxRx->removeListener(this);
+			m_startTest.setToggleState(true, dontSendNotification);
+			m_startTest.setButtonText("Stop Test");
 		}
 	}
-	else if (buttonThatWasClicked == &g_prevTrial)
+	else if (buttonThatWasClicked == &m_prevTrial)
 	{
 		if(currentTrialIndex > 0)
 		{
@@ -114,23 +114,24 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 			loadFile();
 		}
 	}
-	else if (buttonThatWasClicked == &g_nextTrial)
+	else if (buttonThatWasClicked == &m_nextTrial)
 	{
 		if (currentTrialIndex < audioFilesArray.size() - 1)
 		{
 			currentTrialIndex++;
 			loadFile();
 		}
-		else g_startTest.triggerClick();
+		else m_startTest.triggerClick();
 	}
-	else if (buttonThatWasClicked == &g_confirmPointer)
+	else if (buttonThatWasClicked == &m_confirmPointer)
 	{
 
 	}
-	else if (buttonThatWasClicked == &saveLogButton)
+	else if (buttonThatWasClicked == &m_saveLogButton)
 	{
 		if (oscMessageList.size() > 0) saveLog();
 	}
+
 	repaint();
 }
 
@@ -139,9 +140,9 @@ void AuditoryLocalisation::timerCallback()
 	messageCounter.setText(String(oscMessageList.size()), dontSendNotification);
 
 	if(oscMessageList.size() > 0)
-		saveLogButton.setEnabled(true);
+		m_saveLogButton.setEnabled(true);
 	else
-		saveLogButton.setEnabled(false);
+		m_saveLogButton.setEnabled(false);
 }
 
 void AuditoryLocalisation::oscMessageReceived(const OSCMessage& message)
@@ -209,9 +210,9 @@ void AuditoryLocalisation::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_player)
 	{
-		if (!m_player->checkPlaybackStatus() && g_startTest.getToggleState())
+		if (!m_player->checkPlaybackStatus() && m_startTest.getToggleState())
 		{
-			g_nextTrial.triggerClick();
+			m_nextTrial.triggerClick();
 		}
 	}
 }

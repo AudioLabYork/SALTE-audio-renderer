@@ -35,10 +35,10 @@ private:
 	StimulusPlayer* m_player;
 	BinauralRenderer* m_renderer;
 
-	TextButton g_chooseStimuliFolder;
-	TextButton g_startTest;
-	TextButton g_prevTrial, g_nextTrial;
-	TextButton g_confirmPointer;
+	TextButton m_chooseStimuliFolder;
+	TextButton m_startTest;
+	TextButton m_prevTrial, m_nextTrial;
+	TextButton m_confirmPointer;
 
 	void selectSrcPath();
 	void indexAudioFiles();
@@ -56,7 +56,7 @@ private:
 	void saveLog();
 	int port = 9000;
 	double activationTime = 0.0f;
-	TextButton saveLogButton;
+	TextButton m_saveLogButton;
 	Label messageCounter;
 	StringArray oscMessageList;
 
