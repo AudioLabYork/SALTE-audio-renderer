@@ -98,10 +98,7 @@ int TestTrial::getNumberOfTAttributes() const
 
 bool TestTrial::areTConditionsPresent()
 {
-	if (m_TConditions.size() == 2)
-		return true;
-	else
-		return false;
+	return m_TConditions.size() == 2;
 }
 
 void TestTrial::randomiseTConditions()
