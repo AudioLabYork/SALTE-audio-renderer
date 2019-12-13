@@ -105,7 +105,7 @@ m_shouldShowTest(true)
 	transportSlider.addListener(this);
 	addAndMakeVisible(transportSlider);
 
-	addAndMakeVisible(pt);
+	addAndMakeVisible(playerThumbnail);
 
 	startTimerHz(60);
 }
@@ -144,7 +144,8 @@ void StimulusPlayer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFil
 	}
 
 	transportSource.getNextAudioBlock(bufferToFill);
-	ar.process(*bufferToFill.buffer);
+
+	rotator.process(*bufferToFill.buffer);
 }
 
 void StimulusPlayer::releaseResources()
@@ -195,7 +196,7 @@ void StimulusPlayer::resized()
 	transportSlider.setBounds(10 - 3, 295, 710 + 6, 30);
 	playbackHeadPosition.setBounds(280, 45, 500, 25);
 
-	pt.setBounds(10, 170, 710, 120);
+	playerThumbnail.setBounds(10, 170, 710, 120);
 }
 
 void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
@@ -289,10 +290,11 @@ void StimulusPlayer::sliderValueChanged(Slider* slider)
 {
 	if (slider == &rollSlider || slider == &pitchSlider || slider == &yawSlider)
 	{
-		float roll = rollSlider.getValue();
-		float pitch = pitchSlider.getValue();
-		float yaw = yawSlider.getValue();
-		ar.updateEulerRPY(roll, pitch, yaw);
+		float roll = static_cast<float>(rollSlider.getValue());
+		float pitch = static_cast<float>(pitchSlider.getValue());
+		float yaw = static_cast<float>(yawSlider.getValue());
+		
+		rotator.updateEulerRPY(roll, pitch, yaw);
 	}
 	else if (slider == &gainSlider)
 	{
@@ -313,8 +315,8 @@ void StimulusPlayer::timerCallback()
 	// update diplayed times in GUI
 	playbackHeadPosition.setText("Time: " + returnHHMMSS(currentPosition) + " / " + returnHHMMSS(lengthInSeconds), dontSendNotification);
 
-	pt.setPlaybackCursor(currentPosition / lengthInSeconds);
-	pt.setPlaybackOffsets(begOffsetTime / lengthInSeconds, endOffsetTime / lengthInSeconds);
+	playerThumbnail.setPlaybackCursor(currentPosition / lengthInSeconds);
+	playerThumbnail.setPlaybackOffsets(begOffsetTime / lengthInSeconds, endOffsetTime / lengthInSeconds);
 }
 
 void StimulusPlayer::browseForFile()
@@ -354,8 +356,6 @@ void StimulusPlayer::loadFileIntoTransport(String fullPath)
 			currentlyLoadedFile = audiofile;
 			loadedFileChannelCount = reader->numChannels;
 
-			// create thumbnail
-			pt.createThumbnail(currentlyLoadedFile);
 
 			// update GUI label
 			loadedFileName.setText(currentlyLoadedFile.getFileName(), dontSendNotification);
@@ -378,7 +378,6 @@ void StimulusPlayer::unloadFileFromTransport()
 {
 	transportSource.stop();
 	transportSource.setSource(nullptr);
-	pt.clearThumbnail();
 	loadedFileName.setText("", dontSendNotification);
 	playButton.setEnabled(false);
 	stopButton.setEnabled(false);

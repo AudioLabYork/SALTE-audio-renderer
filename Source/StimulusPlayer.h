@@ -90,9 +90,9 @@ private:
 	AudioFormatManager formatManager;
 	File currentlyLoadedFile;
 
-	AmbisonicRotation ar;
 
 	bool loopingEnabled = false;
+	AmbisonicRotation rotator;
 
 	double begOffsetTime = 0.0f, endOffsetTime = 0.0f;
 
@@ -110,7 +110,7 @@ private:
 	Label yawSliderLabel, pitchSliderLabel, rollSliderLabel, gainSliderLabel;
 	Slider transportSlider;
 
-	PlayerThumbnail pt;
+	PlayerThumbnail playerThumbnail;
 
 	bool m_shouldShowTest;
 
