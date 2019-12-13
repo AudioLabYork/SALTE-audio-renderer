@@ -10,7 +10,6 @@ m_shouldShowTest(true)
 	formatManager.registerBasicFormats();
 	readAheadThread.startThread(3);
 
-	//EDITOR
 	addAndMakeVisible(&openButton);
 	openButton.setButtonText("Select Ambisonic file...");
 	openButton.addListener(this);
@@ -131,17 +130,13 @@ void StimulusPlayer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFil
 		return;
 	}
 
-	// check if the playback region has not been reduced at the begining
+	// check if the playback region has been reduced at the begining
 	if (transportSource.getNextReadPosition() < begOffsetTime * m_sampleRate)
-	{
 		transportSource.setPosition(begOffsetTime);
-	}
 
-	// check if the playback region has not been reduced at the end
+	// check if the playback region has been reduced at the end
 	if (transportSource.getNextReadPosition() > transportSource.getTotalLength() - endOffsetTime * m_sampleRate)
-	{
 		transportSource.setPosition(transportSource.getLengthInSeconds());
-	}
 
 	transportSource.getNextAudioBlock(bufferToFill);
 
@@ -155,25 +150,25 @@ void StimulusPlayer::releaseResources()
 
 void StimulusPlayer::paint(Graphics& g)
 {
-	// BACKGROUND
+	// background
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 
-	// RECTANGULAR OUTLINE
+	// outline
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
 
-	// INNER RECTANGLES
-	Rectangle<int> tcRect(10, 10, 250, 150);        // manual transport control
-	Rectangle<int> dispRect(270, 10, 450, 150);        // display state
-	Rectangle<int> wfRect(10, 170, 710, 120);        // waveform
+	// inner outlines
+	Rectangle<int> tcRect(10, 10, 250, 150); // manual transport control
+	Rectangle<int> dispRect(270, 10, 450, 150); // display state
+	Rectangle<int> wfRect(10, 170, 710, 120); // waveform
 
-	// DRAW RECTANGLES
+	// draw inner outlines
 	g.setColour(Colours::black);
 	g.drawRect(tcRect, 1);
 	g.drawRect(dispRect, 1);
 	g.drawRect(wfRect, 1);
 
-	// TEXT
+	// text font and colour
 	g.setFont(Font(14.0f));
 	g.setColour(Colours::white);
 }
@@ -279,6 +274,8 @@ void StimulusPlayer::changeState(TransportState newState)
 			playButton.setButtonText("Play");
 			break;
 		default:
+			// unknown state
+			jassertfalse;
 			break;
 		}
 
@@ -298,12 +295,14 @@ void StimulusPlayer::sliderValueChanged(Slider* slider)
 	}
 	else if (slider == &gainSlider)
 	{
-		setGain(gainSlider.getValue());
+		float gain = static_cast<float>(gainSlider.getValue());
+		
+		setGain(gain);
 	}
 	else if (slider == &transportSlider)
 	{
 		begOffsetTime = transportSource.getLengthInSeconds() * transportSlider.getMinValue();
-		endOffsetTime = transportSource.getLengthInSeconds() * (1 - transportSlider.getMaxValue());
+		endOffsetTime = transportSource.getLengthInSeconds() * (1.0 - transportSlider.getMaxValue());
 	}
 }
 
@@ -407,10 +406,10 @@ void StimulusPlayer::sendMsgToLogWindow(String message)
 
 String StimulusPlayer::returnHHMMSS(double lengthInSeconds)
 {
-	int hours = (int)lengthInSeconds / (60 * 60);
-	int minutes = ((int)lengthInSeconds / 60) % 60;
-	int seconds = ((int)lengthInSeconds) % 60;
-	int millis = floor((lengthInSeconds - floor(lengthInSeconds)) * 100);
+	int hours = static_cast<int>(lengthInSeconds / (60 * 60));
+	int minutes = (static_cast<int>(lengthInSeconds / 60)) % 60;
+	int seconds = (static_cast<int>(lengthInSeconds)) % 60;
+	int millis = static_cast<int>(floor((lengthInSeconds - floor(lengthInSeconds)) * 100));
 
 	String output = String(hours).paddedLeft('0', 2) + ":" +
 		String(minutes).paddedLeft('0', 2) + ":" +
@@ -444,18 +443,6 @@ void StimulusPlayer::stop()
 		changeState(Stopping);
 }
 
-int StimulusPlayer::getNumberOfChannels()
-{
-	return loadedFileChannelCount;
-}
-
-void StimulusPlayer::setGain(float gainInDB)
-{
-	float gain = Decibels::decibelsToGain(gainInDB);
-	transportSource.setGain(gain);
-	gainSlider.setValue(gainInDB, dontSendNotification);
-}
-
 void StimulusPlayer::loop(bool looping)
 {
 	loopingEnabled = looping;
@@ -465,6 +452,17 @@ void StimulusPlayer::loop(bool looping)
 		loopButton.setToggleState(looping, dontSendNotification);
 
 	sendChangeMessage();
+}
+
+int StimulusPlayer::getNumberOfChannels()
+{
+	return loadedFileChannelCount;
+}
+
+void StimulusPlayer::setGain(const float gainInDB)
+{
+	transportSource.setGain(Decibels::decibelsToGain(gainInDB));
+	gainSlider.setValue(gainInDB, dontSendNotification);
 }
 
 bool StimulusPlayer::getLoopingState()
@@ -494,14 +492,22 @@ void StimulusPlayer::setPlaybackHeadPosition(double time)
 
 void StimulusPlayer::setPlaybackOffsets(double beg, double end)
 {
+	if (beg > end)
+	{
+		// the beginning must come before the end
+		jassertfalse;
+		return;
+	}
+
 	begOffsetTime = beg;
 	endOffsetTime = end;
 
 	double length = transportSource.getLengthInSeconds();
-	if (length > 0)
-		transportSlider.setMinAndMaxValues(beg / length, 1 - end / length, dontSendNotification);
+
+	if (length > 0.0)
+		transportSlider.setMinAndMaxValues(beg / length, 1.0 - end / length, dontSendNotification);
 	else
-		transportSlider.setMinAndMaxValues(0, 1, dontSendNotification);
+		transportSlider.setMinAndMaxValues(0.0, 1.0, dontSendNotification);
 
 	sendChangeMessage();
 }

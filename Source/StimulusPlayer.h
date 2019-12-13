@@ -55,9 +55,10 @@ public:
 	void play();
 	void pause();
 	void stop();
-	int getNumberOfChannels();
-	void setGain(float gainInDB);
 	void loop(bool looping);
+
+	int getNumberOfChannels();
+	void setGain(const float gainInDB);
 	bool getLoopingState();
 	bool checkPlaybackStatus();
 	bool checkLoopStatus();
@@ -74,8 +75,6 @@ public:
 
 	// log window message
     String currentMessage;
-
-	bool cachingLock;
 
 private:
 	TransportState state;
