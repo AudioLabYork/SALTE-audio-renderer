@@ -67,7 +67,9 @@ void AuditoryLocalisation::paint(Graphics& g)
 	g.setColour(Colours::white);
 	g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
 	g.drawText("Number of files: " + String(audioFilesArray.size()) + ", total length (s): " + String(totalTimeOfAudioFiles,2), 180, 50, 440, 25, Justification::centredLeft);
-	g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
+	
+	if(audioFilesArray.size() > 0)
+		g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
 }
 void AuditoryLocalisation::resized()
 {
