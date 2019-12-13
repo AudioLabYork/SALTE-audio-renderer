@@ -4,8 +4,6 @@
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
 #include "BinauralRenderer.h"
-#include <vector>
-#include <random>
 
 class AuditoryLocalisation	:	public Component
 							//,	public OSCReceiver
