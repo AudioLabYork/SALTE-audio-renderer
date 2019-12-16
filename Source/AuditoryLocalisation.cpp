@@ -1,9 +1,10 @@
 #include "AuditoryLocalisation.h"
+#include <random>
 
 AuditoryLocalisation::AuditoryLocalisation()
-					: m_oscTxRx(nullptr)
-					, m_player(nullptr)
-					, m_renderer(nullptr)
+	: m_oscTxRx(nullptr)
+	, m_player(nullptr)
+	, m_renderer(nullptr)
 {
 	m_chooseStimuliFolder.setButtonText("Select Stimuli Folder");
 	m_chooseStimuliFolder.addListener(this);
@@ -38,6 +39,7 @@ AuditoryLocalisation::AuditoryLocalisation()
 
 	// load settings
 	initSettings();
+	
 	if (TestSessionFormSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
 	{
 		loadSettings();
@@ -66,11 +68,12 @@ void AuditoryLocalisation::paint(Graphics& g)
 
 	g.setColour(Colours::white);
 	g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
-	g.drawText("Number of files: " + String(audioFilesArray.size()) + ", total length (s): " + String(totalTimeOfAudioFiles,2), 180, 50, 440, 25, Justification::centredLeft);
+	g.drawText("Number of trials: " + String(audioFilesArray.size()) + ", total length (s): " + String(totalTimeOfAudioFiles,2), 180, 50, 440, 25, Justification::centredLeft);
 	
 	if(audioFilesArray.size() > 0)
 		g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
 }
+
 void AuditoryLocalisation::resized()
 {
 	m_chooseStimuliFolder.setBounds(20, 20, 150, 25);
@@ -82,6 +85,7 @@ void AuditoryLocalisation::resized()
 	m_saveLogButton.setBounds(20, 110, 150, 25);
 	messageCounter.setBounds(20, 140, 150, 25);
 }
+
 void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &m_chooseStimuliFolder)
@@ -90,6 +94,11 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 	}
 	else if (buttonThatWasClicked == &m_startTest)
 	{
+		if (audioFilesArray.isEmpty())
+		{
+			indexAudioFiles();
+		}
+
 		if (m_startTest.getToggleState())
 		{
 			currentTrialIndex = 0;
@@ -123,7 +132,10 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 			currentTrialIndex++;
 			loadFile();
 		}
-		else m_startTest.triggerClick();
+		else
+		{
+			m_startTest.triggerClick();
+		}
 	}
 	else if (buttonThatWasClicked == &m_confirmPointer)
 	{
@@ -131,7 +143,10 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 	}
 	else if (buttonThatWasClicked == &m_saveLogButton)
 	{
-		if (oscMessageList.size() > 0) saveLog();
+		if (oscMessageList.size() > 0)
+		{
+			saveLog();
+		}
 	}
 
 	repaint();
@@ -161,6 +176,7 @@ void AuditoryLocalisation::oscBundleReceived(const OSCBundle& bundle)
 void AuditoryLocalisation::processOscMessage(const OSCMessage& message)
 {
 	String arguments;
+	
 	for (int i = 0; i < message.size(); ++i)
 	{
 		if (message[i].isString()) arguments += "," + message[i].getString();
@@ -170,6 +186,7 @@ void AuditoryLocalisation::processOscMessage(const OSCMessage& message)
 
 	double time = Time::getMillisecondCounterHiRes() - activationTime;
 	String messageText = String(time) + ",";
+	
 	if (audioFilesArray[currentTrialIndex].exists() && m_player->checkPlaybackStatus())
 	{
 		messageText += audioFilesArray[currentTrialIndex].getFileName() + "," + message.getAddressPattern().toString() + arguments + "\n";
@@ -178,12 +195,12 @@ void AuditoryLocalisation::processOscMessage(const OSCMessage& message)
 	{
 		messageText += "no stimulus present," + message.getAddressPattern().toString() + arguments + "\n";
 	}
+	
 	oscMessageList.add(messageText);
 }
 
 void AuditoryLocalisation::saveLog()
 {
-	File logFile;
 	FileChooser fc("Select or create results export file...",
 		File::getCurrentWorkingDirectory(),
 		"*.csv",
@@ -191,20 +208,17 @@ void AuditoryLocalisation::saveLog()
 
 	if (fc.browseForFileToSave(true))
 	{
+		File logFile;
+
 		logFile = fc.getResult();
 
-
 		if (!logFile.exists())
-		{
 			logFile.create();
-			// logFile.replaceWithText("time,address,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12\n");
-		}
 
 		FileOutputStream fos(logFile);
+		
 		for (int i = 0; i < oscMessageList.size(); ++i)
-		{
 			fos << oscMessageList[i];
-		}
 	}
 }
 
@@ -223,6 +237,7 @@ void AuditoryLocalisation::selectSrcPath()
 {
 	FileChooser fc("Select the stimuli folder...",
 		File::getSpecialLocation(File::userHomeDirectory));
+	
 	if (fc.browseForDirectory())
 	{
 		audioFilesDir = fc.getResult();
@@ -236,42 +251,35 @@ void AuditoryLocalisation::indexAudioFiles()
 	Array<File> audioFilesInDir;
 	audioFilesInDir.clear();
 
-	DirectoryIterator iter(audioFilesDir, true, "*.wav");
-	while (iter.next())
-	{
-		File theFileItFound(iter.getFile());
-		audioFilesInDir.add(theFileItFound);
-	}
+	m_player->clearPlayer();
 
-	// create the test audio file array
+	DirectoryIterator iter(audioFilesDir, true, "*.wav");
+
+	while (iter.next())
+		audioFilesInDir.add(iter.getFile());
+
+	std::random_device seed;
+	std::mt19937 rng(seed());
+	
 	audioFilesArray.clear();
+	
+	// create the test audio file array
 	for (int i = 0; i < 10; ++i)
 	{
-		// shuffle the audio file array
-		std::random_device seed;
-		std::mt19937 rng(seed());
 		std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
-
+		
 		audioFilesArray.addArray(audioFilesInDir);
+
+		for (auto& file : audioFilesInDir)
+			m_player->loadFileToPlayer(file.getFullPathName());
 	}
 
-	// process the audio file array
-	if (audioFilesArray.size() > 0)
-	{
-		AudioFormatManager formatManager;
-		formatManager.registerBasicFormats();
-		for (int i = 0; i < audioFilesArray.size(); ++i)
-		{
-			auto* reader = formatManager.createReaderFor(audioFilesArray[i]);
-			totalTimeOfAudioFiles += reader->lengthInSamples / reader->sampleRate;
-			reader->~AudioFormatReader();
-		}
-	}
+	totalTimeOfAudioFiles = m_player->getTotalTimeForLoadedFiles();
 }
 
 void AuditoryLocalisation::loadFile()
 {
-	m_player->loadFileIntoTransport(audioFilesArray[currentTrialIndex].getFullPathName());
+	m_player->loadSourceToTransport(currentTrialIndex);
 	m_player->play();
 }
 
@@ -295,7 +303,6 @@ void AuditoryLocalisation::initSettings()
 void AuditoryLocalisation::loadSettings()
 {
 	audioFilesDir = TestSessionFormSettings.getUserSettings()->getValue("audioFilesSrcPath");
-	indexAudioFiles();
 }
 
 void AuditoryLocalisation::saveSettings()

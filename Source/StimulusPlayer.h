@@ -4,13 +4,14 @@
 #include "AmbisonicRotation.h"
 #include "PlayerThumbnail.h"
 
-class StimulusPlayer    :   public Component,
-                            public AudioSource,
-                            public ChangeBroadcaster,
-							private ChangeListener,
-                            private Button::Listener,
-							private Slider::Listener,
-                            private Timer
+class StimulusPlayer
+	: public Component
+	, public AudioSource
+	, public ChangeBroadcaster
+	, private ChangeListener
+	, private Button::Listener
+	, private Slider::Listener
+	, private Timer
 {
 public:
 
@@ -62,14 +63,18 @@ public:
 	bool getLoopingState();
 	bool checkPlaybackStatus();
 	bool checkLoopStatus();
+	
+	double getTotalTimeForLoadedFiles() const;
+
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
 	void setPlaybackOffsets(double beg, double end);
 	double getPlaybackStartOffset();
 	double getPlaybackEndOffset();
-
-	void loadFileIntoTransport(String fullPath);
-	void unloadFileFromTransport();
+	
+	void clearPlayer();
+	void loadFileToPlayer(const String& fullPath);
+	void loadSourceToTransport(const int index);
 
 	void setShowTest(bool shouldShow);
 
@@ -77,30 +82,28 @@ public:
     String currentMessage;
 
 private:
-	TransportState state;
+	void browseForFile();
+	void sendMsgToLogWindow(String message);
+	String returnHHMMSS(double lengthInSeconds);
 
+	TransportState state;
 	TimeSliceThread readAheadThread;
-	std::unique_ptr<AudioFormatReaderSource> audioFileSource;
+
+	std::vector<File> audioSourceFiles;
+	std::vector<std::unique_ptr<AudioFormatReaderSource>> audioFormatReaderSources;
 	AudioTransportSource transportSource;
 
 	int m_samplesPerBlockExpected;
 	double m_sampleRate;
 	
 	AudioFormatManager formatManager;
-	File currentlyLoadedFile;
 
-
-	bool loopingEnabled = false;
 	AmbisonicRotation rotator;
 
-	double begOffsetTime = 0.0f, endOffsetTime = 0.0f;
-
-	int loadedFileChannelCount = 0;
-
-	// METHODS
-	void browseForFile();
-	void sendMsgToLogWindow(String message);
-	String returnHHMMSS(double lengthInSeconds);
+	bool loopingEnabled;
+	double begOffsetTime;
+	double endOffsetTime;
+	int loadedFileChannelCount;
 
 	TextButton openButton, playButton, stopButton, loopButton;
 	Label loadedFileName, playbackHeadPosition;

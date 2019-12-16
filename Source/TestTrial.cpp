@@ -118,16 +118,6 @@ StringArray TestTrial::getRatingOptions() const
 	return m_ratingOptions;
 }
 
-void TestTrial::setLastPlaybackHeadPosition(double time)
-{
-	lastPlaybackHeadPosition = time;
-}
-
-double TestTrial::getLastPlaybackHeadPosition() const
-{
-	return lastPlaybackHeadPosition;
-}
-
 bool TestTrial::getLoopingState() const
 {
 	return isLooping;
