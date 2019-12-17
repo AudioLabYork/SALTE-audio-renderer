@@ -8,12 +8,6 @@
       <FILE id="f1iu3n" name="logo_180px.png" compile="0" resource="1" file="Assets/logo_180px.png"/>
     </GROUP>
     <GROUP id="{4F75A548-1CF0-634F-1E14-36BD701C1135}" name="Source">
-      <GROUP id="{63E3C94B-474D-4592-AD5A-1246BDB34199}" name="WDL">
-        <FILE id="GQdU4k" name="convoengine.cpp" compile="1" resource="0" file="../../Libraries/WDL/convoengine.cpp"/>
-        <FILE id="mzMoHd" name="convoengine.h" compile="0" resource="0" file="../../Libraries/WDL/convoengine.h"/>
-        <FILE id="A9l0hz" name="fft.c" compile="1" resource="0" file="../../Libraries/WDL/fft.c"/>
-        <FILE id="ufAhKz" name="fft.h" compile="0" resource="0" file="../../Libraries/WDL/fft.h"/>
-      </GROUP>
       <FILE id="ARAEsH" name="AmbisonicRotation.cpp" compile="1" resource="0"
             file="Source/AmbisonicRotation.cpp"/>
       <FILE id="g3TxyX" name="AmbisonicRotation.h" compile="0" resource="0"

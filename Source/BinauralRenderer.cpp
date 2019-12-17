@@ -117,6 +117,19 @@ void BinauralRenderer::setOrder(const int order)
 
 	m_order = order;
 	m_numAmbiChans = (order + 1) * (order + 1);
+
+	m_convEngines.clear();
+
+	for (int i = 0; i < m_numAmbiChans; ++i)
+		m_convEngines.emplace_back(std::make_unique<dsp::Convolution>());
+	
+	if ((m_sampleRate > 0) && (m_blockSize > 0))
+	{
+		dsp::ProcessSpec spec = { m_sampleRate, static_cast<juce::uint32>(m_blockSize), 2 };
+
+		for (auto& conv : m_convEngines)
+			conv->prepare(spec);
+	}
 }
 
 int BinauralRenderer::getOrder() const
@@ -310,12 +323,16 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 
 	ProcessSpec spec = { m_sampleRate, m_blockSize, 2 };
 
+	for (auto& conv : m_convEngines)
+		conv->prepare(spec);
+
 	m_lowPass.prepare(spec);
 	m_highPass.prepare(spec);
 }
 
 void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 {
+	ScopedNoDenormals noDenormals;
 	ScopedLock lock(m_procLock);
 
 	if (!m_enableRenderer || buffer.getNumChannels() <= 2)
@@ -324,39 +341,32 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 	if (m_enableRotation)
 		m_headTrackRotator.process(buffer);
 
-	m_workingBuffer.makeCopyOf(buffer);
-	m_convBuffer.clear();
-
-	buffer.clear();
-
-	if ((m_convEngines.size() != m_numAmbiChans) || (m_convEngines.size() == 0))
+	if ((m_numAmbiChans <= 0) || (m_numLsChans <= 0))
 	{
-		// not enough convolution engines to perform this process
+		buffer.clear();
 		return;
 	}
+
+	m_workingBuffer.clear();
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
 		for (int j = 0; j < 2; ++j)
-			m_convBuffer.copyFrom(j, 0, m_workingBuffer.getReadPointer(i), buffer.getNumSamples());
+			m_convBuffer.copyFrom(j, 0, buffer.getReadPointer(i), buffer.getNumSamples());
 
-		m_convEngines[i]->Add(m_convBuffer.getArrayOfWritePointers(), m_convBuffer.getNumSamples(), 2);
+		dsp::AudioBlock<float> convAudioBlockBuffer(m_convBuffer);
+		dsp::ProcessContextReplacing<float> convContextReplacing(convAudioBlockBuffer);
 
-		int availSamples = jmin((int)m_convEngines[i]->Avail(buffer.getNumSamples()), buffer.getNumSamples());
+		m_convEngines[i]->process(convContextReplacing);
 
-		if (availSamples > 0)
-		{
-			float* convo = nullptr;
-
-			for (int k = 0; k < 2; ++k)
-			{
-				convo = m_convEngines[i]->Get()[k];
-				buffer.addFrom(k, 0, convo, availSamples);
-			}
-
-			m_convEngines[i]->Advance(availSamples);
-		}
+		for (int k = 0; k < 2; ++k)
+			m_workingBuffer.addFrom(k, 0, m_convBuffer.getReadPointer(k), m_convBuffer.getNumSamples());
 	}
+
+	buffer.clear();
+
+	for (int m = 0; m < 2; ++m)
+		buffer.addFrom(m, 0, m_workingBuffer.getReadPointer(m), m_workingBuffer.getNumSamples());
 }
 
 void BinauralRenderer::releaseResources()
@@ -379,38 +389,10 @@ void BinauralRenderer::addHRIR(const AudioBuffer<float>& buffer)
 
 bool BinauralRenderer::uploadHRIRsToEngine()
 {
+	// convert the discrete HRIRs into SHD HRIRs for improved computational efficiency
+
 	ScopedLock lock(m_procLock);
 
-	// convert the discrete HRIRs into SHD HRIRs for improved computational efficiency
-	if (!convertHRIRToSHDHRIR())
-	{
-		sendMsgToLogWindow("could not upload SHD HRIRs to engine as conversion to SHD HRIRs failed");
-		return false;
-	}
-
-	m_convEngines.clear();
-
-	for (int i = 0; i < m_numAmbiChans; ++i)
-	{
-		WDL_ImpulseBuffer impulseBuffer;
-		impulseBuffer.samplerate = m_sampleRate;
-		impulseBuffer.SetNumChannels(2);
-
-		for (int m = 0; m < impulseBuffer.GetNumChannels(); ++m)
-			impulseBuffer.impulses[m].Set(m_hrirShdBuffers[i].getReadPointer(m), m_hrirShdBuffers[i].getNumSamples());
-
-		std::unique_ptr<WDL_ConvolutionEngine> convEngine = std::make_unique<WDL_ConvolutionEngine>();
-		convEngine->SetImpulse(&impulseBuffer, -1, 0, 0, false);
-		convEngine->Reset();
-
-		m_convEngines.push_back(std::move(convEngine));
-	}
-
-	return true;
-}
-
-bool BinauralRenderer::convertHRIRToSHDHRIR()
-{
 	if (m_hrirBuffers.size() <= 0)
 	{
 		sendMsgToLogWindow("no HRIRs available to convert to SHD HRIRs");
@@ -476,6 +458,14 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 		m_hrirShdBuffers.push_back(hrirShdBuffer);
 	}
 
+	for (int i = 0; i < m_numAmbiChans; ++i)
+		m_convEngines[i]->copyAndLoadImpulseResponseFromBuffer(m_hrirShdBuffers[i], m_sampleRate, true, false, false, 0);
+
+	return true;
+}
+
+bool BinauralRenderer::convertHRIRToSHDHRIR()
+{
 	return true;
 }
 
