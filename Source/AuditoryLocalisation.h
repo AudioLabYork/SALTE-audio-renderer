@@ -8,7 +8,6 @@
 #include <random>
 
 class AuditoryLocalisation	:	public Component
-							//,	public OSCReceiver
 							,	public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
 							,	private Button::Listener
 							,	private ChangeListener
@@ -54,7 +53,6 @@ private:
 	// OSC logging
 	void processOscMessage(const OSCMessage& message);
 	void saveLog();
-	int port = 9000;
 	double activationTime = 0.0f;
 	TextButton saveLogButton;
 	Label messageCounter;
