@@ -87,30 +87,23 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		return;
 	}
 
-	// prepare the player
-	m_player->unloadFileFromTransport();
-
 	ratingSliderArray.clear();
 	ratingReadouts.clear();
 	selectConditionButtonArray.clear();
 	attributeRatingLabels.clear();
+	
 	selectReferenceButton.setVisible(false);
 	selectTConditionAButton.setVisible(false);
 	selectTConditionBButton.setVisible(false);
 
-	// MUSHRA Reference
-	if (trial->isMReferencePresent())
-	{
-		selectReferenceButton.setVisible(true);
-		selectReferenceButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-		selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::red);
-	}
-
 	// MUSHRA Conditions
 	if (trial->getNumberOfMConditions() > 0)
 	{
-		StringArray selectButtonAlphabet = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
-												"P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
+		StringArray buttonCodes
+		{
+			"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
+			"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"
+		};
 
 		for (int i = 0; i < trial->getNumberOfMConditions(); ++i)
 		{
@@ -137,12 +130,25 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 			selectConditionButtonArray[i]->getProperties().set("playSampleButton", true);
 			selectConditionButtonArray[i]->getProperties().set("buttonIndex", i);
 
-			if (i < selectButtonAlphabet.size())
-				selectConditionButtonArray[i]->setButtonText(selectButtonAlphabet[i]);
+			if (i < buttonCodes.size())
+				selectConditionButtonArray[i]->setButtonText(buttonCodes[i]);
 
 			selectConditionButtonArray[i]->addListener(this);
 			addAndMakeVisible(selectConditionButtonArray[i]);
+
+			// prepare the player and rendering engine
+			m_player->loadFileToPlayer(trial->getMCondition(i)->filepath);
 		}
+	}
+
+	// MUSHRA Reference
+	if (trial->isMReferencePresent())
+	{
+		selectReferenceButton.setVisible(true);
+		selectReferenceButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::red);
+
+		m_player->loadFileToPlayer(trial->getMReference(0)->filepath);
 	}
 
 	// TS26259 Attributes
@@ -184,9 +190,13 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		selectTConditionBButton.setVisible(true);
 		selectTConditionBButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 		selectTConditionBButton.setColour(TextButton::buttonOnColourId, Colours::red);
+
+		// prepare the player and rendering engine
+		m_player->loadFileToPlayer(trial->getTCondition(0)->filepath);
+		m_player->loadFileToPlayer(trial->getTCondition(1)->filepath);
 	}
 
-	// ######################## DISTRIBUTE ELEMENTS IN THE GUI ########################
+	// update GUI
 	const int topMargin = 50;
 	const int bottomMargin = 125;
 	const int leftMargin = 120;
@@ -318,30 +328,27 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 {
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 
+	// MUSHRA
 	for (int i = 0; i < selectConditionButtonArray.size(); ++i)
 	{
 		if (buttonThatWasClicked == selectConditionButtonArray[i])
 		{
 			if (trial == nullptr)
-				break;
+				return;
 
-			m_player->pause();
-
-			// display the condition name in console output
 			sendMsgToLogWindow("Condition name: " + trial->getMCondition(i)->name);
 
-			// store the playback head position
-			if (timeSyncPlayback)
-				trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
-
-			// setup the player
-			m_player->loadFileIntoTransport(trial->getMCondition(i)->filepath);
+			// player configuration
+			m_player->pause();
+			
+			// save the position as loading a new source sets the position back to 0
+			double position = m_player->getPlaybackHeadPosition();
+			
+			m_player->loadSourceToTransport(i);
+			m_player->setPlaybackHeadPosition(position);
 			m_player->setGain(trial->getMCondition(i)->gain);
 
-			if (timeSyncPlayback)
-				m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
-
-			// setup the renderer
+			// renderer configuration
 			m_renderer->setOrder(trial->getMCondition(i)->renderingOrder);
 
 			if (trial->getMCondition(i)->ambixConfig.isNotEmpty())
@@ -365,19 +372,16 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		if (trial == nullptr)
 			return;
+		
+		sendMsgToLogWindow("Condition name: " + trial->getMReference(0)->name);
 
 		m_player->pause();
 
-		sendMsgToLogWindow("Condition name: " + trial->getMReference(0)->name);
+		double position = m_player->getPlaybackHeadPosition();
 
-		if (timeSyncPlayback)
-			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
-
-		m_player->loadFileIntoTransport(trial->getMReference(0)->filepath);
+		m_player->loadSourceToTransport(selectConditionButtonArray.size());
+		m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getMReference(0)->gain);
-
-		if (timeSyncPlayback)
-			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 
 		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
 
@@ -399,19 +403,16 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		if (trial == nullptr)
 			return;
-
-		m_player->pause();
-
+		
 		sendMsgToLogWindow("Condition name: " + trial->getTCondition(0)->name);
 
-		if (timeSyncPlayback)
-			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		m_player->pause();
+		
+		double position = m_player->getPlaybackHeadPosition();
 
-		m_player->loadFileIntoTransport(trial->getTCondition(0)->filepath);
+		m_player->loadSourceToTransport(0);
+		m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(0)->gain);
-
-		if (timeSyncPlayback)
-			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 
 		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
 
@@ -433,18 +434,16 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		if (trial == nullptr)
 			return;
-
-		m_player->pause();
+		
 		sendMsgToLogWindow("Condition name: " + trial->getTCondition(1)->name);
+		
+		m_player->pause();
 
-		if (timeSyncPlayback)
-			trial->setLastPlaybackHeadPosition((m_player->getPlaybackHeadPosition()));
+		double position = m_player->getPlaybackHeadPosition();
 
-		m_player->loadFileIntoTransport(trial->getTCondition(1)->filepath);
+		m_player->loadSourceToTransport(1);
+		m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(1)->gain);
-
-		if (timeSyncPlayback)
-			m_player->setPlaybackHeadPosition(trial->getLastPlaybackHeadPosition());
 
 		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
 
@@ -470,6 +469,10 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		{
 			currentIndex--;
 			m_testSession->setCurrentTrialIndex(currentIndex);
+
+			m_player->stop();
+			m_player->clearPlayer();
+
 			loadTrial(currentIndex);
 		}
 	}
@@ -481,6 +484,10 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		{
 			currentIndex++;
 			m_testSession->setCurrentTrialIndex(currentIndex);
+
+			m_player->stop();
+			m_player->clearPlayer();
+
 			loadTrial(currentIndex);
 		}
 	}
@@ -488,17 +495,15 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		// save up and close
 		m_player->stop();
+		m_player->clearPlayer();
+
 		m_testSession->exportResults();
+
 		mushraTestListeners.call([this](Listener& l) { l.testCompleted(); });
+
 		setVisible(false);
 	}
 }
-
-//void MixedMethodsComponent::triggerConditionPlayback(int buttonIndex)
-//{
-//	this probably requires some macros to call the respective methods:
-//	trial->getMCondition(buttonIndex), trial->getTAttribute(buttonIndex), etc.
-//}
 
 void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 {

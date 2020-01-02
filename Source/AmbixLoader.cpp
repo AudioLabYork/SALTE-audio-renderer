@@ -65,7 +65,6 @@ void AmbixLoader::parseFile(const File& file)
 				else if (line.startsWithIgnoreCase("/flip"))
 				{
 					String res = line.fromFirstOccurrenceOf("/flip ", false, true);
-					Logger::outputDebugString(res);
 				}
 				else if (line.startsWithIgnoreCase("/flop"))
 				{

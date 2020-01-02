@@ -98,10 +98,7 @@ int TestTrial::getNumberOfTAttributes() const
 
 bool TestTrial::areTConditionsPresent()
 {
-	if (m_TConditions.size() == 2)
-		return true;
-	else
-		return false;
+	return m_TConditions.size() == 2;
 }
 
 void TestTrial::randomiseTConditions()
@@ -119,16 +116,6 @@ void TestTrial::setRatingOptions(const StringArray ratings)
 StringArray TestTrial::getRatingOptions() const
 {
 	return m_ratingOptions;
-}
-
-void TestTrial::setLastPlaybackHeadPosition(double time)
-{
-	lastPlaybackHeadPosition = time;
-}
-
-double TestTrial::getLastPlaybackHeadPosition() const
-{
-	return lastPlaybackHeadPosition;
 }
 
 bool TestTrial::getLoopingState() const

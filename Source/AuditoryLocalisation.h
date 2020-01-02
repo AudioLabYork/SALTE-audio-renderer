@@ -4,8 +4,6 @@
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
 #include "BinauralRenderer.h"
-#include <vector>
-#include <random>
 
 class AuditoryLocalisation	:	public Component
 							,	public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
@@ -34,10 +32,10 @@ private:
 	StimulusPlayer* m_player;
 	BinauralRenderer* m_renderer;
 
-	TextButton g_chooseStimuliFolder;
-	TextButton g_startTest;
-	TextButton g_prevTrial, g_nextTrial;
-	TextButton g_confirmPointer;
+	TextButton m_chooseStimuliFolder;
+	TextButton m_startTest;
+	TextButton m_prevTrial, m_nextTrial;
+	TextButton m_confirmPointer;
 
 	void selectSrcPath();
 	void indexAudioFiles();
@@ -54,7 +52,7 @@ private:
 	void processOscMessage(const OSCMessage& message);
 	void saveLog();
 	double activationTime = 0.0f;
-	TextButton saveLogButton;
+	TextButton m_saveLogButton;
 	Label messageCounter;
 	StringArray oscMessageList;
 

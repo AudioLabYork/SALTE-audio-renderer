@@ -108,9 +108,6 @@ public:
 
 	void setRatingOptions(const StringArray ratings);
 	StringArray getRatingOptions() const;
-	
-	void setLastPlaybackHeadPosition(double time);
-	double getLastPlaybackHeadPosition() const;
 
 	void setLooping(bool looping);
 	bool getLoopingState() const;
