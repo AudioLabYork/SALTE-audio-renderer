@@ -370,6 +370,14 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 			m_mixedMethods.currentMessage.clear();
 		}
 	}
+	else if (source == &m_localisationComponent)
+	{
+		if (m_localisationComponent.currentMessage != "")
+		{
+			logWindowMessage += timeStamp + m_localisationComponent.currentMessage;
+			m_localisationComponent.currentMessage.clear();
+		}
+	}
 
 	logWindow.setText(logWindowMessage);
 	logWindow.moveCaretToEnd();

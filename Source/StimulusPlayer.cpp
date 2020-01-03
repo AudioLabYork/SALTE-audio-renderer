@@ -373,6 +373,11 @@ void StimulusPlayer::loadSourceToTransport(const int index)
 	loopButton.setEnabled(true);
 }
 
+String StimulusPlayer::getCurrentSourceFileName()
+{
+	return loadedFileName.getText();
+}
+
 void StimulusPlayer::setShowTest(bool shouldShow)
 {
 	m_shouldShowTest = shouldShow;

@@ -65,7 +65,6 @@ public:
 	bool checkLoopStatus();
 	
 	double getTotalTimeForLoadedFiles() const;
-
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
 	void setPlaybackOffsets(double beg, double end);
@@ -75,6 +74,7 @@ public:
 	void clearPlayer();
 	void loadFileToPlayer(const String& fullPath);
 	void loadSourceToTransport(const int index);
+	String getCurrentSourceFileName();
 
 	void setShowTest(bool shouldShow);
 
