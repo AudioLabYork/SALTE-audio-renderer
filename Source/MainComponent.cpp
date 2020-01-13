@@ -56,6 +56,13 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
 
+	// load settings
+	initOscSettings();
+	if (OscSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
+	{
+		loadOscSettings();
+	}
+
 	connectOscButton.setButtonText("Connect OSC");
 	connectOscButton.addListener(this);
 	connectOscButton.triggerClick(); // connect on startup
@@ -70,7 +77,7 @@ MainComponent::MainComponent()
 	audioSettingsFile = File(filePath + "/" + "SALTEAudioSettings.conf");
 
 	if (audioSettingsFile.existsAsFile())
-		loadSettings();
+		loadAudioSettings();
 
 	m_testSessionForm.init(&m_testSession);
 	m_testSessionForm.addListener(this);
@@ -118,7 +125,8 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
-	saveSettings();
+	saveAudioSettings();
+	saveOscSettings();
 	oscTxRx.disconnectTxRx();
 	m_binauralRendererView.deinit();
 	shutdownAudio();
@@ -198,8 +206,8 @@ void MainComponent::paint(Graphics& g)
 		g.setColour(getLookAndFeel().findColour(Label::textColourId));
 		g.setFont(14.0f);
 		g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
-		g.drawText("Send to", 410, 10, 50, 25, Justification::centredLeft, true);
-		g.drawText("Receive at", 490, 10, 75, 25, Justification::centredLeft, true);
+		g.drawText("Send to", 435, 10, 60, 25, Justification::centredLeft, true);
+		g.drawText("Receive at", 490, 10, 60, 25, Justification::centredLeft, true);
 		g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
 	}
 }
@@ -227,9 +235,9 @@ void MainComponent::resized()
 		connectOscButton.setBounds(560, 20, 80, 40);
 		openAudioDeviceManager.setBounds(310, 70, 240, 25);
 
-		clientTxIpLabel.setBounds(310, 35, 80, 25);
-		clientTxPortLabel.setBounds(410, 35, 60, 25);
-		clientRxPortLabel.setBounds(490, 35, 60, 25);
+		clientTxIpLabel.setBounds(310, 35, 120, 25);
+		clientTxPortLabel.setBounds(435, 35, 55, 25);
+		clientRxPortLabel.setBounds(495, 35, 55, 25);
 
 		logWindow.setBounds(10, 660, 640, 130);
 
@@ -317,14 +325,14 @@ void MainComponent::testCompleted()
 	m_binauralRendererView.setTestInProgress(false);
 }
 
-void MainComponent::loadSettings()
+void MainComponent::loadAudioSettings()
 {
 	XmlDocument asxmldoc(audioSettingsFile);
 	std::unique_ptr<XmlElement> audioDeviceSettings(asxmldoc.getDocumentElement());
 	deviceManager.initialise(0, 2, audioDeviceSettings.get(), true);
 }
 
-void MainComponent::saveSettings()
+void MainComponent::saveAudioSettings()
 {
 	std::unique_ptr<XmlElement> audioDeviceSettings(deviceManager.createStateXml());
 	if (audioDeviceSettings.get())
@@ -381,4 +389,30 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 
 	logWindow.setText(logWindowMessage);
 	logWindow.moveCaretToEnd();
+}
+
+void MainComponent::initOscSettings()
+{
+	PropertiesFile::Options options;
+	options.applicationName = "SALTEOscSettings";
+	options.filenameSuffix = ".conf";
+	options.osxLibrarySubFolder = "Application Support";
+	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
+	options.storageFormat = PropertiesFile::storeAsXML;
+	OscSettings.setStorageParameters(options);
+}
+
+void MainComponent::loadOscSettings()
+{
+	clientTxIpLabel.setText(OscSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
+	clientTxPortLabel.setText(OscSettings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
+	clientRxPortLabel.setText(OscSettings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
+}
+
+void MainComponent::saveOscSettings()
+{
+	OscSettings.getUserSettings()->setValue("clientTxIp", clientTxIpLabel.getText());
+	OscSettings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
+	OscSettings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
+	OscSettings.getUserSettings()->setValue("loadSettingsFile", true);
 }
