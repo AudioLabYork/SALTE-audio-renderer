@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
+#include <convoengine.h>
 #include "AmbisonicRotation.h"
 #include "OscTransceiver.h"
 #include "SOFAReader.h"
@@ -102,7 +103,7 @@ private:
 
 	AmbisonicRotation m_headTrackRotator;
 
-	std::vector<std::unique_ptr<dsp::Convolution>> m_convEngines;
+	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
 
 	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_lowPass;
 	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_highPass;
