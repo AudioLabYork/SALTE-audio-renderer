@@ -8,6 +8,7 @@ class BinauralRendererView
 	, public Button::Listener
 	, public Timer
 	, public ChangeBroadcaster
+	, public ChangeListener
 	, public BinauralRenderer::Listener
 {
 public:
@@ -18,12 +19,22 @@ public:
 
 	void paint(Graphics& g) override;
 	void resized() override;
-
+	void changeListenerCallback(ChangeBroadcaster* source) override;
 	void buttonClicked(Button* buttonClicked) override;
 
 	void ambixFileLoaded(const File& file) override;
 	void sofaFileLoaded(const File& file) override;
 
+
+
+	enum RendererModes
+	{
+		bypassed,
+		loudspeaker,
+		binaural
+	};
+
+	void setRendererMode(RendererModes targetMode);
 	void setTestInProgress(bool inProgress);
 
 	void browseForAmbixConfigFile();
@@ -36,7 +47,7 @@ private:
 
 	BinauralRenderer* m_renderer;
 
-	ToggleButton m_enableRenderer;
+	TabbedButtonBar modeSelectTabs;
 
 	Label m_ambixFileLabel;
 	TextButton m_ambixFileBrowse;
