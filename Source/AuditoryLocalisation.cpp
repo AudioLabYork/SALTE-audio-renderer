@@ -40,7 +40,7 @@ AuditoryLocalisation::AuditoryLocalisation()
 
 AuditoryLocalisation::~AuditoryLocalisation()
 {
-	saveSettings();
+	//saveSettings();
 }
 
 void AuditoryLocalisation::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer)
@@ -51,12 +51,12 @@ void AuditoryLocalisation::init(OscTransceiver* oscTxRx, StimulusPlayer* player,
 	m_oscTxRx = oscTxRx;
 
 	// load settings
-	initSettings();
+	//initSettings();
 
-	if (TestSessionFormSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
-	{
-		loadSettings();
-	}
+	//if (TestSessionFormSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
+	//{
+	//	loadSettings();
+	//}
 }
 
 void AuditoryLocalisation::paint(Graphics& g)
@@ -67,23 +67,25 @@ void AuditoryLocalisation::paint(Graphics& g)
 	g.drawRect(getLocalBounds(), 1);
 
 	g.setColour(Colours::white);
-	g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
-	g.drawText("Number of trials: " + String(audioFilesArray.size()) + ", total length (s): " + String(totalTimeOfAudioFiles,2), 180, 50, 440, 25, Justification::centredLeft);
-	
-	if(audioFilesArray.size() > 0)
-		g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
+	g.drawText("The localisation component is under development.", getLocalBounds(), Justification::centred);
+
+	//g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
+	//g.drawText("Number of trials: " + String(audioFilesArray.size()) + ", total length (s): " + String(totalTimeOfAudioFiles,2), 180, 50, 440, 25, Justification::centredLeft);
+	//
+	//if(audioFilesArray.size() > 0)
+	//	g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
 }
 
 void AuditoryLocalisation::resized()
 {
-	m_chooseStimuliFolder.setBounds(20, 20, 150, 25);
-	m_startTest.setBounds(20, 50, 150, 25);
-	m_prevTrial.setBounds(20, 420, 100, 25);
-	m_nextTrial.setBounds(140, 420, 100, 25);
-	m_confirmPointer.setBounds(320, 320, 150, 25);
+	//m_chooseStimuliFolder.setBounds(20, 20, 150, 25);
+	//m_startTest.setBounds(20, 50, 150, 25);
+	//m_prevTrial.setBounds(20, 420, 100, 25);
+	//m_nextTrial.setBounds(140, 420, 100, 25);
+	//m_confirmPointer.setBounds(320, 320, 150, 25);
 
-	m_saveLogButton.setBounds(20, 110, 150, 25);
-	messageCounter.setBounds(20, 140, 150, 25);
+	//m_saveLogButton.setBounds(20, 110, 150, 25);
+	//messageCounter.setBounds(20, 140, 150, 25);
 }
 
 void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)

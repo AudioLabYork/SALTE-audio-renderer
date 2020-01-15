@@ -184,7 +184,7 @@ void MainComponent::paint(Graphics& g)
 	g.drawRect(getLocalBounds(), 1);
 
 	g.setColour(getLookAndFeel().findColour(Label::textColourId));
-	g.drawMultiLineText(String("Build date and time:\n" + String(__DATE__) + " " + String(__TIME__)), 10, 140, 150, Justification::left);
+	g.drawMultiLineText(String("Build date and time:\n" + String(__DATE__) + " " + String(__TIME__)), 20, 140, 150, Justification::left);
 
 	g.setFont(18.0f);
 	g.drawMultiLineText("Spatial\nAudio\nListening\nTest\nEnvironment", 120, 33, 120, Justification::left, 1.2f);
