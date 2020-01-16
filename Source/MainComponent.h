@@ -4,6 +4,7 @@
 #include "AudioSetup.h"
 #include "OscTransceiver.h"
 #include "StimulusPlayer.h"
+#include "LoudspeakerRenderer.h"
 #include "BinauralRenderer.h"
 #include "BinauralRendererView.h"
 #include "MixedMethods.h"
@@ -41,6 +42,7 @@ private:
 	AudioSetup m_audioSetup;
 	OscTransceiver oscTxRx;
 	StimulusPlayer m_stimulusPlayer;
+	LoudspeakerRenderer m_loudspeakerRenderer;
 	BinauralRenderer m_binauralRenderer;
 	BinauralRendererView m_binauralRendererView;
 	MixedMethodsComponent m_mixedMethods;

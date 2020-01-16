@@ -8,7 +8,6 @@
 #include <random>
 
 class AuditoryLocalisation	:	public Component
-							//,	public OSCReceiver
 							,	public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
 							,	private Button::Listener
 							,	private ChangeListener

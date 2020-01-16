@@ -9,13 +9,16 @@ MainComponent::MainComponent()
 	addAndMakeVisible(m_stimulusPlayer);
 	m_stimulusPlayer.addChangeListener(this);
 
+	// setup loudspeaker renderer
+	m_loudspeakerRenderer.addChangeListener(this);
+
 	// setup binaural renderer, pass the osc transceiver
 	oscTxRx.addListener(&m_binauralRenderer);
 
 	m_binauralRenderer.addListener(&m_binauralRendererView);
 	m_binauralRenderer.addChangeListener(this);
 
-	m_binauralRendererView.init(&m_binauralRenderer);
+	m_binauralRendererView.init(&m_loudspeakerRenderer, &m_binauralRenderer);
 	m_binauralRendererView.addChangeListener(this);
 	addAndMakeVisible(m_binauralRendererView);
 
@@ -146,8 +149,12 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 	// pass the buffer into the stimulus player to be filled with required audio
 	m_stimulusPlayer.getNextAudioBlock(newinfo);
 
+	// pass the buffer to the loudspeaker renderer to replace ambisonic signals with loudspeaker feeds
+	m_loudspeakerRenderer.processBlock(*newinfo.buffer);
+
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
 	m_binauralRenderer.processBlock(*newinfo.buffer);
+
 	m_headphoneCompensation.processBlock(*newinfo.buffer);
 
 	AudioBuffer<float>* sourceBuffer = bufferToFill.buffer;
@@ -162,6 +169,7 @@ void MainComponent::releaseResources()
 {
 	// relese resources taken by stimulus player object
 	m_stimulusPlayer.releaseResources();
+	m_loudspeakerRenderer.releaseResources();
 	m_binauralRenderer.releaseResources();
 	m_headphoneCompensation.releaseResources();
 }

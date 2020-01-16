@@ -1,29 +1,41 @@
 #include "BinauralRendererView.h"
 
 BinauralRendererView::BinauralRendererView()
-	: m_renderer(nullptr)
+	: m_binRenderer(nullptr)
 	, modeSelectTabs(TabbedButtonBar::Orientation::TabsAtTop)
 {
 
 }
 
-void BinauralRendererView::init(BinauralRenderer* renderer)
+void BinauralRendererView::init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRenderer)
 {
-	m_renderer = renderer;
+	m_lsRenderer = lsRenderer;
+	m_binRenderer = binRenderer;
 
 	Colour bckgnd = Colour(25, 50, 77);
-	modeSelectTabs.addTab("Bypassed", bckgnd, 0);
-	modeSelectTabs.addTab("Loudspeakers", bckgnd, 1);
-	modeSelectTabs.addTab("Binaural", bckgnd, 2);
+	modeSelectTabs.addTab("Renderer Bypassed", bckgnd, 0);
+	modeSelectTabs.addTab("Loudspeaker Rendering", bckgnd, 1);
+	modeSelectTabs.addTab("Binaural Rendering", bckgnd, 2);
+	modeSelectTabs.setColour(TabbedButtonBar::tabOutlineColourId, Colours::black);
+	modeSelectTabs.setColour(TabbedButtonBar::frontOutlineColourId, Colours::black); // looks like this doesn't work
 	modeSelectTabs.addChangeListener(this);
 	addAndMakeVisible(modeSelectTabs);
 
-	m_ambixFileLabel.setText("AmbiX Config File:", dontSendNotification);
-	addAndMakeVisible(m_ambixFileLabel);
+	// Loudspeaker Rendering
+	m_lsAmbixFileLabel.setText("AmbiX Config File:", dontSendNotification);
+	addAndMakeVisible(m_lsAmbixFileLabel);
 
-	m_ambixFileBrowse.setButtonText("Select file...");
-	m_ambixFileBrowse.addListener(this);
-	addAndMakeVisible(m_ambixFileBrowse);
+	m_lsAmbixFileBrowse.setButtonText("Select file...");
+	m_lsAmbixFileBrowse.addListener(this);
+	addAndMakeVisible(m_lsAmbixFileBrowse);
+
+	// Binaural Rendering
+	m_binAmbixFileLabel.setText("AmbiX Config File:", dontSendNotification);
+	addAndMakeVisible(m_binAmbixFileLabel);
+
+	m_binAmbixFileBrowse.setButtonText("Select file...");
+	m_binAmbixFileBrowse.addListener(this);
+	addAndMakeVisible(m_binAmbixFileBrowse);
 
 	m_sofaFileLabel.setText("SOFA File:", dontSendNotification);
 	addAndMakeVisible(m_sofaFileLabel);
@@ -59,7 +71,6 @@ void BinauralRendererView::init(BinauralRenderer* renderer)
 	addAndMakeVisible(m_yawLabel);
 
 	startTimer(50);
-
 	modeSelectTabs.setCurrentTabIndex(0);
 	setRendererMode(bypassed);
 }
@@ -76,27 +87,41 @@ void BinauralRendererView::paint(Graphics& g)
 
 	// RECTANGULAR OUTLINE
 	g.setColour(Colours::black);
-	g.drawRect(getLocalBounds().withTrimmedTop(25), 1);
+	juce::Rectangle<int> area(getLocalBounds().withTrimmedTop(25));
+	//g.drawRect(getLocalBounds().withTrimmedTop(25), 1);
+	Line<float> line1(	Point<float> (area.getTopLeft().getX(), area.getTopLeft().getY()),
+						Point<float> (area.getBottomLeft().getX(), area.getBottomLeft().getY()));
+	Line<float> line2(	Point<float>(area.getBottomLeft().getX(), area.getBottomLeft().getY()),
+						Point<float>(area.getBottomRight().getX(), area.getBottomRight().getY()));
+	Line<float> line3(	Point<float>(area.getBottomRight().getX(), area.getBottomRight().getY()),
+						Point<float>(area.getTopRight().getX(), area.getTopRight().getY()));
+	g.drawLine(line1, 2.0f);
+	g.drawLine(line2, 2.0f);
+	g.drawLine(line3, 2.0f);
 }
 
 void BinauralRendererView::resized()
 {
-	modeSelectTabs.setBounds(0, 0, getWidth(), 25);
+	const int tabBarHeight = 25;
+	modeSelectTabs.setBounds(0, 0, getWidth(), tabBarHeight);
 
-	m_ambixFileLabel.setBounds(10, 30, 390, 25);
-	m_ambixFileBrowse.setBounds(400, 30, 80, 25);
+	m_lsAmbixFileLabel.setBounds(10, 35, 390, 25);
+	m_lsAmbixFileBrowse.setBounds(400, 35, 80, 25);
 
-	m_sofaFileLabel.setBounds(10, 70, 390, 25);
-	m_sofaFileBrowse.setBounds(400, 70, 80, 25);
+	m_binAmbixFileLabel.setBounds(10, 35, 390, 25);
+	m_binAmbixFileBrowse.setBounds(400, 35, 80, 25);
 
-	m_enableDualBand.setBounds(10, 100, 200, 25);
-	m_enableRotation.setBounds(10, 130, 200, 25);
-	m_enableMirrorView.setBounds(10, 160, 200, 25);
+	m_sofaFileLabel.setBounds(10, 75, 390, 25);
+	m_sofaFileBrowse.setBounds(400, 75, 80, 25);
+
+	m_enableDualBand.setBounds(10, 140, 200, 25);
+	m_enableRotation.setBounds(10, 170, 200, 25);
+	m_enableMirrorView.setBounds(10, 200, 200, 25);
 
 	const int border = 5;
-	const int headSize = getHeight() - 2 * border;
+	const int headSize = getHeight() - 2 * border - tabBarHeight;
 
-	m_binauralHeadView.setBounds(getWidth() - headSize - border, border, headSize, headSize);
+	m_binauralHeadView.setBounds(getWidth() - headSize - border, border + tabBarHeight, headSize, headSize);
 
 	m_rollLabel.setBounds(400, 175, 150, 20);
 	m_pitchLabel.setBounds(400, 195, 150, 20);
@@ -115,9 +140,13 @@ void BinauralRendererView::changeListenerCallback(ChangeBroadcaster* source)
 
 void BinauralRendererView::buttonClicked(Button* buttonClicked)
 {
-	if (buttonClicked == &m_ambixFileBrowse)
+	if (buttonClicked == &m_lsAmbixFileBrowse)
 	{
-		browseForAmbixConfigFile();
+		browseForLsAmbixConfigFile();
+	}
+	else if (buttonClicked == &m_binAmbixFileBrowse)
+	{
+		browseForBinAmbixConfigFile();
 	}
 	else if (buttonClicked == &m_sofaFileBrowse)
 	{
@@ -125,17 +154,17 @@ void BinauralRendererView::buttonClicked(Button* buttonClicked)
 	}
 	else if (buttonClicked == &m_enableDualBand)
 	{
-		m_renderer->enableDualBand(m_enableDualBand.getToggleState());
+		m_binRenderer->enableDualBand(m_enableDualBand.getToggleState());
 	}
 	else if (buttonClicked == &m_enableRotation)
 	{
-		m_renderer->enableRotation(m_enableRotation.getToggleState());
+		m_binRenderer->enableRotation(m_enableRotation.getToggleState());
 	}
 }
 
 void BinauralRendererView::ambixFileLoaded(const File& file)
 {
-	m_ambixFileLabel.setText("AmbiX Config File: " + file.getFileName(), NotificationType::dontSendNotification);
+	m_binAmbixFileLabel.setText("AmbiX Config File: " + file.getFileName(), NotificationType::dontSendNotification);
 }
 
 void BinauralRendererView::sofaFileLoaded(const File& file)
@@ -145,63 +174,61 @@ void BinauralRendererView::sofaFileLoaded(const File& file)
 
 void BinauralRendererView::setRendererMode(RendererModes targetMode)
 {
+	// hide everything
+	m_lsAmbixFileBrowse.setVisible(false);
+	m_lsAmbixFileLabel.setVisible(false);
+	m_binAmbixFileBrowse.setVisible(false);
+	m_binAmbixFileLabel.setVisible(false);
+	m_sofaFileBrowse.setVisible(false);
+	m_sofaFileLabel.setVisible(false);
+
+	m_enableDualBand.setVisible(false);
+	m_enableRotation.setVisible(false);
+	
+	m_rollLabel.setVisible(false);
+	m_pitchLabel.setVisible(false);
+	m_yawLabel.setVisible(false);
+	
+	m_binauralHeadView.setVisible(false);
+	m_enableMirrorView.setVisible(false);
+
+	// bypass renderers
+	m_binRenderer->enableRenderer(false);
+
+	// turn on what is needed
 	switch (targetMode)
 	{
 	case bypassed:
 	{
-		m_ambixFileBrowse.setVisible(false);
-		m_ambixFileLabel.setVisible(false);
-		m_enableDualBand.setVisible(false);
-
-		m_sofaFileBrowse.setVisible(false);
-		m_sofaFileLabel.setVisible(false);
-
-		m_enableRotation.setVisible(false);
-		m_rollLabel.setVisible(false);
-		m_pitchLabel.setVisible(false);
-		m_yawLabel.setVisible(false);
-		m_binauralHeadView.setVisible(false);
-		m_enableMirrorView.setVisible(false);
-
-		m_renderer->enableRenderer(false);
 		break;
 	}
 	case loudspeaker:
 	{
-		m_ambixFileBrowse.setVisible(true);
-		m_ambixFileLabel.setVisible(true);
-		m_enableDualBand.setVisible(true);
+		m_lsAmbixFileBrowse.setVisible(true);
+		m_lsAmbixFileLabel.setVisible(true);
 
-		m_sofaFileBrowse.setVisible(false);
-		m_sofaFileLabel.setVisible(false);
-
-		m_enableRotation.setVisible(false);
-		m_rollLabel.setVisible(false);
-		m_pitchLabel.setVisible(false);
-		m_yawLabel.setVisible(false);
-		m_binauralHeadView.setVisible(false);
-		m_enableMirrorView.setVisible(false);
-
-		m_renderer->enableRenderer(true);
+		m_lsRenderer->enableRenderer(true);
 		break;
 	}
 	case binaural:
 	{
-		m_ambixFileBrowse.setVisible(true);
-		m_ambixFileLabel.setVisible(true);
-		m_enableDualBand.setVisible(true);
+		m_binAmbixFileBrowse.setVisible(true);
+		m_binAmbixFileLabel.setVisible(true);
 		
 		m_sofaFileBrowse.setVisible(true);
 		m_sofaFileLabel.setVisible(true);
 
+		m_enableDualBand.setVisible(true);
 		m_enableRotation.setVisible(true);
+		
 		m_rollLabel.setVisible(true);
 		m_pitchLabel.setVisible(true);
 		m_yawLabel.setVisible(true);
+
 		m_binauralHeadView.setVisible(true);
 		m_enableMirrorView.setVisible(true);
 
-		m_renderer->enableRenderer(true);
+		m_binRenderer->enableRenderer(true);
 		break;
 	}
 	default:
@@ -213,17 +240,19 @@ void BinauralRendererView::setTestInProgress(bool inProgress)
 {
 	if (inProgress)
 	{
+		m_lsAmbixFileBrowse.setEnabled(false);
+		m_binAmbixFileBrowse.setEnabled(false);
 		m_sofaFileBrowse.setEnabled(false);
-		m_ambixFileBrowse.setEnabled(false);
 	}
 	else
 	{
+		m_lsAmbixFileBrowse.setEnabled(true);
+		m_binAmbixFileBrowse.setEnabled(true);
 		m_sofaFileBrowse.setEnabled(true);
-		m_ambixFileBrowse.setEnabled(true);
 	}
 }
 
-void BinauralRendererView::browseForAmbixConfigFile()
+void BinauralRendererView::browseForLsAmbixConfigFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
 	FileChooser fc("Select Ambix Config file to open...",
@@ -235,8 +264,25 @@ void BinauralRendererView::browseForAmbixConfigFile()
 	{
 		File chosenFile = fc.getResult();
 
-		m_renderer->initialiseFromAmbix(chosenFile);
+		//m_binRenderer->initialiseFromAmbix(chosenFile);
+		//m_sofaFileBrowse.setEnabled(true);
+	}
+#endif
+}
 
+void BinauralRendererView::browseForBinAmbixConfigFile()
+{
+#if JUCE_MODAL_LOOPS_PERMITTED
+	FileChooser fc("Select Ambix Config file to open...",
+		File::getCurrentWorkingDirectory(),
+		"*.config",
+		true);
+
+	if (fc.browseForFileToOpen())
+	{
+		File chosenFile = fc.getResult();
+
+		m_binRenderer->initialiseFromAmbix(chosenFile);
 		m_sofaFileBrowse.setEnabled(true);
 	}
 #endif
@@ -254,7 +300,7 @@ void BinauralRendererView::browseForSofaFile()
 	{
 		File chosenFile = fc.getResult();
 
-		m_renderer->loadHRIRsFromSofaFile(chosenFile);
+		m_binRenderer->loadHRIRsFromSofaFile(chosenFile);
 	}
 #endif
 }
@@ -263,13 +309,13 @@ void BinauralRendererView::timerCallback()
 {
 	if (m_enableRotation.getToggleState())
 	{
-		m_rollLabel.setText("R: " + String(m_renderer->getRoll(), 1) + " deg", dontSendNotification);
-		m_pitchLabel.setText("P: " + String(m_renderer->getPitch(), 1) + " deg", dontSendNotification);
-		m_yawLabel.setText("Y: " + String(m_renderer->getYaw(), 1) + " deg", dontSendNotification);
+		m_rollLabel.setText("R: " + String(m_binRenderer->getRoll(), 1) + " deg", dontSendNotification);
+		m_pitchLabel.setText("P: " + String(m_binRenderer->getPitch(), 1) + " deg", dontSendNotification);
+		m_yawLabel.setText("Y: " + String(m_binRenderer->getYaw(), 1) + " deg", dontSendNotification);
 
 		if (m_enableMirrorView.getToggleState())
-			m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), -m_renderer->getYaw());
+			m_binauralHeadView.setHeadOrientation(m_binRenderer->getRoll(), m_binRenderer->getPitch(), -m_binRenderer->getYaw());
 		else
-			m_binauralHeadView.setHeadOrientation(m_renderer->getRoll(), m_renderer->getPitch(), m_renderer->getYaw() + 180);
+			m_binauralHeadView.setHeadOrientation(m_binRenderer->getRoll(), m_binRenderer->getPitch(), m_binRenderer->getYaw() + 180);
 	}
 }

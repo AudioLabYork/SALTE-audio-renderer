@@ -1,5 +1,6 @@
 #pragma once
 
+#include "LoudspeakerRenderer.h"
 #include "BinauralRenderer.h"
 #include "BinauralHeadView.h"
 
@@ -14,7 +15,7 @@ class BinauralRendererView
 public:
 	BinauralRendererView();
 
-	void init(BinauralRenderer* renderer);
+	void init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRenderer);
 	void deinit();
 
 	void paint(Graphics& g) override;
@@ -24,8 +25,6 @@ public:
 
 	void ambixFileLoaded(const File& file) override;
 	void sofaFileLoaded(const File& file) override;
-
-
 
 	enum RendererModes
 	{
@@ -37,7 +36,8 @@ public:
 	void setRendererMode(RendererModes targetMode);
 	void setTestInProgress(bool inProgress);
 
-	void browseForAmbixConfigFile();
+	void browseForLsAmbixConfigFile();
+	void browseForBinAmbixConfigFile();
 	void browseForSofaFile();
 
 	String m_currentLogMessage;
@@ -45,12 +45,16 @@ public:
 private:
 	virtual void timerCallback() override;
 
-	BinauralRenderer* m_renderer;
+	LoudspeakerRenderer* m_lsRenderer;
+	BinauralRenderer* m_binRenderer;
 
 	TabbedButtonBar modeSelectTabs;
 
-	Label m_ambixFileLabel;
-	TextButton m_ambixFileBrowse;
+	Label m_lsAmbixFileLabel;
+	TextButton m_lsAmbixFileBrowse;
+
+	Label m_binAmbixFileLabel;
+	TextButton m_binAmbixFileBrowse;
 
 	Label m_sofaFileLabel;
 	TextButton m_sofaFileBrowse;
