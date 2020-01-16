@@ -67,10 +67,16 @@ private:
 
 	ImageComponent imageComponent;
 
-	// save and load settings
+	// save and load audio settings
 	File audioSettingsFile;
-	void loadSettings();
-	void saveSettings();
+	void loadAudioSettings();
+	void saveAudioSettings();
+
+	// OSC settings
+	void initOscSettings();
+	void loadOscSettings();
+	void saveOscSettings();
+	ApplicationProperties OscSettings;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

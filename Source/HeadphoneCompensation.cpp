@@ -26,8 +26,8 @@ void HeadphoneCompensation::processBlock(AudioBuffer<float>& buffer)
 {
 	if (m_enableEq)
 	{
-		dsp::AudioBlock<float> buffer(buffer.getArrayOfWritePointers(), 2, buffer.getNumSamples());
-		m_conv.process(dsp::ProcessContextReplacing<float>(buffer));
+		dsp::AudioBlock<float> block(buffer.getArrayOfWritePointers(), 2, buffer.getNumSamples());
+		m_conv.process(dsp::ProcessContextReplacing<float>(block));
 	}
 }
 
