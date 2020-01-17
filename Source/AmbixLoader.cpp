@@ -16,6 +16,21 @@ void AmbixLoader::getDecodeMatrix(std::vector<float>& decodeMatrix)
 	decodeMatrix = m_decodeMatrix;
 }
 
+int AmbixLoader::getAmbiOrder()
+{
+	return m_order;
+}
+
+int AmbixLoader::getNumAmbiChans()
+{
+	return m_numAmbiChans;
+}
+
+int AmbixLoader::getNumLsChans()
+{
+	return m_numLsChans;
+}
+
 int AmbixLoader::getNumHrirs()
 {
 	return static_cast<int>(m_hrirs.size());
@@ -118,6 +133,7 @@ void AmbixLoader::parseFile(const File& file)
 		else if (line.contains("#DECODERMATRIX"))
 		{
 			m_decodeMatrix.clear();
+			int rows = 0;
 
 			while (!fis.isExhausted())
 			{
@@ -127,13 +143,18 @@ void AmbixLoader::parseFile(const File& file)
 					break;
 
 				juce::String::CharPointerType charptr = line.getCharPointer();
+				rows++;
+				int columns = 0;
 
 				while (charptr != charptr.findTerminatingNull())
 				{
 					float nextval = static_cast<float>(CharacterFunctions::readDoubleValue(charptr));
 					m_decodeMatrix.push_back(nextval);
+					columns++;
 				}
+				m_numAmbiChans = columns;
 			}
+			m_numLsChans = rows;
 		}
 	}
 }

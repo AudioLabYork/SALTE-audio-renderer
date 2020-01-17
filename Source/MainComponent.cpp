@@ -36,11 +36,8 @@ MainComponent::MainComponent()
 
 	addAndMakeVisible(&imageComponent);
 
-	//// set number of output channels to 2 (binaural rendering case)
-	//setAudioChannels (0, 2);
-
-	// set number of output channels to 50 (rendering using loudspeaker rig)
-	setAudioChannels(0, 50);
+	// set number of output channels to 64 (rendering using binaural playback or loudspeaker rig)
+	setAudioChannels(0, 64);
 
 	// OSC labels
 	clientTxIpLabel.setEditable(false, true, false);
@@ -140,6 +137,7 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 {
 	// prepare stimulus player object
 	m_stimulusPlayer.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	m_loudspeakerRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_binauralRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_headphoneCompensation.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
@@ -158,7 +156,7 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 	m_stimulusPlayer.getNextAudioBlock(newinfo);
 
 	// pass the buffer to the loudspeaker renderer to replace ambisonic signals with loudspeaker feeds
-	m_loudspeakerRenderer.processBlock(*newinfo.buffer);
+	//m_loudspeakerRenderer.processBlock(*newinfo.buffer);
 
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
 	m_binauralRenderer.processBlock(*newinfo.buffer);
@@ -360,6 +358,14 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 		{
 			logWindowMessage += timeStamp + m_stimulusPlayer.currentMessage;
 			m_stimulusPlayer.currentMessage.clear();
+		}
+	}
+	else if (source == &m_loudspeakerRenderer)
+	{
+		if (m_loudspeakerRenderer.m_currentLogMessage != "")
+		{
+			logWindowMessage += timeStamp + m_loudspeakerRenderer.m_currentLogMessage;
+			m_loudspeakerRenderer.m_currentLogMessage.clear();
 		}
 	}
 	else if (source == &m_binauralRenderer)

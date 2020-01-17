@@ -7,6 +7,7 @@
 #include "SOFAReader.h"
 #include "AmbixLoader.h"
 #include "ROM.h"
+#include "Maths.h"
 
 class BinauralRenderer
 	: public ChangeBroadcaster
@@ -71,7 +72,6 @@ private:
 
 	bool convertHRIRToSHDHRIR();
 
-	float legendreP(const int n, const float x);
 	void getMaxReWeights(std::vector<float>& weights);
 
 	CriticalSection m_procLock;

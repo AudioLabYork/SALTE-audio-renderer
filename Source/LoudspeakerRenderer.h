@@ -3,6 +3,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AmbixLoader.h"
 #include "ROM.h"
+#include "Maths.h"
 
 class LoudspeakerRenderer
 	: public ChangeBroadcaster
@@ -20,11 +21,17 @@ public:
 	void sendMsgToLogWindow(String message);
 	String m_currentLogMessage;
 
-	void initialiseFromAmbix(const File& ambixFile);
+	void loadAmbixFile(const File& ambixFile);
+	String getCurrentAmbixFileName();
 
 private:
+	File m_currentAmbixFile;
+
 	void setDecodingMatrix(std::vector<float>& decodeMatrix);
+	void updateMatrices();
+
 	std::vector<float> m_basicDecodeMatrix;
+	std::vector<float> m_basicDecodeTransposeMatrix;
 
 	CriticalSection m_procLock;
 

@@ -2,11 +2,11 @@
 
 LoudspeakerRenderer::LoudspeakerRenderer()
 	: m_order(0)
-	, m_numAmbiChans(1)
+	, m_numAmbiChans(0)
 	, m_numLsChans(0)
 	, m_blockSize(0)
 	, m_sampleRate(0.0)
-	, m_enableRenderer(true)
+	, m_enableRenderer(false)
 {
 }
 
@@ -21,6 +21,14 @@ void LoudspeakerRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
 	ScopedLock lock(m_procLock);
 
 	m_basicDecodeMatrix = decodeMatrix;
+}
+
+void LoudspeakerRenderer::updateMatrices()
+{
+	ScopedLock lock(m_procLock);
+
+	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
+	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
 }
 
 bool LoudspeakerRenderer::isRendererEnabled()
@@ -63,23 +71,33 @@ void LoudspeakerRenderer::releaseResources()
 {
 }
 
-void LoudspeakerRenderer::initialiseFromAmbix(const File& ambixFile)
+void LoudspeakerRenderer::loadAmbixFile(const File& ambixFile)
 {
 	if (!ambixFile.existsAsFile())
+	{
 		sendMsgToLogWindow("failed to load: " + ambixFile.getFileName());
+		return;
+	}
+
+	m_currentAmbixFile = ambixFile;
 
 	AmbixLoader loader(ambixFile);
 
-
-	std::vector<float> azi;
-	std::vector<float> ele;
-	loader.getSourcePositions(azi, ele);
+	//std::vector<float> azi;
+	//std::vector<float> ele;
+	//loader.getSourcePositions(azi, ele);
 
 	std::vector<float> decodeMatrix;
 	loader.getDecodeMatrix(decodeMatrix);
 	setDecodingMatrix(decodeMatrix);
 
+	m_numAmbiChans = loader.getNumAmbiChans();
+	m_numLsChans = loader.getNumLsChans();
 
-	sendMsgToLogWindow("successfully loaded: " + ambixFile.getFileName());
+	sendMsgToLogWindow("successfully loaded: " + ambixFile.getFileName() + " / In: " + String(m_numAmbiChans) + " / Out: " + String(m_numLsChans));
+}
 
+String LoudspeakerRenderer::getCurrentAmbixFileName()
+{
+	return m_currentAmbixFile.getFileName();
 }

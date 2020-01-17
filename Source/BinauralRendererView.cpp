@@ -123,9 +123,9 @@ void BinauralRendererView::resized()
 
 	m_binauralHeadView.setBounds(getWidth() - headSize - border, border + tabBarHeight, headSize, headSize);
 
-	m_rollLabel.setBounds(400, 175, 150, 20);
-	m_pitchLabel.setBounds(400, 195, 150, 20);
-	m_yawLabel.setBounds(400, 215, 150, 20);
+	m_rollLabel.setBounds(400, 165, 150, 20);
+	m_pitchLabel.setBounds(400, 185, 150, 20);
+	m_yawLabel.setBounds(400, 205, 150, 20);
 }
 
 void BinauralRendererView::changeListenerCallback(ChangeBroadcaster* source)
@@ -194,6 +194,7 @@ void BinauralRendererView::setRendererMode(RendererModes targetMode)
 
 	// bypass renderers
 	m_binRenderer->enableRenderer(false);
+	m_lsRenderer->enableRenderer(false);
 
 	// turn on what is needed
 	switch (targetMode)
@@ -263,9 +264,8 @@ void BinauralRendererView::browseForLsAmbixConfigFile()
 	if (fc.browseForFileToOpen())
 	{
 		File chosenFile = fc.getResult();
-
-		//m_binRenderer->initialiseFromAmbix(chosenFile);
-		//m_sofaFileBrowse.setEnabled(true);
+		m_lsRenderer->loadAmbixFile(chosenFile);
+		m_lsAmbixFileLabel.setText("AmbiX Config File: " + m_lsRenderer->getCurrentAmbixFileName(), NotificationType::dontSendNotification);
 	}
 #endif
 }

@@ -50,6 +50,7 @@
       <FILE id="hrTOiU" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="mi7Esd" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="Oit1Qu" name="Maths.cpp" compile="1" resource="0" file="Source/Maths.cpp"/>
       <FILE id="VoCmcv" name="Maths.h" compile="0" resource="0" file="Source/Maths.h"/>
       <FILE id="eVWJjz" name="MixedMethods.cpp" compile="1" resource="0"
             file="Source/MixedMethods.cpp"/>
