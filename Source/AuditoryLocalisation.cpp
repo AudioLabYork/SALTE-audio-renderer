@@ -272,14 +272,14 @@ void AuditoryLocalisation::indexAudioFiles()
 	}
 
 	for (auto& file : audioFilesArray)
-		m_player->loadFileToPlayer(file.getFullPathName());
+		m_player->cacheFileToPlayer(file.getFullPathName());
 
 	totalTimeOfAudioFiles = m_player->getTotalTimeForLoadedFiles();
 }
 
 void AuditoryLocalisation::loadFile()
 {
-	m_player->loadSourceToTransport(currentTrialIndex);
+	m_player->loadSourceToTransport(audioFilesArray[currentTrialIndex].getFileName());
 	m_player->play();
 
 

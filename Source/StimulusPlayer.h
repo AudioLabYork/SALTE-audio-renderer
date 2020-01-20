@@ -72,8 +72,8 @@ public:
 	double getPlaybackEndOffset();
 	
 	void clearPlayer();
-	void loadFileToPlayer(const String& fullPath);
-	void loadSourceToTransport(const int index);
+	void cacheFileToPlayer(const String& fullPath);
+	void loadSourceToTransport(const String& fullPath);
 	String getCurrentSourceFileName();
 
 	void setShowTest(bool shouldShow);
@@ -91,6 +91,7 @@ private:
 
 	std::vector<File> audioSourceFiles;
 	std::vector<std::unique_ptr<AudioFormatReaderSource>> audioFormatReaderSources;
+	StringArray cachedFileNames;
 	AudioTransportSource transportSource;
 
 	int m_samplesPerBlockExpected;

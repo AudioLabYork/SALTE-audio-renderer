@@ -52,7 +52,7 @@ public:
 	bool uploadHRIRsToEngine();
 
 	void loadStandardDefault();
-	void initialiseFromAmbix(const File& ambixFile);
+	void loadAmbixFile(const File& ambixFile);
 	void loadHRIRsFromSofaFile(const File& sofaFile);
 
 	class Listener

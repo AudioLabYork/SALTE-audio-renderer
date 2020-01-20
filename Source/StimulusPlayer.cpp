@@ -326,7 +326,8 @@ void StimulusPlayer::browseForFile()
 	if (chooser.browseForFileToOpen())
 	{
 		File file = chooser.getResult();
-		loadFileToPlayer(file.getFullPathName());
+		cacheFileToPlayer(file.getFullPathName());
+		loadSourceToTransport(file.getFullPathName());
 	}
 }
 
@@ -338,7 +339,7 @@ void StimulusPlayer::clearPlayer()
 	playerThumbnail.clearThumbnail();
 }
 
-void StimulusPlayer::loadFileToPlayer(const String& fullPath)
+void StimulusPlayer::cacheFileToPlayer(const String& fullPath)
 {
 	File audiofile(fullPath);
 
@@ -349,12 +350,14 @@ void StimulusPlayer::loadFileToPlayer(const String& fullPath)
 			std::unique_ptr<AudioFormatReaderSource> audioFormatReaderSource = std::make_unique<AudioFormatReaderSource>(reader, true);
 			audioSourceFiles.push_back(audiofile);
 			audioFormatReaderSources.push_back(std::move(audioFormatReaderSource));
+			cachedFileNames.add(fullPath);
 		}
 	}
 }
 
-void StimulusPlayer::loadSourceToTransport(const int index)
+void StimulusPlayer::loadSourceToTransport(const String& fullPath)
 {
+	const int index = cachedFileNames.indexOf(fullPath, true, 0);
 	transportSource.addChangeListener(this);
 	transportSource.setSource(
 		audioFormatReaderSources[index].get(),

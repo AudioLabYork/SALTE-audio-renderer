@@ -16,6 +16,7 @@ BinauralRenderer::BinauralRenderer()
 	, m_lowPass(new dsp::FIR::Coefficients<float>(order_1_lo_band_48, 257))
 	, m_highPass(new dsp::FIR::Coefficients<float>(order_1_hi_band_48, 257))
 {
+	loadStandardDefault();
 }
 
 void BinauralRenderer::sendMsgToLogWindow(String message)
@@ -538,7 +539,7 @@ void BinauralRenderer::loadStandardDefault()
 	sendMsgToLogWindow("successfully loaded: default configuration");
 }
 
-void BinauralRenderer::initialiseFromAmbix(const File& ambixFile)
+void BinauralRenderer::loadAmbixFile(const File& ambixFile)
 {
 	if (!ambixFile.existsAsFile())
 		sendMsgToLogWindow("failed to load: " + ambixFile.getFileName());

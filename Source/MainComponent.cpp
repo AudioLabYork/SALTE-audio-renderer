@@ -14,7 +14,6 @@ MainComponent::MainComponent()
 
 	// setup binaural renderer, pass the osc transceiver
 	oscTxRx.addListener(&m_binauralRenderer);
-
 	m_binauralRenderer.addListener(&m_binauralRendererView);
 	m_binauralRenderer.addChangeListener(this);
 
@@ -156,7 +155,7 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 	m_stimulusPlayer.getNextAudioBlock(newinfo);
 
 	// pass the buffer to the loudspeaker renderer to replace ambisonic signals with loudspeaker feeds
-	//m_loudspeakerRenderer.processBlock(*newinfo.buffer);
+	m_loudspeakerRenderer.processBlock(*newinfo.buffer);
 
 	// pass the buffer to the binaural rendering object to replace ambisonic signals with binaural audio
 	m_binauralRenderer.processBlock(*newinfo.buffer);

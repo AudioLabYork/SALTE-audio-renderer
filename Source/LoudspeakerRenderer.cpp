@@ -27,8 +27,8 @@ void LoudspeakerRenderer::updateMatrices()
 {
 	ScopedLock lock(m_procLock);
 
-	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
-	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
+	//m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
+	//mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
 }
 
 bool LoudspeakerRenderer::isRendererEnabled()
@@ -59,12 +59,23 @@ void LoudspeakerRenderer::processBlock(AudioBuffer<float>& buffer)
 {
 	ScopedLock lock(m_procLock);
 
-	if (!m_enableRenderer || buffer.getNumChannels() <= 2)
+	if (!m_enableRenderer || m_numAmbiChans == 0 || m_numLsChans == 0)
 		return;
 
-	m_workingBuffer.makeCopyOf(buffer);
+	m_workingBuffer.clear();
 
-	buffer.clear();
+	for (int i = 0; i < m_numLsChans; ++i)
+	{
+		for (int j = 0; j < m_numAmbiChans; ++j)
+		{
+			const int idx = (i * m_numAmbiChans) + j;
+
+			const float basicMatrixGain = m_basicDecodeMatrix[idx];
+			m_workingBuffer.addFrom(i, 0, buffer.getWritePointer(j), buffer.getNumSamples(), basicMatrixGain);
+		}
+	}
+
+	buffer.makeCopyOf(m_workingBuffer);
 }
 
 void LoudspeakerRenderer::releaseResources()
@@ -90,6 +101,7 @@ void LoudspeakerRenderer::loadAmbixFile(const File& ambixFile)
 	std::vector<float> decodeMatrix;
 	loader.getDecodeMatrix(decodeMatrix);
 	setDecodingMatrix(decodeMatrix);
+	updateMatrices();
 
 	m_numAmbiChans = loader.getNumAmbiChans();
 	m_numLsChans = loader.getNumLsChans();

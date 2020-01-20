@@ -282,7 +282,7 @@ void BinauralRendererView::browseForBinAmbixConfigFile()
 	{
 		File chosenFile = fc.getResult();
 
-		m_binRenderer->initialiseFromAmbix(chosenFile);
+		m_binRenderer->loadAmbixFile(chosenFile);
 		m_sofaFileBrowse.setEnabled(true);
 	}
 #endif

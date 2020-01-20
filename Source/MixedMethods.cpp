@@ -137,7 +137,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 			addAndMakeVisible(selectConditionButtonArray[i]);
 
 			// prepare the player and rendering engine
-			m_player->loadFileToPlayer(trial->getMCondition(i)->filepath);
+			m_player->cacheFileToPlayer(trial->getMCondition(i)->filepath);
 		}
 	}
 
@@ -148,7 +148,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		selectReferenceButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
 		selectReferenceButton.setColour(TextButton::buttonOnColourId, Colours::red);
 
-		m_player->loadFileToPlayer(trial->getMReference(0)->filepath);
+		m_player->cacheFileToPlayer(trial->getMReference(0)->filepath);
 	}
 
 	// TS26259 Attributes
@@ -192,8 +192,8 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		selectTConditionBButton.setColour(TextButton::buttonOnColourId, Colours::red);
 
 		// prepare the player and rendering engine
-		m_player->loadFileToPlayer(trial->getTCondition(0)->filepath);
-		m_player->loadFileToPlayer(trial->getTCondition(1)->filepath);
+		m_player->cacheFileToPlayer(trial->getTCondition(0)->filepath);
+		m_player->cacheFileToPlayer(trial->getTCondition(1)->filepath);
 	}
 
 	// update GUI
@@ -344,7 +344,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			// save the position as loading a new source sets the position back to 0
 			double position = m_player->getPlaybackHeadPosition();
 			
-			m_player->loadSourceToTransport(i);
+			m_player->loadSourceToTransport(trial->getMCondition(i)->filepath);
 			m_player->setPlaybackHeadPosition(position);
 			m_player->setGain(trial->getMCondition(i)->gain);
 
@@ -352,7 +352,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			m_renderer->setOrder(trial->getMCondition(i)->renderingOrder);
 
 			if (trial->getMCondition(i)->ambixConfig.isNotEmpty())
-				m_renderer->initialiseFromAmbix(File(trial->getMCondition(i)->ambixConfig));
+				m_renderer->loadAmbixFile(File(trial->getMCondition(i)->ambixConfig));
 			else
 				m_renderer->loadStandardDefault();
 
@@ -379,14 +379,14 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		double position = m_player->getPlaybackHeadPosition();
 
-		m_player->loadSourceToTransport(selectConditionButtonArray.size());
+		m_player->loadSourceToTransport(trial->getMReference(0)->filepath);
 		m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getMReference(0)->gain);
 
 		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
 
 		if (trial->getMReference(0)->ambixConfig.isNotEmpty())
-			m_renderer->initialiseFromAmbix(File(trial->getMReference(0)->ambixConfig));
+			m_renderer->loadAmbixFile(File(trial->getMReference(0)->ambixConfig));
 		else
 			m_renderer->loadStandardDefault();
 
@@ -410,14 +410,14 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		
 		double position = m_player->getPlaybackHeadPosition();
 
-		m_player->loadSourceToTransport(0);
+		m_player->loadSourceToTransport(trial->getTCondition(0)->filepath);
 		m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(0)->gain);
 
 		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
 
 		if (trial->getTCondition(0)->ambixConfig.isNotEmpty())
-			m_renderer->initialiseFromAmbix(File(trial->getTCondition(0)->ambixConfig));
+			m_renderer->loadAmbixFile(File(trial->getTCondition(0)->ambixConfig));
 		else
 			m_renderer->loadStandardDefault();
 
@@ -441,14 +441,14 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		double position = m_player->getPlaybackHeadPosition();
 
-		m_player->loadSourceToTransport(1);
+		m_player->loadSourceToTransport(trial->getTCondition(1)->filepath);
 		m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(1)->gain);
 
 		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
 
 		if (trial->getTCondition(1)->ambixConfig.isNotEmpty())
-			m_renderer->initialiseFromAmbix(File(trial->getTCondition(1)->ambixConfig));
+			m_renderer->loadAmbixFile(File(trial->getTCondition(1)->ambixConfig));
 		else
 			m_renderer->loadStandardDefault();
 
