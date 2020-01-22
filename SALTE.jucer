@@ -34,10 +34,9 @@
             file="Source/BinauralRenderer.cpp"/>
       <FILE id="i1aY0Y" name="BinauralRenderer.h" compile="0" resource="0"
             file="Source/BinauralRenderer.h"/>
-      <FILE id="ppGCbM" name="BinauralRendererView.cpp" compile="1" resource="0"
-            file="Source/BinauralRendererView.cpp"/>
-      <FILE id="vgSgS0" name="BinauralRendererView.h" compile="0" resource="0"
-            file="Source/BinauralRendererView.h"/>
+      <FILE id="ppGCbM" name="RendererView.cpp" compile="1" resource="0"
+            file="Source/RendererView.cpp"/>
+      <FILE id="vgSgS0" name="RendererView.h" compile="0" resource="0" file="Source/RendererView.h"/>
       <FILE id="i4kzUa" name="HeadphoneCompensation.cpp" compile="1" resource="0"
             file="Source/HeadphoneCompensation.cpp"/>
       <FILE id="aiTte5" name="HeadphoneCompensation.h" compile="0" resource="0"
@@ -59,6 +58,9 @@
             file="Source/OscTransceiver.cpp"/>
       <FILE id="NFM0r4" name="OscTransceiver.h" compile="0" resource="0"
             file="Source/OscTransceiver.h"/>
+      <FILE id="Ua6Zsp" name="OutputRouting.cpp" compile="1" resource="0"
+            file="Source/OutputRouting.cpp"/>
+      <FILE id="WxOWPK" name="OutputRouting.h" compile="0" resource="0" file="Source/OutputRouting.h"/>
       <FILE id="ek0W3u" name="PlayerThumbnail.cpp" compile="1" resource="0"
             file="Source/PlayerThumbnail.cpp"/>
       <FILE id="vnlYeG" name="PlayerThumbnail.h" compile="0" resource="0"

@@ -3,15 +3,16 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AudioSetup.h"
 #include "OscTransceiver.h"
+#include "MixedMethods.h"
+#include "TestSession.h"
+#include "TestSessionForm.h"
+#include "AuditoryLocalisation.h"
+#include "RendererView.h"
 #include "StimulusPlayer.h"
 #include "LoudspeakerRenderer.h"
 #include "BinauralRenderer.h"
-#include "BinauralRendererView.h"
-#include "MixedMethods.h"
-#include "AuditoryLocalisation.h"
-#include "TestSession.h"
-#include "TestSessionForm.h"
 #include "HeadphoneCompensation.h"
+#include "OutputRouting.h"
 
 class MainComponent
 	: public AudioAppComponent
@@ -44,10 +45,11 @@ private:
 	StimulusPlayer m_stimulusPlayer;
 	LoudspeakerRenderer m_loudspeakerRenderer;
 	BinauralRenderer m_binauralRenderer;
-	BinauralRendererView m_binauralRendererView;
+	RendererView m_rendererView;
 	MixedMethodsComponent m_mixedMethods;
 	AuditoryLocalisation m_localisationComponent;
 	HeadphoneCompensation m_headphoneCompensation;
+	OutputRouting m_lspkRouter;
 
 	TestSession m_testSession;
 	TestSessionForm m_testSessionForm;
@@ -60,8 +62,8 @@ private:
 
 	TextButton openAudioDeviceManager, connectOscButton;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
-
 	TextButton showMixedComp, showLocComp;
+	TextButton openRouter;
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;
 
@@ -73,10 +75,10 @@ private:
 	void saveAudioSettings();
 
 	// OSC settings
-	void initOscSettings();
-	void loadOscSettings();
-	void saveOscSettings();
-	ApplicationProperties OscSettings;
+	void initSettings();
+	void loadSettings();
+	void saveSettings();
+	ApplicationProperties Settings;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

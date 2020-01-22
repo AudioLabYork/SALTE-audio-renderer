@@ -14,12 +14,12 @@ MainComponent::MainComponent()
 
 	// setup binaural renderer, pass the osc transceiver
 	oscTxRx.addListener(&m_binauralRenderer);
-	m_binauralRenderer.addListener(&m_binauralRendererView);
+	m_binauralRenderer.addListener(&m_rendererView);
 	m_binauralRenderer.addChangeListener(this);
 
-	m_binauralRendererView.init(&m_loudspeakerRenderer, &m_binauralRenderer);
-	m_binauralRendererView.addChangeListener(this);
-	addAndMakeVisible(m_binauralRendererView);
+	m_rendererView.init(&m_loudspeakerRenderer, &m_binauralRenderer);
+	m_rendererView.addChangeListener(this);
+	addAndMakeVisible(m_rendererView);
 
 	// initialize headphone compensation
 	addAndMakeVisible(m_headphoneCompensation);
@@ -56,10 +56,10 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientRxPortLabel);
 
 	// load settings
-	initOscSettings();
-	if (OscSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
+	initSettings();
+	if (Settings.getUserSettings()->getBoolValue("loadSettingsFile"))
 	{
-		loadOscSettings();
+		loadSettings();
 	}
 
 	connectOscButton.setButtonText("Connect OSC");
@@ -112,6 +112,10 @@ MainComponent::MainComponent()
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
 
+	openRouter.setButtonText("Output Routing");
+	openRouter.addListener(this);
+	addAndMakeVisible(&openRouter);
+
 	LookAndFeel& lookAndFeel = getLookAndFeel();
 	Colour bckgnd = Colour(25, 50, 77);
 	lookAndFeel.setColour(ResizableWindow::backgroundColourId, bckgnd);
@@ -125,9 +129,9 @@ MainComponent::MainComponent()
 MainComponent::~MainComponent()
 {
 	saveAudioSettings();
-	saveOscSettings();
+	saveSettings();
 	oscTxRx.disconnectTxRx();
-	m_binauralRendererView.deinit();
+	m_rendererView.deinit();
 	shutdownAudio();
 }
 
@@ -139,6 +143,7 @@ void MainComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate
 	m_loudspeakerRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_binauralRenderer.prepareToPlay(samplesPerBlockExpected, sampleRate);
 	m_headphoneCompensation.prepareToPlay(samplesPerBlockExpected, sampleRate);
+	m_lspkRouter.prepareToPlay(samplesPerBlockExpected, sampleRate);
 
 	if (samplesPerBlockExpected != m_maxSamplesPerBlock)
 	{
@@ -162,6 +167,8 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 
 	m_headphoneCompensation.processBlock(*newinfo.buffer);
 
+	m_lspkRouter.processBlock(*newinfo.buffer);
+
 	AudioBuffer<float>* sourceBuffer = bufferToFill.buffer;
 
 	for (int c = 0; c < sourceBuffer->getNumChannels(); ++c)
@@ -177,6 +184,7 @@ void MainComponent::releaseResources()
 	m_loudspeakerRenderer.releaseResources();
 	m_binauralRenderer.releaseResources();
 	m_headphoneCompensation.releaseResources();
+	m_lspkRouter.releaseResources();
 }
 
 //==============================================================================
@@ -234,8 +242,9 @@ void MainComponent::resized()
 	{
 		m_audioSetup.setCentrePosition(getWidth() / 2, getHeight() / 2);
 		m_stimulusPlayer.setBounds(660, 10, 730, 330);
-		m_binauralRendererView.setBounds(660, 350, 730, 245);
-		m_headphoneCompensation.setBounds(660, 605, 730, 185);
+		m_rendererView.setBounds(660, 350, 730, 245);
+		m_headphoneCompensation.setBounds(660+365, 605, 365, 185);
+		m_lspkRouter.setCentrePosition(getWidth() / 2, getHeight() / 2);
 
 		connectOscButton.setBounds(560, 20, 80, 40);
 		openAudioDeviceManager.setBounds(310, 70, 240, 25);
@@ -249,6 +258,8 @@ void MainComponent::resized()
 		showMixedComp.setBounds(310, 105, 115, 25);
 		showLocComp.setBounds(435, 105, 115, 25);
 		showTestInterface.setBounds(560, 70, 80, 60);
+
+		openRouter.setBounds(660, 605, 240, 25);
 	}
 }
 
@@ -302,7 +313,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_stimulusPlayer.setShowTest(show);
 		if (m_audioSetup.m_shouldBeVisible) m_audioSetup.setVisible(!show);
-		m_binauralRendererView.setVisible(!show);
+		m_rendererView.setVisible(!show);
 		m_headphoneCompensation.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
 		connectOscButton.setVisible(!show);
@@ -312,6 +323,11 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 		logWindow.setVisible(!show);
 		resized();
 	}
+	else if (buttonThatWasClicked == &openRouter)
+	{
+		addAndMakeVisible(m_lspkRouter);
+		m_lspkRouter.m_shouldBeVisible = true;
+	}
 
 	repaint();
 }
@@ -320,21 +336,21 @@ void MainComponent::formCompleted()
 {
 	m_mixedMethods.loadTestSession();
 	m_mixedMethods.setVisible(true);
-	m_binauralRendererView.setTestInProgress(true);
+	m_rendererView.setTestInProgress(true);
 }
 
 void MainComponent::testCompleted()
 {
 	m_testSessionForm.reset();
 	m_testSessionForm.setVisible(true);
-	m_binauralRendererView.setTestInProgress(false);
+	m_rendererView.setTestInProgress(false);
 }
 
 void MainComponent::loadAudioSettings()
 {
 	XmlDocument asxmldoc(audioSettingsFile);
 	std::unique_ptr<XmlElement> audioDeviceSettings(asxmldoc.getDocumentElement());
-	deviceManager.initialise(0, 2, audioDeviceSettings.get(), true);
+	deviceManager.initialise(0, 64, audioDeviceSettings.get(), true);
 }
 
 void MainComponent::saveAudioSettings()
@@ -375,12 +391,12 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 			m_binauralRenderer.m_currentLogMessage.clear();
 		}
 	}
-	else if (source == &m_binauralRendererView)
+	else if (source == &m_rendererView)
 	{
-		if (m_binauralRendererView.m_currentLogMessage != "")
+		if (m_rendererView.m_currentLogMessage != "")
 		{
-			logWindowMessage += timeStamp + m_binauralRendererView.m_currentLogMessage;
-			m_binauralRendererView.m_currentLogMessage.clear();
+			logWindowMessage += timeStamp + m_rendererView.m_currentLogMessage;
+			m_rendererView.m_currentLogMessage.clear();
 		}
 	}
 	else if (source == &m_mixedMethods)
@@ -404,28 +420,35 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	logWindow.moveCaretToEnd();
 }
 
-void MainComponent::initOscSettings()
+void MainComponent::initSettings()
 {
 	PropertiesFile::Options options;
-	options.applicationName = "SALTEOscSettings";
+	options.applicationName = "SALTESettings";
 	options.filenameSuffix = ".conf";
 	options.osxLibrarySubFolder = "Application Support";
 	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
 	options.storageFormat = PropertiesFile::storeAsXML;
-	OscSettings.setStorageParameters(options);
+	Settings.setStorageParameters(options);
 }
 
-void MainComponent::loadOscSettings()
+void MainComponent::loadSettings()
 {
-	clientTxIpLabel.setText(OscSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
-	clientTxPortLabel.setText(OscSettings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
-	clientRxPortLabel.setText(OscSettings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
+	clientTxIpLabel.setText(Settings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
+	clientTxPortLabel.setText(Settings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
+	clientRxPortLabel.setText(Settings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
+
+	m_lspkRouter.loadRoutingFile(Settings.getUserSettings()->getValue("routingFile"));
+	m_lspkRouter.loadCalibrationFile(Settings.getUserSettings()->getValue("calibrationFile"));
 }
 
-void MainComponent::saveOscSettings()
+void MainComponent::saveSettings()
 {
-	OscSettings.getUserSettings()->setValue("clientTxIp", clientTxIpLabel.getText());
-	OscSettings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
-	OscSettings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
-	OscSettings.getUserSettings()->setValue("loadSettingsFile", true);
+	Settings.getUserSettings()->setValue("clientTxIp", clientTxIpLabel.getText());
+	Settings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
+	Settings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
+
+	Settings.getUserSettings()->setValue("routingFile", m_lspkRouter.getRoutingFilePath());
+	Settings.getUserSettings()->setValue("calibrationFile", m_lspkRouter.getCalibrationFilePath());
+
+	Settings.getUserSettings()->setValue("loadSettingsFile", true);
 }

@@ -1,13 +1,13 @@
-#include "BinauralRendererView.h"
+#include "RendererView.h"
 
-BinauralRendererView::BinauralRendererView()
+RendererView::RendererView()
 	: m_binRenderer(nullptr)
 	, modeSelectTabs(TabbedButtonBar::Orientation::TabsAtTop)
 {
 
 }
 
-void BinauralRendererView::init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRenderer)
+void RendererView::init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRenderer)
 {
 	m_lsRenderer = lsRenderer;
 	m_binRenderer = binRenderer;
@@ -75,12 +75,12 @@ void BinauralRendererView::init(LoudspeakerRenderer* lsRenderer, BinauralRendere
 	setRendererMode(bypassed);
 }
 
-void BinauralRendererView::deinit()
+void RendererView::deinit()
 {
 	stopTimer();
 }
 
-void BinauralRendererView::paint(Graphics& g)
+void RendererView::paint(Graphics& g)
 {
 	// BACKGROUND
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
@@ -100,7 +100,7 @@ void BinauralRendererView::paint(Graphics& g)
 	g.drawLine(line3, 2.0f);
 }
 
-void BinauralRendererView::resized()
+void RendererView::resized()
 {
 	const int tabBarHeight = 25;
 	modeSelectTabs.setBounds(0, 0, getWidth(), tabBarHeight);
@@ -128,7 +128,7 @@ void BinauralRendererView::resized()
 	m_yawLabel.setBounds(400, 205, 150, 20);
 }
 
-void BinauralRendererView::changeListenerCallback(ChangeBroadcaster* source)
+void RendererView::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == &modeSelectTabs)
 	{
@@ -138,7 +138,7 @@ void BinauralRendererView::changeListenerCallback(ChangeBroadcaster* source)
 	}
 }
 
-void BinauralRendererView::buttonClicked(Button* buttonClicked)
+void RendererView::buttonClicked(Button* buttonClicked)
 {
 	if (buttonClicked == &m_lsAmbixFileBrowse)
 	{
@@ -162,17 +162,17 @@ void BinauralRendererView::buttonClicked(Button* buttonClicked)
 	}
 }
 
-void BinauralRendererView::ambixFileLoaded(const File& file)
+void RendererView::ambixFileLoaded(const File& file)
 {
 	m_binAmbixFileLabel.setText("AmbiX Config File: " + file.getFileName(), NotificationType::dontSendNotification);
 }
 
-void BinauralRendererView::sofaFileLoaded(const File& file)
+void RendererView::sofaFileLoaded(const File& file)
 {
 	m_sofaFileLabel.setText("SOFA File: " + file.getFileName(), NotificationType::dontSendNotification);
 }
 
-void BinauralRendererView::setRendererMode(RendererModes targetMode)
+void RendererView::setRendererMode(RendererModes targetMode)
 {
 	// hide everything
 	m_lsAmbixFileBrowse.setVisible(false);
@@ -237,7 +237,7 @@ void BinauralRendererView::setRendererMode(RendererModes targetMode)
 	}
 }
 
-void BinauralRendererView::setTestInProgress(bool inProgress)
+void RendererView::setTestInProgress(bool inProgress)
 {
 	if (inProgress)
 	{
@@ -253,7 +253,7 @@ void BinauralRendererView::setTestInProgress(bool inProgress)
 	}
 }
 
-void BinauralRendererView::browseForLsAmbixConfigFile()
+void RendererView::browseForLsAmbixConfigFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
 	FileChooser fc("Select Ambix Config file to open...",
@@ -270,7 +270,7 @@ void BinauralRendererView::browseForLsAmbixConfigFile()
 #endif
 }
 
-void BinauralRendererView::browseForBinAmbixConfigFile()
+void RendererView::browseForBinAmbixConfigFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
 	FileChooser fc("Select Ambix Config file to open...",
@@ -288,7 +288,7 @@ void BinauralRendererView::browseForBinAmbixConfigFile()
 #endif
 }
 
-void BinauralRendererView::browseForSofaFile()
+void RendererView::browseForSofaFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
 	FileChooser fc("Select SOFA file to open...",
@@ -305,7 +305,7 @@ void BinauralRendererView::browseForSofaFile()
 #endif
 }
 
-void BinauralRendererView::timerCallback()
+void RendererView::timerCallback()
 {
 	if (m_enableRotation.getToggleState())
 	{

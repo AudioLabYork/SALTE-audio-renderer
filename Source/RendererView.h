@@ -4,7 +4,7 @@
 #include "BinauralRenderer.h"
 #include "BinauralHeadView.h"
 
-class BinauralRendererView
+class RendererView
 	: public Component
 	, public Button::Listener
 	, public Timer
@@ -13,7 +13,7 @@ class BinauralRendererView
 	, public BinauralRenderer::Listener
 {
 public:
-	BinauralRendererView();
+	RendererView();
 
 	void init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRenderer);
 	void deinit();
