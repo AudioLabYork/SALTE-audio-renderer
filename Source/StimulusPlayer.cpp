@@ -343,9 +343,9 @@ void StimulusPlayer::cacheFileToPlayer(const String& fullPath)
 {
 	File audiofile(fullPath);
 
-	if (audiofile.existsAsFile())
+	if (audiofile.existsAsFile() && !cachedFileNames.contains(fullPath))
 	{
-		if (AudioFormatReader* reader = formatManager.createReaderFor(audiofile))
+		if (AudioFormatReader * reader = formatManager.createReaderFor(audiofile))
 		{
 			std::unique_ptr<AudioFormatReaderSource> audioFormatReaderSource = std::make_unique<AudioFormatReaderSource>(reader, true);
 			audioSourceFiles.push_back(audiofile);
@@ -478,7 +478,7 @@ bool StimulusPlayer::checkLoopStatus()
 	return loopingEnabled;
 }
 
-double StimulusPlayer::getTotalTimeForLoadedFiles() const
+double StimulusPlayer::getTotalTimeForCachedFiles() const
 {
 	if (audioFormatReaderSources.size() <= 0)
 		return 0;

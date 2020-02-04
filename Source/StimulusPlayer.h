@@ -64,7 +64,7 @@ public:
 	bool checkPlaybackStatus();
 	bool checkLoopStatus();
 	
-	double getTotalTimeForLoadedFiles() const;
+	double getTotalTimeForCachedFiles() const;
 	double getPlaybackHeadPosition();
 	void setPlaybackHeadPosition(double time);
 	void setPlaybackOffsets(double beg, double end);
