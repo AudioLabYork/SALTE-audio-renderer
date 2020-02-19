@@ -6,6 +6,7 @@
 #include "BinauralRenderer.h"
 
 class AuditoryLocalisation	:	public Component
+							//,	public OSCReceiver
 							,	public OSCReceiver::Listener<OSCReceiver::RealtimeCallback>
 							,	private Button::Listener
 							,	private ChangeListener
@@ -39,8 +40,10 @@ private:
 
 	void selectSrcPath();
 	void indexAudioFiles();
+	String returnHHMMSS(double lengthInSeconds);
 	File audioFilesDir;
 	Array<File> audioFilesArray;
+	AudioFormatManager formatManager;
 	double totalTimeOfAudioFiles = 0;
 
 	int currentTrialIndex = 0;
@@ -51,6 +54,7 @@ private:
 	// OSC logging
 	void processOscMessage(const OSCMessage& message);
 	void saveLog();
+	int port = 9000;
 	double activationTime = 0.0f;
 	TextButton m_saveLogButton;
 	Label messageCounter;
