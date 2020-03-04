@@ -16,7 +16,7 @@ StimulusPlayer::StimulusPlayer()
 	readAheadThread.startThread(3);
 
 	addAndMakeVisible(&openButton);
-	openButton.setButtonText("Select Ambisonic file...");
+	openButton.setButtonText("Select audio file...");
 	openButton.addListener(this);
 
 	addAndMakeVisible(&playButton);
@@ -320,7 +320,7 @@ void StimulusPlayer::timerCallback()
 void StimulusPlayer::browseForFile()
 {
 	FileChooser chooser("Select a Wave file to play...",
-		File::getSpecialLocation(File::userHomeDirectory),
+		File::getCurrentWorkingDirectory(),
 		"*.wav", true);
 
 	if (chooser.browseForFileToOpen())

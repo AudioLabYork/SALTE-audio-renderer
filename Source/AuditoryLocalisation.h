@@ -27,6 +27,9 @@ public:
 	void timerCallback() override;
 
 	String currentMessage;
+
+	String getAudioSrcFilePath();
+	void setAudioSrcFilePath(String filePath);
 private:
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;
@@ -35,12 +38,13 @@ private:
 	TextButton m_chooseStimuliFolder;
 	TextButton m_startTest;
 	TextButton m_prevTrial, m_nextTrial;
-	TextButton m_confirmPointer;
 
 	void selectSrcPath();
 	void indexAudioFiles();
+	String returnHHMMSS(double lengthInSeconds);
 	File audioFilesDir;
 	Array<File> audioFilesArray;
+	AudioFormatManager formatManager;
 	double totalTimeOfAudioFiles = 0;
 
 	int currentTrialIndex = 0;
@@ -51,15 +55,10 @@ private:
 	// OSC logging
 	void processOscMessage(const OSCMessage& message);
 	void saveLog();
+	int port = 9000;
 	double activationTime = 0.0f;
 	TextButton m_saveLogButton;
 	Label messageCounter;
 	StringArray oscMessageList;
-
-	// settings
-	void initSettings();
-	void loadSettings();
-	void saveSettings();
-	ApplicationProperties TestSessionFormSettings;
 };
 

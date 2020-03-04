@@ -6,6 +6,8 @@ AuditoryLocalisation::AuditoryLocalisation()
 	, m_player(nullptr)
 	, m_renderer(nullptr)
 {
+	formatManager.registerBasicFormats();
+
 	m_chooseStimuliFolder.setButtonText("Select Stimuli Folder");
 	m_chooseStimuliFolder.addListener(this);
 	addAndMakeVisible(m_chooseStimuliFolder);
@@ -23,10 +25,6 @@ AuditoryLocalisation::AuditoryLocalisation()
 	m_nextTrial.addListener(this);
 	addAndMakeVisible(m_nextTrial);
 
-	m_confirmPointer.setButtonText("Confirm Pointer Direction");
-	m_confirmPointer.addListener(this);
-	addAndMakeVisible(m_confirmPointer);
-
 	// osc logging
 	startTimerHz(60);
 
@@ -40,7 +38,6 @@ AuditoryLocalisation::AuditoryLocalisation()
 
 AuditoryLocalisation::~AuditoryLocalisation()
 {
-	//saveSettings();
 }
 
 void AuditoryLocalisation::init(OscTransceiver* oscTxRx, StimulusPlayer* player, BinauralRenderer* renderer)
@@ -49,14 +46,6 @@ void AuditoryLocalisation::init(OscTransceiver* oscTxRx, StimulusPlayer* player,
 	m_player = player;
 	m_player->addChangeListener(this);
 	m_oscTxRx = oscTxRx;
-
-	// load settings
-	//initSettings();
-
-	//if (TestSessionFormSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
-	//{
-	//	loadSettings();
-	//}
 }
 
 void AuditoryLocalisation::paint(Graphics& g)
@@ -67,25 +56,25 @@ void AuditoryLocalisation::paint(Graphics& g)
 	g.drawRect(getLocalBounds(), 1);
 
 	g.setColour(Colours::white);
-	g.drawText("The localisation component is under development.", getLocalBounds(), Justification::centred);
+	g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
+	g.drawText("Number of trials: " + String(audioFilesArray.size()) + ", total length: " + returnHHMMSS(totalTimeOfAudioFiles), 180, 50, 440, 25, Justification::centredLeft);
+	
+	if(audioFilesArray.size() > 0)
+		g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
 
-	//g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
-	//g.drawText("Number of trials: " + String(audioFilesArray.size()) + ", total length (s): " + String(totalTimeOfAudioFiles,2), 180, 50, 440, 25, Justification::centredLeft);
-	//
-	//if(audioFilesArray.size() > 0)
-	//	g.drawText("Current trial: " + String(currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 80, 440, 25, Justification::centredLeft);
+	g.setFont(20.0f);
+	g.drawText("The localisation component is under development.", getLocalBounds(), Justification::centred);
 }
 
 void AuditoryLocalisation::resized()
 {
-	//m_chooseStimuliFolder.setBounds(20, 20, 150, 25);
-	//m_startTest.setBounds(20, 50, 150, 25);
-	//m_prevTrial.setBounds(20, 420, 100, 25);
-	//m_nextTrial.setBounds(140, 420, 100, 25);
-	//m_confirmPointer.setBounds(320, 320, 150, 25);
+	m_chooseStimuliFolder.setBounds(20, 20, 150, 25);
+	m_startTest.setBounds(20, 50, 150, 25);
+	m_prevTrial.setBounds(20, 420, 100, 25);
+	m_nextTrial.setBounds(140, 420, 100, 25);
 
-	//m_saveLogButton.setBounds(20, 110, 150, 25);
-	//messageCounter.setBounds(20, 140, 150, 25);
+	m_saveLogButton.setBounds(20, 110, 150, 25);
+	messageCounter.setBounds(20, 140, 150, 25);
 }
 
 void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
@@ -139,10 +128,6 @@ void AuditoryLocalisation::buttonClicked(Button* buttonThatWasClicked)
 			m_startTest.triggerClick();
 		}
 	}
-	else if (buttonThatWasClicked == &m_confirmPointer)
-	{
-
-	}
 	else if (buttonThatWasClicked == &m_saveLogButton)
 	{
 		if (oscMessageList.size() > 0)
@@ -187,7 +172,7 @@ void AuditoryLocalisation::processOscMessage(const OSCMessage& message)
 	}
 
 	double time = Time::getMillisecondCounterHiRes() - activationTime;
-	String messageText = String(time) + ",";
+	String messageText = String(time) + "," + String(currentTrialIndex + 1) + ",";
 	
 	if (audioFilesArray[currentTrialIndex].exists() && m_player->checkPlaybackStatus())
 	{
@@ -214,10 +199,13 @@ void AuditoryLocalisation::saveLog()
 
 		logFile = fc.getResult();
 
-		if (!logFile.exists()) logFile.create();
+		if (!logFile.exists())
+			logFile.create();
 
 		FileOutputStream fos(logFile);
-		
+
+		// create csv file header
+		fos << "time,trial_index,stimulus,osc_pattern,et_el,et_az,et_rot,et_dist,et_conf\n";
 		for (int i = 0; i < oscMessageList.size(); ++i)
 			fos << oscMessageList[i];
 	}
@@ -234,88 +222,113 @@ void AuditoryLocalisation::changeListenerCallback(ChangeBroadcaster* source)
 	}
 }
 
+String AuditoryLocalisation::getAudioSrcFilePath()
+{
+	return audioFilesDir.getFullPathName();
+}
+
+void AuditoryLocalisation::setAudioSrcFilePath(String filePath)
+{
+	if (File(filePath).exists())
+	{
+		audioFilesDir = filePath;
+		indexAudioFiles();
+	}
+}
+
 void AuditoryLocalisation::selectSrcPath()
 {
 	FileChooser fc("Select the stimuli folder...",
-		File::getSpecialLocation(File::userHomeDirectory));
+		File::getCurrentWorkingDirectory());
 	
 	if (fc.browseForDirectory())
 	{
 		audioFilesDir = fc.getResult();
 		indexAudioFiles();
-		saveSettings();
+		// saveSettings();
 	}
 }
 
 void AuditoryLocalisation::indexAudioFiles()
 {
-	Array<File> audioFilesInDir;
-	audioFilesInDir.clear();
-
-	m_player->clearPlayer();
-
-	DirectoryIterator iter(audioFilesDir, true, "*.wav");
-
-	while (iter.next())
-		audioFilesInDir.add(iter.getFile());
-
 	audioFilesArray.clear();
+	Array<File> audioFilesInDir;
 	
-	// create the test audio file array
-	for (int i = 0; i < 5; ++i)
+	// create the test file array (visual stimuli)
+	audioFilesInDir.clear();
+	DirectoryIterator iter1(audioFilesDir, false, "stim_vis_1_*.wav");
+	while (iter1.next())
+		audioFilesInDir.add(iter1.getFile());
+
+	for (int i = 0; i < 10; ++i)
 	{
 		std::random_device seed;
 		std::mt19937 rng(seed());
 		std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
-		
 		audioFilesArray.addArray(audioFilesInDir);
 	}
 
+	// create the test file array (audio stimuli)
+	audioFilesInDir.clear();
+	DirectoryIterator iter2(audioFilesDir, false, "stim_vis_0_*.wav");
+	while (iter2.next())
+		audioFilesInDir.add(iter2.getFile());
+
+	for (int i = 0; i < 20; ++i)
+	{
+		std::random_device seed;
+		std::mt19937 rng(seed());
+		std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
+		audioFilesArray.addArray(audioFilesInDir);
+	}
+
+	// load files to the player
+	m_player->clearPlayer();
 	for (auto& file : audioFilesArray)
 		m_player->cacheFileToPlayer(file.getFullPathName());
 
-	totalTimeOfAudioFiles = m_player->getTotalTimeForLoadedFiles();
+	totalTimeOfAudioFiles = 0.0f;
+	for (auto& file : audioFilesArray)
+	{
+		if (auto * reader = formatManager.createReaderFor(file))
+		{
+			totalTimeOfAudioFiles += reader->lengthInSamples / reader->sampleRate;
+			reader->~AudioFormatReader();
+		}
+
+	}
+}
+
+String AuditoryLocalisation::returnHHMMSS(double lengthInSeconds)
+{
+	int hours = static_cast<int>(lengthInSeconds / (60 * 60));
+	int minutes = (static_cast<int>(lengthInSeconds / 60)) % 60;
+	int seconds = (static_cast<int>(lengthInSeconds)) % 60;
+	int millis = static_cast<int>(floor((lengthInSeconds - floor(lengthInSeconds)) * 100));
+
+	String output = String(hours).paddedLeft('0', 2) + ":" +
+		String(minutes).paddedLeft('0', 2) + ":" +
+		String(seconds).paddedLeft('0', 2) + "." +
+		String(millis).paddedLeft('0', 2);
+	return output;
 }
 
 void AuditoryLocalisation::loadFile()
 {
-	m_player->loadSourceToTransport(audioFilesArray[currentTrialIndex].getFileName());
+	m_player->loadSourceToTransport(audioFilesArray[currentTrialIndex].getFullPathName());
 	m_player->play();
-
 
 	String filename = m_player->getCurrentSourceFileName();
 
 	String vis = filename.fromFirstOccurrenceOf("vis_", false, false).upToFirstOccurrenceOf("_", false, false);
-	String azi = filename.fromFirstOccurrenceOf("azi_", false, false).dropLastCharacters(4);
-	sendMsgToLogWindow(vis + " / " + azi + " / " + audioFilesArray[currentTrialIndex].getFileName());
-	m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)vis.getIntValue(), (float)azi.getFloatValue(), (float)0);
+	String azi = filename.fromFirstOccurrenceOf("azi_", false, false).upToFirstOccurrenceOf("_", false, false);
+	String ele = filename.fromFirstOccurrenceOf("ele_", false, false).dropLastCharacters(4);
+	sendMsgToLogWindow("vis: " + vis + ", azi: " + azi + ", ele: " + ele + ", file: " + audioFilesArray[currentTrialIndex].getFileName());
+	m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)vis.getIntValue(), (float)azi.getFloatValue(), (float) ele.getFloatValue());
 }
 
 void AuditoryLocalisation::sendMsgToLogWindow(String message)
 {
 	currentMessage += message + "\n";
 	sendChangeMessage();  // broadcast change message to inform and update the editor
-}
-
-void AuditoryLocalisation::initSettings()
-{
-	PropertiesFile::Options options;
-	options.applicationName = "SALTELocalisationTestSettings";
-	options.filenameSuffix = ".conf";
-	options.osxLibrarySubFolder = "Application Support";
-	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
-	options.storageFormat = PropertiesFile::storeAsXML;
-	TestSessionFormSettings.setStorageParameters(options);
-}
-
-void AuditoryLocalisation::loadSettings()
-{
-	audioFilesDir = TestSessionFormSettings.getUserSettings()->getValue("audioFilesSrcPath");
-	if (File(audioFilesDir).exists()) indexAudioFiles();
-}
-
-void AuditoryLocalisation::saveSettings()
-{
-	TestSessionFormSettings.getUserSettings()->setValue("audioFilesSrcPath", audioFilesDir.getFullPathName());
-	TestSessionFormSettings.getUserSettings()->setValue("loadSettingsFile", true);
 }

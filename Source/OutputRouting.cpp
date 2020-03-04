@@ -42,10 +42,8 @@ void OutputRouting::processBlock(AudioBuffer<float>& buffer)
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
 
-
 	AudioBuffer<float> duplicatedBuffer;
 	duplicatedBuffer.makeCopyOf(buffer);
-
 
 	for (int channel = 0; channel < totalNumInputChannels; ++channel)
 	{
@@ -187,8 +185,6 @@ void OutputRouting::loadRoutingFile(String chosenFilePath)
 	}
 	else
 	{
-		//AlertWindow::showMessageBoxAsync(AlertWindow::InfoIcon, "Sorry, wrong file ...",
-		//	chosenFile.getFullPathName());
 		initRoutingMatrix();
 	}
 }
@@ -248,8 +244,6 @@ void OutputRouting::loadCalibrationFile(String chosenFilePath)
 	}
 	else
 	{
-		//AlertWindow::showMessageBoxAsync(AlertWindow::InfoIcon, "Sorry, wrong file ...",
-		//	chosenFile.getFullPathName());
 		initCalibrationMatrix();
 	}
 }

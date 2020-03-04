@@ -22,11 +22,8 @@ public:
 
 	String getRoutingFilePath();
 	String getCalibrationFilePath();
-
 	void loadRoutingFile(String chosenFilePath);
 	void loadCalibrationFile(String chosenFilePath);
-
-
 private:
 
 	Array <int> routingMatrix;

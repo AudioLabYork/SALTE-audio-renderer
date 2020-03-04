@@ -55,28 +55,13 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
 
-	// load settings
-	initSettings();
-	if (Settings.getUserSettings()->getBoolValue("loadSettingsFile"))
-	{
-		loadSettings();
-	}
-
 	connectOscButton.setButtonText("Connect OSC");
 	connectOscButton.addListener(this);
-	connectOscButton.triggerClick(); // connect on startup
 	addAndMakeVisible(&connectOscButton);
 
 	openAudioDeviceManager.setButtonText("Audio device setup");
 	openAudioDeviceManager.addListener(this);
 	addAndMakeVisible(&openAudioDeviceManager);
-
-	// load settings file if available
-	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
-	audioSettingsFile = File(filePath + "/" + "SALTEAudioSettings.conf");
-
-	if (audioSettingsFile.existsAsFile())
-		loadAudioSettings();
 
 	m_testSessionForm.init(&m_testSession);
 	m_testSessionForm.addListener(this);
@@ -124,11 +109,13 @@ MainComponent::MainComponent()
 	lookAndFeel.setColour(Slider::backgroundColourId, bckgnd.darker());
 	lookAndFeel.setColour(TextButton::buttonColourId, Colour(12, 25, 39));
 	lookAndFeel.setColour(Slider::trackColourId, Colour(12, 25, 39));
+
+	loadSettings();
+	connectOscButton.triggerClick(); // connect OSC on startup
 }
 
 MainComponent::~MainComponent()
 {
-	saveAudioSettings();
 	saveSettings();
 	oscTxRx.disconnectTxRx();
 	m_rendererView.deinit();
@@ -346,22 +333,6 @@ void MainComponent::testCompleted()
 	m_rendererView.setTestInProgress(false);
 }
 
-void MainComponent::loadAudioSettings()
-{
-	XmlDocument asxmldoc(audioSettingsFile);
-	std::unique_ptr<XmlElement> audioDeviceSettings(asxmldoc.getDocumentElement());
-	deviceManager.initialise(0, 64, audioDeviceSettings.get(), true);
-}
-
-void MainComponent::saveAudioSettings()
-{
-	std::unique_ptr<XmlElement> audioDeviceSettings(deviceManager.createStateXml());
-	if (audioDeviceSettings.get())
-	{
-		audioDeviceSettings->writeTo(audioSettingsFile);
-	}
-}
-
 // LOG WINDOW
 void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
@@ -420,35 +391,61 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	logWindow.moveCaretToEnd();
 }
 
-void MainComponent::initSettings()
+void MainComponent::loadSettings()
 {
+	// audio
+	String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
+	File audioSettingsFile = File(filePath + "/" + "SALTEAudioSettings.conf");
+	if (audioSettingsFile.existsAsFile())
+	{
+		XmlDocument asxmldoc(audioSettingsFile);
+		std::unique_ptr<XmlElement> audioDeviceSettings(asxmldoc.getDocumentElement());
+		deviceManager.initialise(0, 64, audioDeviceSettings.get(), true);
+	}
+
+	// other
 	PropertiesFile::Options options;
 	options.applicationName = "SALTESettings";
 	options.filenameSuffix = ".conf";
 	options.osxLibrarySubFolder = "Application Support";
 	options.folderName = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
 	options.storageFormat = PropertiesFile::storeAsXML;
-	Settings.setStorageParameters(options);
-}
+	appSettings.setStorageParameters(options);
 
-void MainComponent::loadSettings()
-{
-	clientTxIpLabel.setText(Settings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
-	clientTxPortLabel.setText(Settings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
-	clientRxPortLabel.setText(Settings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
+	if (appSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
+	{
+		clientTxIpLabel.setText(appSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
+		clientTxPortLabel.setText(appSettings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
+		clientRxPortLabel.setText(appSettings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
 
-	m_lspkRouter.loadRoutingFile(Settings.getUserSettings()->getValue("routingFile"));
-	m_lspkRouter.loadCalibrationFile(Settings.getUserSettings()->getValue("calibrationFile"));
+		m_localisationComponent.setAudioSrcFilePath(appSettings.getUserSettings()->getValue("audioFilesSrcPath"));
+
+		m_lspkRouter.loadRoutingFile(appSettings.getUserSettings()->getValue("routingFile"));
+		m_lspkRouter.loadCalibrationFile(appSettings.getUserSettings()->getValue("calibrationFile"));
+	}
 }
 
 void MainComponent::saveSettings()
 {
-	Settings.getUserSettings()->setValue("clientTxIp", clientTxIpLabel.getText());
-	Settings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
-	Settings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
+	// audio
+	std::unique_ptr<XmlElement> audioDeviceSettings(deviceManager.createStateXml());
+	if (audioDeviceSettings.get())
+	{
+		String filePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getParentDirectory().getFullPathName();
+		File audioSettingsFile = File(filePath + "/" + "SALTEAudioSettings.conf");
+		audioDeviceSettings->writeTo(audioSettingsFile);
+	}
 
-	Settings.getUserSettings()->setValue("routingFile", m_lspkRouter.getRoutingFilePath());
-	Settings.getUserSettings()->setValue("calibrationFile", m_lspkRouter.getCalibrationFilePath());
+	// osc
+	appSettings.getUserSettings()->setValue("clientTxIp", clientTxIpLabel.getText());
+	appSettings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
+	appSettings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
 
-	Settings.getUserSettings()->setValue("loadSettingsFile", true);
+	appSettings.getUserSettings()->setValue("audioFilesSrcPath", m_localisationComponent.getAudioSrcFilePath());
+
+	// output router
+	appSettings.getUserSettings()->setValue("routingFile", m_lspkRouter.getRoutingFilePath());
+	appSettings.getUserSettings()->setValue("calibrationFile", m_lspkRouter.getCalibrationFilePath());
+
+	appSettings.getUserSettings()->setValue("loadSettingsFile", true);
 }
