@@ -58,7 +58,6 @@ public:
 	void stop();
 	void loop(bool looping);
 
-	int getNumberOfChannels();
 	void setGain(const float gainInDB);
 	bool getLoopingState();
 	bool checkPlaybackStatus();
@@ -81,6 +80,8 @@ public:
 	// log window message
     String currentMessage;
 
+	String getAudioFilesDir();
+	void setAudioFilesDir(String filePath);
 private:
 	void browseForFile();
 	void sendMsgToLogWindow(String message);
@@ -89,6 +90,7 @@ private:
 	TransportState state;
 	TimeSliceThread readAheadThread;
 
+	File audioFilesDir;
 	std::vector<File> audioSourceFiles;
 	std::vector<std::unique_ptr<AudioFormatReaderSource>> audioFormatReaderSources;
 	StringArray cachedFileNames;
@@ -104,7 +106,6 @@ private:
 	bool loopingEnabled;
 	double begOffsetTime;
 	double endOffsetTime;
-	int loadedFileChannelCount;
 
 	TextButton openButton, playButton, stopButton, loopButton;
 	Label loadedFileName, playbackHeadPosition;

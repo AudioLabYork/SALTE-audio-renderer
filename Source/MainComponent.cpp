@@ -336,13 +336,11 @@ void MainComponent::testCompleted()
 // LOG WINDOW
 void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 {
-	String timeStamp = Time::getCurrentTime().formatted("%H:%M:%S") + ": ";
-
 	if (source == &m_stimulusPlayer)
 	{
 		if (m_stimulusPlayer.currentMessage != "")
 		{
-			logWindowMessage += timeStamp + m_stimulusPlayer.currentMessage;
+			logWindowMessage += "StimPlayer: " + m_stimulusPlayer.currentMessage;
 			m_stimulusPlayer.currentMessage.clear();
 		}
 	}
@@ -350,7 +348,7 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	{
 		if (m_loudspeakerRenderer.m_currentLogMessage != "")
 		{
-			logWindowMessage += timeStamp + m_loudspeakerRenderer.m_currentLogMessage;
+			logWindowMessage += "LspkRenderer: " + m_loudspeakerRenderer.m_currentLogMessage;
 			m_loudspeakerRenderer.m_currentLogMessage.clear();
 		}
 	}
@@ -358,7 +356,7 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	{
 		if (m_binauralRenderer.m_currentLogMessage != "")
 		{
-			logWindowMessage += timeStamp + m_binauralRenderer.m_currentLogMessage;
+			logWindowMessage += "BinRenderer: " + m_binauralRenderer.m_currentLogMessage;
 			m_binauralRenderer.m_currentLogMessage.clear();
 		}
 	}
@@ -366,7 +364,7 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	{
 		if (m_rendererView.m_currentLogMessage != "")
 		{
-			logWindowMessage += timeStamp + m_rendererView.m_currentLogMessage;
+			logWindowMessage += "RendererView: " + m_rendererView.m_currentLogMessage;
 			m_rendererView.m_currentLogMessage.clear();
 		}
 	}
@@ -374,7 +372,7 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	{
 		if (m_mixedMethods.currentMessage != "")
 		{
-			logWindowMessage += timeStamp + m_mixedMethods.currentMessage;
+			logWindowMessage += "MMTest: " + m_mixedMethods.currentMessage;
 			m_mixedMethods.currentMessage.clear();
 		}
 	}
@@ -382,7 +380,7 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	{
 		if (m_localisationComponent.currentMessage != "")
 		{
-			logWindowMessage += timeStamp + m_localisationComponent.currentMessage;
+			logWindowMessage += "LocTest: " + m_localisationComponent.currentMessage;
 			m_localisationComponent.currentMessage.clear();
 		}
 	}
@@ -391,6 +389,7 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 	logWindow.moveCaretToEnd();
 }
 
+// LOAD AND SAVE SETTINGS
 void MainComponent::loadSettings()
 {
 	// audio
@@ -414,12 +413,21 @@ void MainComponent::loadSettings()
 
 	if (appSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
 	{
+		// osc
 		clientTxIpLabel.setText(appSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
 		clientTxPortLabel.setText(appSettings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
 		clientRxPortLabel.setText(appSettings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
 
-		m_localisationComponent.setAudioSrcFilePath(appSettings.getUserSettings()->getValue("audioFilesSrcPath"));
+		// localisation component
+		m_localisationComponent.setAudioFilesDir(appSettings.getUserSettings()->getValue("locCompAudioFilesDir"));
+		
+		// stimulus player
+		m_stimulusPlayer.setAudioFilesDir(appSettings.getUserSettings()->getValue("stimPlayerAudioFilesDir"));
 
+		// renderer view
+		m_rendererView.setCurrentTab(appSettings.getUserSettings()->getValue("rendererViewTabIndex"));
+
+		// router
 		m_lspkRouter.loadRoutingFile(appSettings.getUserSettings()->getValue("routingFile"));
 		m_lspkRouter.loadCalibrationFile(appSettings.getUserSettings()->getValue("calibrationFile"));
 	}
@@ -441,7 +449,14 @@ void MainComponent::saveSettings()
 	appSettings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
 	appSettings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
 
-	appSettings.getUserSettings()->setValue("audioFilesSrcPath", m_localisationComponent.getAudioSrcFilePath());
+	// localisation component
+	appSettings.getUserSettings()->setValue("locCompAudioFilesDir", m_localisationComponent.getAudioFilesDir());
+	
+	// stimulus player
+	appSettings.getUserSettings()->setValue("stimPlayerAudioFilesDir", m_stimulusPlayer.getAudioFilesDir());
+
+	// renderer view
+	appSettings.getUserSettings()->setValue("rendererViewTabIndex", m_rendererView.getCurrentTab());
 
 	// output router
 	appSettings.getUserSettings()->setValue("routingFile", m_lspkRouter.getRoutingFilePath());

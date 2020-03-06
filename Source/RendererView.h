@@ -26,6 +26,9 @@ public:
 	void ambixFileLoaded(const File& file) override;
 	void sofaFileLoaded(const File& file) override;
 
+	String getCurrentTab();
+	void setCurrentTab(String index);
+
 	enum RendererModes
 	{
 		bypassed,

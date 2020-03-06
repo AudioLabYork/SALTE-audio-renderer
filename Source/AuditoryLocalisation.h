@@ -28,8 +28,8 @@ public:
 
 	String currentMessage;
 
-	String getAudioSrcFilePath();
-	void setAudioSrcFilePath(String filePath);
+	String getAudioFilesDir();
+	void setAudioFilesDir(String filePath);
 private:
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;

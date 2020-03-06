@@ -9,7 +9,6 @@ StimulusPlayer::StimulusPlayer()
 	, loopingEnabled(false)
 	, begOffsetTime(0.0)
 	, endOffsetTime(0.0)
-	, loadedFileChannelCount(0)
 	, m_shouldShowTest(true)
 {
 	formatManager.registerBasicFormats();
@@ -242,6 +241,19 @@ void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
 	repaint();
 }
 
+String StimulusPlayer::getAudioFilesDir()
+{
+	return audioFilesDir.getFullPathName();
+}
+
+void StimulusPlayer::setAudioFilesDir(String filePath)
+{
+	if (File(filePath).exists())
+	{
+		audioFilesDir = filePath;
+	}
+}
+
 void StimulusPlayer::changeState(TransportState newState)
 {
 	if (state != newState)
@@ -320,12 +332,14 @@ void StimulusPlayer::timerCallback()
 void StimulusPlayer::browseForFile()
 {
 	FileChooser chooser("Select a Wave file to play...",
-		File::getCurrentWorkingDirectory(),
+		audioFilesDir,
 		"*.wav", true);
 
 	if (chooser.browseForFileToOpen())
 	{
 		File file = chooser.getResult();
+		audioFilesDir = file.getParentDirectory();
+		clearPlayer();
 		cacheFileToPlayer(file.getFullPathName());
 		loadSourceToTransport(file.getFullPathName());
 	}
@@ -335,8 +349,10 @@ void StimulusPlayer::clearPlayer()
 {
 	transportSource.setSource(nullptr);
 	audioSourceFiles.clear();
+	cachedFileNames.clear();
 	audioFormatReaderSources.clear();
 	playerThumbnail.clearThumbnail();
+	sendMsgToLogWindow("Cache cleared");
 }
 
 void StimulusPlayer::cacheFileToPlayer(const String& fullPath)
@@ -351,6 +367,7 @@ void StimulusPlayer::cacheFileToPlayer(const String& fullPath)
 			audioSourceFiles.push_back(audiofile);
 			audioFormatReaderSources.push_back(std::move(audioFormatReaderSource));
 			cachedFileNames.add(fullPath);
+			sendMsgToLogWindow("Cached: " + audiofile.getFileName());
 		}
 	}
 }
@@ -358,18 +375,24 @@ void StimulusPlayer::cacheFileToPlayer(const String& fullPath)
 void StimulusPlayer::loadSourceToTransport(const String& fullPath)
 {
 	const int index = cachedFileNames.indexOf(fullPath, true, 0);
+	auto source_ptr = audioFormatReaderSources[index].get();
+	auto source_fs = audioFormatReaderSources[index]->getAudioFormatReader()->sampleRate;
+	auto source_chnum = audioFormatReaderSources[index]->getAudioFormatReader()->numChannels;
+	auto source_bitdepth = audioFormatReaderSources[index]->getAudioFormatReader()->bitsPerSample;
+
 	transportSource.addChangeListener(this);
 	transportSource.setSource(
-		audioFormatReaderSources[index].get(),
+		source_ptr,
 		32768, // tells it to buffer this many samples ahead
 		&readAheadThread, // this is the background thread to use for reading-ahead
-		audioFormatReaderSources[index]->getAudioFormatReader()->sampleRate, // allows for sample rate correction
-		audioFormatReaderSources[index]->getAudioFormatReader()->numChannels); // the maximum number of channels that may need to be played
+		source_fs, // allows for sample rate correction
+		source_chnum); // the maximum number of channels that may need to be played
 
 	transportSource.prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 
 	playerThumbnail.createThumbnail(audioSourceFiles[index]);
 	loadedFileName.setText(audioSourceFiles[index].getFileName(), dontSendNotification);
+	sendMsgToLogWindow("Loaded: " + audioSourceFiles[index].getFileName() + ", " + String(source_chnum) + " channels, " + String(source_fs) + "Hz, " + String(source_bitdepth) + "bit");
 
 	playButton.setEnabled(true);
 	stopButton.setEnabled(true);
@@ -450,11 +473,6 @@ void StimulusPlayer::loop(bool looping)
 		loopButton.setToggleState(looping, dontSendNotification);
 
 	sendChangeMessage();
-}
-
-int StimulusPlayer::getNumberOfChannels()
-{
-	return loadedFileChannelCount;
 }
 
 void StimulusPlayer::setGain(const float gainInDB)

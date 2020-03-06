@@ -222,12 +222,12 @@ void AuditoryLocalisation::changeListenerCallback(ChangeBroadcaster* source)
 	}
 }
 
-String AuditoryLocalisation::getAudioSrcFilePath()
+String AuditoryLocalisation::getAudioFilesDir()
 {
 	return audioFilesDir.getFullPathName();
 }
 
-void AuditoryLocalisation::setAudioSrcFilePath(String filePath)
+void AuditoryLocalisation::setAudioFilesDir(String filePath)
 {
 	if (File(filePath).exists())
 	{

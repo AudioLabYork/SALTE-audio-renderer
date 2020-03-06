@@ -1,7 +1,8 @@
 #include "RendererView.h"
 
 RendererView::RendererView()
-	: m_binRenderer(nullptr)
+	: m_lsRenderer(nullptr)
+	, m_binRenderer(nullptr)
 	, modeSelectTabs(TabbedButtonBar::Orientation::TabsAtTop)
 {
 
@@ -170,6 +171,16 @@ void RendererView::ambixFileLoaded(const File& file)
 void RendererView::sofaFileLoaded(const File& file)
 {
 	m_sofaFileLabel.setText("SOFA File: " + file.getFileName(), NotificationType::dontSendNotification);
+}
+
+String RendererView::getCurrentTab()
+{
+	return String(modeSelectTabs.getCurrentTabIndex());
+}
+
+void RendererView::setCurrentTab(String index)
+{
+	modeSelectTabs.setCurrentTabIndex(index.getIntValue(), true);
 }
 
 void RendererView::setRendererMode(RendererModes targetMode)
