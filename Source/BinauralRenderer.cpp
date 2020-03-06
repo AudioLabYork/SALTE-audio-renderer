@@ -16,7 +16,6 @@ BinauralRenderer::BinauralRenderer()
 	, m_lowPass(new dsp::FIR::Coefficients<float>(order_1_lo_band_48, 257))
 	, m_highPass(new dsp::FIR::Coefficients<float>(order_1_hi_band_48, 257))
 {
-	loadStandardDefault();
 }
 
 void BinauralRenderer::sendMsgToLogWindow(String message)
@@ -118,6 +117,8 @@ void BinauralRenderer::setOrder(const int order)
 
 	m_order = order;
 	m_numAmbiChans = (order + 1) * (order + 1);
+
+	sendMsgToLogWindow("switched to: " + String(m_order) + " order");
 }
 
 int BinauralRenderer::getOrder() const

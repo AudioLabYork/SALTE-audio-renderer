@@ -16,6 +16,8 @@ MainComponent::MainComponent()
 	oscTxRx.addListener(&m_binauralRenderer);
 	m_binauralRenderer.addListener(&m_rendererView);
 	m_binauralRenderer.addChangeListener(this);
+	m_binauralRenderer.setOrder(1);
+	m_binauralRenderer.loadStandardDefault(); // load standard configuration
 
 	m_rendererView.init(&m_loudspeakerRenderer, &m_binauralRenderer);
 	m_rendererView.addChangeListener(this);

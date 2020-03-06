@@ -31,6 +31,18 @@ void RendererView::init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRe
 	addAndMakeVisible(m_lsAmbixFileBrowse);
 
 	// Binaural Rendering
+	m_loadStandard1OA.setButtonText("1OA KU100");
+	m_loadStandard1OA.addListener(this);
+	addAndMakeVisible(m_loadStandard1OA);
+
+	m_loadStandard3OA.setButtonText("3OA KU100");
+	m_loadStandard3OA.addListener(this);
+	addAndMakeVisible(m_loadStandard3OA);
+
+	m_loadStandard5OA.setButtonText("5OA KU100");
+	m_loadStandard5OA.addListener(this);
+	addAndMakeVisible(m_loadStandard5OA);
+
 	m_binAmbixFileLabel.setText("AmbiX Config File:", dontSendNotification);
 	addAndMakeVisible(m_binAmbixFileLabel);
 
@@ -109,11 +121,15 @@ void RendererView::resized()
 	m_lsAmbixFileLabel.setBounds(10, 35, 390, 25);
 	m_lsAmbixFileBrowse.setBounds(400, 35, 80, 25);
 
-	m_binAmbixFileLabel.setBounds(10, 35, 390, 25);
-	m_binAmbixFileBrowse.setBounds(400, 35, 80, 25);
+	m_loadStandard1OA.setBounds(10, 35, 100, 25);
+	m_loadStandard3OA.setBounds(120, 35, 100, 25);
+	m_loadStandard5OA.setBounds(230, 35, 100, 25);
 
-	m_sofaFileLabel.setBounds(10, 75, 390, 25);
-	m_sofaFileBrowse.setBounds(400, 75, 80, 25);
+	m_binAmbixFileLabel.setBounds(10, 65, 390, 25);
+	m_binAmbixFileBrowse.setBounds(400, 65, 80, 25);
+
+	m_sofaFileLabel.setBounds(10, 105, 390, 25);
+	m_sofaFileBrowse.setBounds(400, 105, 80, 25);
 
 	m_enableDualBand.setBounds(10, 140, 200, 25);
 	m_enableRotation.setBounds(10, 170, 200, 25);
@@ -144,6 +160,21 @@ void RendererView::buttonClicked(Button* buttonClicked)
 	if (buttonClicked == &m_lsAmbixFileBrowse)
 	{
 		browseForLsAmbixConfigFile();
+	}
+	if (buttonClicked == &m_loadStandard1OA)
+	{
+		m_binRenderer->setOrder(1);
+		m_binRenderer->loadStandardDefault();
+	}
+	if (buttonClicked == &m_loadStandard3OA)
+	{
+		m_binRenderer->setOrder(3);
+		m_binRenderer->loadStandardDefault();
+	}
+	if (buttonClicked == &m_loadStandard5OA)
+	{
+		m_binRenderer->setOrder(5);
+		m_binRenderer->loadStandardDefault();
 	}
 	else if (buttonClicked == &m_binAmbixFileBrowse)
 	{
@@ -188,6 +219,9 @@ void RendererView::setRendererMode(RendererModes targetMode)
 	// hide everything
 	m_lsAmbixFileBrowse.setVisible(false);
 	m_lsAmbixFileLabel.setVisible(false);
+	m_loadStandard1OA.setVisible(false);
+	m_loadStandard3OA.setVisible(false);
+	m_loadStandard5OA.setVisible(false);
 	m_binAmbixFileBrowse.setVisible(false);
 	m_binAmbixFileLabel.setVisible(false);
 	m_sofaFileBrowse.setVisible(false);
@@ -224,6 +258,10 @@ void RendererView::setRendererMode(RendererModes targetMode)
 	}
 	case binaural:
 	{
+		m_loadStandard1OA.setVisible(true);
+		m_loadStandard3OA.setVisible(true);
+		m_loadStandard5OA.setVisible(true);
+
 		m_binAmbixFileBrowse.setVisible(true);
 		m_binAmbixFileLabel.setVisible(true);
 		
