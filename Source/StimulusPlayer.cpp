@@ -374,29 +374,36 @@ void StimulusPlayer::cacheFileToPlayer(const String& fullPath)
 
 void StimulusPlayer::loadSourceToTransport(const String& fullPath)
 {
-	const int index = cachedFileNames.indexOf(fullPath, true, 0);
-	auto source_ptr = audioFormatReaderSources[index].get();
-	auto source_fs = audioFormatReaderSources[index]->getAudioFormatReader()->sampleRate;
-	auto source_chnum = audioFormatReaderSources[index]->getAudioFormatReader()->numChannels;
-	auto source_bitdepth = audioFormatReaderSources[index]->getAudioFormatReader()->bitsPerSample;
+	if (cachedFileNames.contains(fullPath, false))
+	{
+		const int index = cachedFileNames.indexOf(fullPath, false, 0);
+		auto source_ptr = audioFormatReaderSources[index].get();
+		auto source_fs = audioFormatReaderSources[index]->getAudioFormatReader()->sampleRate;
+		auto source_chnum = audioFormatReaderSources[index]->getAudioFormatReader()->numChannels;
+		auto source_bitdepth = audioFormatReaderSources[index]->getAudioFormatReader()->bitsPerSample;
 
-	transportSource.addChangeListener(this);
-	transportSource.setSource(
-		source_ptr,
-		32768, // tells it to buffer this many samples ahead
-		&readAheadThread, // this is the background thread to use for reading-ahead
-		source_fs, // allows for sample rate correction
-		source_chnum); // the maximum number of channels that may need to be played
+		transportSource.addChangeListener(this);
+		transportSource.setSource(
+			source_ptr,
+			32768, // tells it to buffer this many samples ahead
+			&readAheadThread, // this is the background thread to use for reading-ahead
+			source_fs, // allows for sample rate correction
+			source_chnum); // the maximum number of channels that may need to be played
 
-	transportSource.prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
+		transportSource.prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 
-	playerThumbnail.createThumbnail(audioSourceFiles[index]);
-	loadedFileName.setText(audioSourceFiles[index].getFileName(), dontSendNotification);
-	sendMsgToLogWindow("Loaded: " + audioSourceFiles[index].getFileName() + ", " + String(source_chnum) + " channels, " + String(source_fs) + "Hz, " + String(source_bitdepth) + "bit");
+		playerThumbnail.createThumbnail(audioSourceFiles[index]);
+		loadedFileName.setText(audioSourceFiles[index].getFileName(), dontSendNotification);
+		sendMsgToLogWindow("Loaded: " + audioSourceFiles[index].getFileName() + ", " + String(source_chnum) + " channels, " + String(source_fs) + "Hz, " + String(source_bitdepth) + "bit");
 
-	playButton.setEnabled(true);
-	stopButton.setEnabled(true);
-	loopButton.setEnabled(true);
+		playButton.setEnabled(true);
+		stopButton.setEnabled(true);
+		loopButton.setEnabled(true);
+	}
+	else
+	{
+		sendMsgToLogWindow("Missing: " + fullPath);
+	}
 }
 
 String StimulusPlayer::getCurrentSourceFileName()
