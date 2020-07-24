@@ -10,11 +10,11 @@ BinauralRenderer::BinauralRenderer()
 	, m_yaw(0.0f)
 	, m_pitch(0.0f)
 	, m_roll(0.0f)
+    , m_lowPass(new dsp::FIR::Coefficients<float>(order_1_lo_band_48, 257))
+    , m_highPass(new dsp::FIR::Coefficients<float>(order_1_hi_band_48, 257))
 	, m_enableRenderer(false)
 	, m_enableDualBand(false)
 	, m_enableRotation(true)
-	, m_lowPass(new dsp::FIR::Coefficients<float>(order_1_lo_band_48, 257))
-	, m_highPass(new dsp::FIR::Coefficients<float>(order_1_hi_band_48, 257))
 {
 }
 
