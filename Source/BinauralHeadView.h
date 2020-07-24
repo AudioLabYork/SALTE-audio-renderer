@@ -1,9 +1,5 @@
 #pragma once
 
-#if JUCE_MAC
-#import <OpenGL/gl.h>
-#endif
-
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "WavefrontObjParser.h"
 
