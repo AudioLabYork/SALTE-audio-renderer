@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include <convoengine.h>
+#include "convoengine.h"
 #include "AmbisonicRotation.h"
 #include "OscTransceiver.h"
 #include "SOFAReader.h"
