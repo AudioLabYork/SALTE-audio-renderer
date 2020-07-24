@@ -18,7 +18,7 @@ HeadphoneCompensation::~HeadphoneCompensation()
 
 void HeadphoneCompensation::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-	dsp::ProcessSpec spec{ sampleRate, samplesPerBlockExpected, 2 };
+    dsp::ProcessSpec spec{ sampleRate, static_cast<uint32>(samplesPerBlockExpected), 2 };
 	m_conv.prepare(spec);
 }
 

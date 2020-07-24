@@ -268,7 +268,7 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 		m_convBuffer.setSize(2, m_blockSize);
 	}
 
-	ProcessSpec spec = { m_sampleRate, m_blockSize, 2 };
+    ProcessSpec spec = { m_sampleRate, static_cast<uint32>(m_blockSize), 2 };
 
 	m_lowPass.prepare(spec);
 	m_highPass.prepare(spec);
