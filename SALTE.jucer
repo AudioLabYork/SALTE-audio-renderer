@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="zmM4K5" name="SALTE" projectType="guiapp" jucerVersion="5.4.7"
-              companyName="University of York" companyWebsite="https://audiolab.york.ac.uk">
+<JUCERPROJECT id="zmM4K5" name="SALTE" projectType="guiapp" companyName="University of York"
+              companyWebsite="https://audiolab.york.ac.uk" jucerFormatVersion="1"
+              displaySplashScreen="1">
   <MAINGROUP id="H9ikxc" name="SALTE">
     <GROUP id="{38B28B71-9D6E-68E2-2653-CC11D6B73ADE}" name="Assets">
       <FILE id="TYSXpe" name="HUMAN_HEAD.obj" compile="0" resource="1" file="Assets/HUMAN_HEAD.obj"/>
