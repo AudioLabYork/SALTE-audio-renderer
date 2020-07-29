@@ -93,8 +93,8 @@
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/WDL/WDL&#10;../../../../Libraries/API_Cpp/libsofa/src&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/include"
                        libraryPath="../../../../Libraries/API_Cpp/libsofa/lib&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/lib/macos"/>
-        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include"
-                       libraryPath="../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/macos"/>
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL/WDL&#10;../../../../Libraries/API_Cpp/libsofa/src&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/include"
+                       libraryPath="../../../../Libraries/API_Cpp/libsofa/lib&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/lib/macos"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../JUCE 5.4.3/modules"/>
@@ -116,11 +116,11 @@
     </XCODE_MAC>
     <VS2019 targetFolder="Builds/VisualStudio2019" externalLibraries="libsofa_debug_x64.lib&#10;libcurl_imp_x64.lib&#10;libhdf5_hl_x64.lib&#10;libhdf5_x64.lib&#10;netcdf_x64.lib&#10;zlib_x64.lib">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
-                       libraryPath="../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/WDL/WDL&#10;../../../../Libraries/API_Cpp/libsofa/src&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/include&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
+                       libraryPath="../../../../Libraries/API_Cpp/libsofa/lib&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/lib/macos"
                        useRuntimeLibDLL="0"/>
-        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
-                       libraryPath="../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL/WDL&#10;../../../../Libraries/API_Cpp/libsofa/src&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/include&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
+                       libraryPath="../../../../Libraries/API_Cpp/libsofa/lib&#10;../../../../Libraries/API_Cpp/libsofa/dependencies/lib/macos"
                        useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
