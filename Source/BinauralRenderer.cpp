@@ -495,8 +495,8 @@ void BinauralRenderer::loadStandardDefault()
 
 		setVirtualLoudspeakers(azi, ele, chans);
 
-		decodeMatrix.resize(1250);
-		std::copy(leb50_lo_dec_mat, leb50_lo_dec_mat + 1250, decodeMatrix.begin());
+		decodeMatrix.resize(1800);
+		std::copy(leb50_lo_dec_mat, leb50_lo_dec_mat + 1800, decodeMatrix.begin());
 		break;
 	}
 	default:

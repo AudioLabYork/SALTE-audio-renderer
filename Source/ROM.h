@@ -47,8 +47,8 @@ extern const float leb26_lo_dec_mat[416];
 extern const float leb26_hi_dec_mat[416];
 
 // leb50 low band, high band matrices
-extern const float leb50_lo_dec_mat[1250];
-extern const float leb50_hi_dec_mat[1250];
+extern const float leb50_lo_dec_mat[1800];
+extern const float leb50_hi_dec_mat[1800];
 
 // order 1 low band, high band filters Fc = 757.93Hz
 extern const float order_1_lo_band_48[257];
