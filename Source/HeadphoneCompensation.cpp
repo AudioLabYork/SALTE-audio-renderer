@@ -18,7 +18,7 @@ HeadphoneCompensation::~HeadphoneCompensation()
 
 void HeadphoneCompensation::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
-	dsp::ProcessSpec spec{ sampleRate, samplesPerBlockExpected, 2 };
+    dsp::ProcessSpec spec{ sampleRate, static_cast<uint32>(samplesPerBlockExpected), 2 };
 	m_conv.prepare(spec);
 }
 
@@ -62,7 +62,7 @@ void HeadphoneCompensation::buttonClicked(Button* buttonClicked)
 		{
 			File chosenFile = fc.getResult();
 			m_conv.reset();
-			m_conv.loadImpulseResponse(chosenFile, true, false, 0);
+            m_conv.loadImpulseResponse(chosenFile, juce::dsp::Convolution::Stereo::yes, juce::dsp::Convolution::Trim::no, 0);
 		}
 #endif
 	}

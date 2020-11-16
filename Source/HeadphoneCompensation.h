@@ -15,8 +15,8 @@ public:
 
 	void buttonClicked(Button* buttonClicked) override;
 
-	void paint(Graphics& g);
-	void resized();
+	void paint(Graphics& g) override;
+	void resized() override;
 
 private:
 	TextButton m_firBrowse;
