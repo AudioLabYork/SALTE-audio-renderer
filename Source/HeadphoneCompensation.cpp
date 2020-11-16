@@ -62,8 +62,7 @@ void HeadphoneCompensation::buttonClicked(Button* buttonClicked)
 		{
 			File chosenFile = fc.getResult();
 			m_conv.reset();
-			//m_conv.loadImpulseResponse(chosenFile, true, false, 0);
-			m_conv.loadImpulseResponse(chosenFile, juce::dsp::Convolution::Stereo::yes, juce::dsp::Convolution::Trim::no, 0);
+			m_conv.loadImpulseResponse(chosenFile, true, false, 0);
 		}
 #endif
 	}
