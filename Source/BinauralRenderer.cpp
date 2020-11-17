@@ -89,26 +89,6 @@ void BinauralRenderer::processOscMessage(const OSCMessage& message)
 
 		setHeadTrackingData(roll, pitch, yaw);
 	}
-
-	if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
-	{
-		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getChildFile("SOFA");
-
-		if (sourcePath.exists())
-		{
-			String filename = message[0].getString();
-			sourcePath = sourcePath.getChildFile(filename);
-
-			if (sourcePath.existsAsFile())
-			{
-				loadHRIRsFromSofaFile(sourcePath);
-			}
-			else
-			{
-				sendMsgToLogWindow("SOFA file could not be found");
-			}
-		}
-	}
 }
 
 void BinauralRenderer::setOrder(const int order)
@@ -575,50 +555,6 @@ void BinauralRenderer::loadAmbixFile(const File& ambixFile)
 	sendMsgToLogWindow("successfully loaded: " + ambixFile.getFileName());
 
 	listeners.call([&](BinauralRenderer::Listener& l) { l.ambixFileLoaded(ambixFile); });
-}
-
-void BinauralRenderer::loadHRIRsFromSofaFile(const File& sofaFile)
-{
-	String sofaFilePath = sofaFile.getFullPathName();
-
-	SOFAReader reader(sofaFilePath.toStdString());
-
-	std::vector<float> azi;
-	std::vector<float> ele;
-	int chans = 0;
-
-	getVirtualLoudspeakers(azi, ele, chans);
-
-	// there needs to be some speakers loaded in order to use sofa files
-	if (chans <= 0)
-		sendMsgToLogWindow("failed to load: " + sofaFile.getFileName());
-
-	clearHRIR();
-
-	std::vector<float> hrir;
-
-	std::size_t channels = reader.getNumImpulseChannels();
-	std::size_t samples = reader.getNumImpulseSamples();
-
-	for (int i = 0; i < chans; ++i)
-	{
-		if (reader.getResponseForSpeakerPosition(hrir, azi[i], ele[i]))
-		{
-			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
-
-			for (int c = 0; c < channels; ++c)
-				inputBuffer.copyFrom(c, 0, hrir.data(), static_cast<int>(samples));
-
-			addHRIR(inputBuffer);
-		}
-	}
-
-	if (!uploadHRIRsToEngine())
-		sendMsgToLogWindow("failed to load: " + sofaFile.getFileName());
-
-	sendMsgToLogWindow("successfully loaded: " + sofaFile.getFileName());
-
-	listeners.call([&](BinauralRenderer::Listener& l) { l.sofaFileLoaded(sofaFile); });
 }
 
 void BinauralRenderer::addListener(Listener* newListener)

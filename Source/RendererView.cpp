@@ -50,16 +50,8 @@ void RendererView::init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRe
 	m_binAmbixFileBrowse.addListener(this);
 	addAndMakeVisible(m_binAmbixFileBrowse);
 
-	m_sofaFileLabel.setText("SOFA File:", dontSendNotification);
-	addAndMakeVisible(m_sofaFileLabel);
-
-	m_sofaFileBrowse.setButtonText("Select file...");
-	m_sofaFileBrowse.setEnabled(false);
-	m_sofaFileBrowse.addListener(this);
-	addAndMakeVisible(m_sofaFileBrowse);
-
 	m_enableDualBand.setButtonText("Enable dual band");
-	m_enableDualBand.setToggleState(true, dontSendNotification);
+	m_enableDualBand.setToggleState(false, dontSendNotification);
 	m_enableDualBand.addListener(this);
 	addAndMakeVisible(m_enableDualBand);
 
@@ -128,9 +120,6 @@ void RendererView::resized()
 	m_binAmbixFileLabel.setBounds(10, 65, 390, 25);
 	m_binAmbixFileBrowse.setBounds(400, 65, 80, 25);
 
-	m_sofaFileLabel.setBounds(10, 105, 390, 25);
-	m_sofaFileBrowse.setBounds(400, 105, 80, 25);
-
 	m_enableDualBand.setBounds(10, 140, 200, 25);
 	m_enableRotation.setBounds(10, 170, 200, 25);
 	m_enableMirrorView.setBounds(10, 200, 200, 25);
@@ -180,10 +169,6 @@ void RendererView::buttonClicked(Button* buttonClicked)
 	{
 		browseForBinAmbixConfigFile();
 	}
-	else if (buttonClicked == &m_sofaFileBrowse)
-	{
-		browseForSofaFile();
-	}
 	else if (buttonClicked == &m_enableDualBand)
 	{
 		m_binRenderer->enableDualBand(m_enableDualBand.getToggleState());
@@ -197,11 +182,6 @@ void RendererView::buttonClicked(Button* buttonClicked)
 void RendererView::ambixFileLoaded(const File& file)
 {
 	m_binAmbixFileLabel.setText("AmbiX Config File: " + file.getFileName(), NotificationType::dontSendNotification);
-}
-
-void RendererView::sofaFileLoaded(const File& file)
-{
-	m_sofaFileLabel.setText("SOFA File: " + file.getFileName(), NotificationType::dontSendNotification);
 }
 
 String RendererView::getCurrentTab()
@@ -224,8 +204,6 @@ void RendererView::setRendererMode(RendererModes targetMode)
 	m_loadStandard5OA.setVisible(false);
 	m_binAmbixFileBrowse.setVisible(false);
 	m_binAmbixFileLabel.setVisible(false);
-	m_sofaFileBrowse.setVisible(false);
-	m_sofaFileLabel.setVisible(false);
 
 	m_enableDualBand.setVisible(false);
 	m_enableRotation.setVisible(false);
@@ -264,9 +242,6 @@ void RendererView::setRendererMode(RendererModes targetMode)
 
 		m_binAmbixFileBrowse.setVisible(true);
 		m_binAmbixFileLabel.setVisible(true);
-		
-		m_sofaFileBrowse.setVisible(true);
-		m_sofaFileLabel.setVisible(true);
 
 		m_enableDualBand.setVisible(true);
 		m_enableRotation.setVisible(true);
@@ -292,13 +267,11 @@ void RendererView::setTestInProgress(bool inProgress)
 	{
 		m_lsAmbixFileBrowse.setEnabled(false);
 		m_binAmbixFileBrowse.setEnabled(false);
-		m_sofaFileBrowse.setEnabled(false);
 	}
 	else
 	{
 		m_lsAmbixFileBrowse.setEnabled(true);
 		m_binAmbixFileBrowse.setEnabled(true);
-		m_sofaFileBrowse.setEnabled(true);
 	}
 }
 
@@ -332,24 +305,6 @@ void RendererView::browseForBinAmbixConfigFile()
 		File chosenFile = fc.getResult();
 
 		m_binRenderer->loadAmbixFile(chosenFile);
-		m_sofaFileBrowse.setEnabled(true);
-	}
-#endif
-}
-
-void RendererView::browseForSofaFile()
-{
-#if JUCE_MODAL_LOOPS_PERMITTED
-	FileChooser fc("Select SOFA file to open...",
-		File::getCurrentWorkingDirectory(),
-		"*.sofa",
-		true);
-
-	if (fc.browseForFileToOpen())
-	{
-		File chosenFile = fc.getResult();
-
-		m_binRenderer->loadHRIRsFromSofaFile(chosenFile);
 	}
 #endif
 }

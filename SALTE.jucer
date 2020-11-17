@@ -68,8 +68,6 @@
             file="Source/PlayerThumbnail.h"/>
       <FILE id="QLkJpD" name="ROM.cpp" compile="1" resource="0" file="Source/ROM.cpp"/>
       <FILE id="CiLfND" name="ROM.h" compile="0" resource="0" file="Source/ROM.h"/>
-      <FILE id="RMzaUA" name="SOFAReader.cpp" compile="1" resource="0" file="Source/SOFAReader.cpp"/>
-      <FILE id="E0ADir" name="SOFAReader.h" compile="0" resource="0" file="Source/SOFAReader.h"/>
       <FILE id="tW1uaz" name="StimulusPlayer.cpp" compile="1" resource="0"
             file="Source/StimulusPlayer.cpp"/>
       <FILE id="wqfDrA" name="StimulusPlayer.h" compile="0" resource="0"
@@ -89,12 +87,10 @@
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" externalLibraries="sofa_debug&#10;curl&#10;hdf5_hl&#10;hdf5&#10;netcdf_c++4&#10;netcdf&#10;z">
+    <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include"
-                       libraryPath="../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/macos"/>
-        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include"
-                       libraryPath="../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/macos"/>
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/WDL"/>
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../../JUCE 5.4.3/modules"/>
@@ -114,13 +110,11 @@
         <MODULEPATH id="juce_dsp" path="C:/JUCE 5.4.3/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
-    <VS2019 targetFolder="Builds/VisualStudio2019" externalLibraries="libsofa_debug_x64.lib&#10;libcurl_imp_x64.lib&#10;libhdf5_hl_x64.lib&#10;libhdf5_x64.lib&#10;netcdf_x64.lib&#10;zlib_x64.lib">
+    <VS2019 targetFolder="Builds/VisualStudio2019">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
-                       libraryPath="../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"
+        <CONFIGURATION isDebug="1" name="Debug" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
                        useRuntimeLibDLL="0"/>
-        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/libsofa/src&#10;../../../../Libraries/libsofa/dependencies/include&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
-                       libraryPath="../../../../Libraries/libsofa/lib&#10;../../../../Libraries/libsofa/dependencies/lib/win"
+        <CONFIGURATION isDebug="0" name="Release" headerPath="../../../../Libraries/WDL&#10;../../../../Libraries/asiosdk_2.3.3_2019-06-14/common"
                        useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>

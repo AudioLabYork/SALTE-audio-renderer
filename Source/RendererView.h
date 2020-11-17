@@ -24,7 +24,6 @@ public:
 	void buttonClicked(Button* buttonClicked) override;
 
 	void ambixFileLoaded(const File& file) override;
-	void sofaFileLoaded(const File& file) override;
 
 	String getCurrentTab();
 	void setCurrentTab(String index);
@@ -41,7 +40,6 @@ public:
 
 	void browseForLsAmbixConfigFile();
 	void browseForBinAmbixConfigFile();
-	void browseForSofaFile();
 
 	String m_currentLogMessage;
 
@@ -60,12 +58,7 @@ private:
 	Label m_binAmbixFileLabel;
 	TextButton m_binAmbixFileBrowse;
 
-	Label m_sofaFileLabel;
-	TextButton m_sofaFileBrowse;
-
 	ToggleButton m_enableDualBand;
-
-	String m_sofaFilePath;
 
 	ToggleButton m_enableRotation;
 	Label m_rollLabel;

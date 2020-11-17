@@ -4,7 +4,6 @@
 #include "convoengine.h"
 #include "AmbisonicRotation.h"
 #include "OscTransceiver.h"
-#include "SOFAReader.h"
 #include "AmbixLoader.h"
 #include "ROM.h"
 #include "Maths.h"
@@ -53,14 +52,12 @@ public:
 
 	void loadStandardDefault();
 	void loadAmbixFile(const File& ambixFile);
-	void loadHRIRsFromSofaFile(const File& sofaFile);
 
 	class Listener
 	{
 	public:
 		virtual ~Listener() = default;
 		virtual void ambixFileLoaded(const File& file) = 0;
-		virtual void sofaFileLoaded(const File& file) = 0;
 	};
 
 	void addListener(Listener* newListener);
