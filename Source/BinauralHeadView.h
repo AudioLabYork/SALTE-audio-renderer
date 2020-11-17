@@ -64,7 +64,7 @@ private:
 			"\n"
 			"void main()\n"
 			"{\n"
-			"    vec4 light = viewMatrix * lightPosition;\n"
+			"    vec4 light = (viewMatrix * lightPosition) * modelMatrix;\n"
 			"    lightIntensity = dot(light, normal);\n"
 			"\n"
 			"    gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;\n"
