@@ -54,7 +54,6 @@ private:
 	Label m_lsAmbixFileLabel;
 	TextButton m_lsAmbixFileBrowse;
 
-	TextButton m_loadStandard1OA, m_loadStandard3OA, m_loadStandard5OA;
 	Label m_binAmbixFileLabel;
 	TextButton m_binAmbixFileBrowse;
 

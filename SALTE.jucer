@@ -66,8 +66,6 @@
             file="Source/PlayerThumbnail.cpp"/>
       <FILE id="vnlYeG" name="PlayerThumbnail.h" compile="0" resource="0"
             file="Source/PlayerThumbnail.h"/>
-      <FILE id="QLkJpD" name="ROM.cpp" compile="1" resource="0" file="Source/ROM.cpp"/>
-      <FILE id="CiLfND" name="ROM.h" compile="0" resource="0" file="Source/ROM.h"/>
       <FILE id="tW1uaz" name="StimulusPlayer.cpp" compile="1" resource="0"
             file="Source/StimulusPlayer.cpp"/>
       <FILE id="wqfDrA" name="StimulusPlayer.h" compile="0" resource="0"

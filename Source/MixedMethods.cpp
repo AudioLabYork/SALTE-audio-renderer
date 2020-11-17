@@ -354,7 +354,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			if (trial->getMCondition(i)->ambixConfig.isNotEmpty())
 				m_renderer->loadAmbixFile(File(trial->getMCondition(i)->ambixConfig));
 			else
-				m_renderer->loadStandardDefault();
+				//m_renderer->loadStandardDefault();
 
 			// play the scene
 			m_player->play();
@@ -388,7 +388,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (trial->getMReference(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getMReference(0)->ambixConfig));
 		else
-			m_renderer->loadStandardDefault();
+			//m_renderer->loadStandardDefault();
 
 		m_player->play();
 
@@ -419,7 +419,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (trial->getTCondition(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(0)->ambixConfig));
 		else
-			m_renderer->loadStandardDefault();
+			//m_renderer->loadStandardDefault();
 
 		m_player->play();
 
@@ -450,7 +450,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (trial->getTCondition(1)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(1)->ambixConfig));
 		else
-			m_renderer->loadStandardDefault();
+			//m_renderer->loadStandardDefault();
 
 		m_player->play();
 
