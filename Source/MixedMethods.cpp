@@ -519,6 +519,8 @@ void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 		if (ratingType == "attribute") trial->getTAttribute(sliderIndex)->score = static_cast<float>(sliderThatWasChanged->getValue());
 		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
 	}
+
+	updateRemoteInterface();
 }
 
 void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDragging)
@@ -550,62 +552,37 @@ void MixedMethodsComponent::updateRemoteInterface()
 		StringArray ratings = trial->getRatingOptions();
 		if (ratings.size() > 0)
 		{
-			m_oscTxRx->sendOscMessage("/numOfRatingLabels", (int)ratings.size());
 			for (int i = 0; i < ratings.size(); ++i)
 			{
-				m_oscTxRx->sendOscMessage("/ratingLabel", (int)i, (String)ratings[i]);
+				m_oscTxRx->sendOscMessage("/ratingLabel", (int)ratings.size(), (int)i, (String)ratings[i]);
 			}
 		}
-	}
-
-	// Transport controls
-	if (m_player->checkPlaybackStatus())
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)1);
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)0);
-	}
-	else
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)0);
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)1);
-	}
-
-	if (m_player->checkLoopStatus())
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)1);
-	}
-	else
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)0);
 	}
 
 	// sliders
 	if (ratingSliderArray.size() > 0)
 	{
-		m_oscTxRx->sendOscMessage("/numOfSliders", (int)ratingSliderArray.size());
 		for (int i = 0; i < ratingSliderArray.size(); ++i)
 		{
-			m_oscTxRx->sendOscMessage("/sliderState", (int)i, (float)ratingSliderArray[i]->getValue(), (float)ratingSliderArray[i]->getMinimum(), (float)ratingSliderArray[i]->getMaximum());
+			m_oscTxRx->sendOscMessage("/sliderState", (int)ratingSliderArray.size(), (int)i, (float)ratingSliderArray[i]->getMinimum(), (float)ratingSliderArray[i]->getMaximum(), (float)ratingSliderArray[i]->getValue());
 		}
 	}
 
 	// condition trigger buttons
 	if (selectConditionButtonArray.size() > 0)
 	{
-		m_oscTxRx->sendOscMessage("/numOfCondTrigButtons", (int)selectConditionButtonArray.size());
-		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		for (int i = 0; i < selectConditionButtonArray.size(); ++i)
 		{
-			m_oscTxRx->sendOscMessage("/condTrigButtonState", (int)i, (int)selectConditionButtonArray[i]->getToggleState());
+			m_oscTxRx->sendOscMessage("/condTrigButtonState", (int)selectConditionButtonArray.size(), (int)i, (int)selectConditionButtonArray[i]->getToggleState());
 		}
 	}
 
 	// attribute labels
 	if (attributeRatingLabels.size() > 0)
 	{
-		m_oscTxRx->sendOscMessage("/numOfAttributeLabels", (int)attributeRatingLabels.size());
-		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		for (int i = 0; i < attributeRatingLabels.size(); ++i)
 		{
-			m_oscTxRx->sendOscMessage("/attributeLabel", (int)i, (String)attributeRatingLabels[i]->getText());
+			m_oscTxRx->sendOscMessage("/attributeLabel", (int)attributeRatingLabels.size(), (int)i, (String)attributeRatingLabels[i]->getText());
 		}
 	}
 
@@ -636,6 +613,27 @@ void MixedMethodsComponent::updateRemoteInterface()
 	else
 	{
 		m_oscTxRx->sendOscMessage("/RefTrigButtonPresent", (int)0);
+	}
+
+	// Transport controls
+	if (m_player->checkPlaybackStatus())
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)1);
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)0);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)0);
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)1);
+	}
+
+	if (m_player->checkLoopStatus())
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)1);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)0);
 	}
 
 	// show UI
