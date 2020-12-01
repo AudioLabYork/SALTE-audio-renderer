@@ -353,8 +353,6 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 			if (trial->getMCondition(i)->ambixConfig.isNotEmpty())
 				m_renderer->loadAmbixFile(File(trial->getMCondition(i)->ambixConfig));
-			else
-				//m_renderer->loadStandardDefault();
 
 			// play the scene
 			m_player->play();
@@ -387,8 +385,6 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		if (trial->getMReference(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getMReference(0)->ambixConfig));
-		else
-			//m_renderer->loadStandardDefault();
 
 		m_player->play();
 
@@ -418,8 +414,6 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		if (trial->getTCondition(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(0)->ambixConfig));
-		else
-			//m_renderer->loadStandardDefault();
 
 		m_player->play();
 
@@ -449,8 +443,6 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		if (trial->getTCondition(1)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(1)->ambixConfig));
-		else
-			//m_renderer->loadStandardDefault();
 
 		m_player->play();
 
@@ -644,59 +636,61 @@ void MixedMethodsComponent::updateRemoteInterface()
 
 void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 {
-	// CONTROL BUTTONS
-	if (message.size() == 1 && message.getAddressPattern() == "/button" && message[0].isString())
+	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+	if (trial != nullptr)
 	{
-		if (message[0].getString() == "play")
+		// CONTROL BUTTONS
+		if (message.size() == 1 && message.getAddressPattern() == "/button" && message[0].isString())
 		{
-			m_player->play();
+			if (message[0].getString() == "play")
+			{
+				m_player->play();
+			}
+			else if (message[0].getString() == "stop")
+			{
+				m_player->stop();
+			}
+			else if (message[0].getString() == "loop")
+			{
+				m_player->loop(!m_player->checkLoopStatus());
+			}
+			else if (message[0].getString() == "A")
+			{
+				if (selectTConditionAButton.isVisible()) selectTConditionAButton.triggerClick();
+			}
+			else if (message[0].getString() == "B")
+			{
+				if (selectTConditionBButton.isVisible()) selectTConditionBButton.triggerClick();
+			}
+			else if (message[0].getString() == "reference")
+			{
+				if (selectReferenceButton.isVisible()) selectReferenceButton.triggerClick();
+			}
+			else if (message[0].getString() == "prev_trial")
+			{
+				prevTrialButton.triggerClick();
+			}
+			else if (message[0].getString() == "next_trial")
+			{
+				nextTrialButton.triggerClick();
+			}
 		}
-		else if (message[0].getString() == "stop")
-		{
-			m_player->stop();
-		}
-		else if (message[0].getString() == "loop")
-		{
-			m_player->loop(!m_player->checkLoopStatus());
-		}
-		else if (message[0].getString() == "A")
-		{
-			if (selectTConditionAButton.isVisible()) selectTConditionAButton.triggerClick();
-		}
-		else if (message[0].getString() == "B")
-		{
-			if (selectTConditionBButton.isVisible()) selectTConditionBButton.triggerClick();
-		}
-		else if (message[0].getString() == "reference")
-		{
-			if (selectReferenceButton.isVisible()) selectReferenceButton.triggerClick();
-		}
-		else if (message[0].getString() == "condA") { if (selectConditionButtonArray[0] != nullptr) selectConditionButtonArray[0]->triggerClick(); }
-		else if (message[0].getString() == "condB") { if (selectConditionButtonArray[1] != nullptr) selectConditionButtonArray[1]->triggerClick(); }
-		else if (message[0].getString() == "condC") { if (selectConditionButtonArray[2] != nullptr) selectConditionButtonArray[2]->triggerClick(); }
-		else if (message[0].getString() == "condD") { if (selectConditionButtonArray[3] != nullptr) selectConditionButtonArray[3]->triggerClick(); }
-		else if (message[0].getString() == "condE") { if (selectConditionButtonArray[4] != nullptr) selectConditionButtonArray[4]->triggerClick(); }
-		else if (message[0].getString() == "condF") { if (selectConditionButtonArray[5] != nullptr) selectConditionButtonArray[5]->triggerClick(); }
-		else if (message[0].getString() == "condG") { if (selectConditionButtonArray[6] != nullptr) selectConditionButtonArray[6]->triggerClick(); }
-		else if (message[0].getString() == "condH") { if (selectConditionButtonArray[7] != nullptr) selectConditionButtonArray[7]->triggerClick(); }
-		else if (message[0].getString() == "condI") { if (selectConditionButtonArray[8] != nullptr) selectConditionButtonArray[8]->triggerClick(); }
-		else if (message[0].getString() == "condJ") { if (selectConditionButtonArray[9] != nullptr) selectConditionButtonArray[9]->triggerClick(); }
-		else if (message[0].getString() == "condK") { if (selectConditionButtonArray[10] != nullptr) selectConditionButtonArray[10]->triggerClick(); }
 
-		else if (message[0].getString() == "prev_trial")
+		// CONDITION TRIGGER BUTTONS
+		if (message.size() == 1 && message.getAddressPattern() == "/condButton" && message[0].isInt32())
 		{
-			prevTrialButton.triggerClick();
+			int sliderIndex = message[0].getInt32();
+			if (selectConditionButtonArray[sliderIndex] != nullptr)
+				selectConditionButtonArray[sliderIndex]->triggerClick();
 		}
-		else if (message[0].getString() == "next_trial")
-		{
-			nextTrialButton.triggerClick();
-		}
-	}
 
-	// CONTROL SLIDERS
-	if (message.size() == 2 && message.getAddressPattern() == "/slider" && message[0].isFloat32() && message[1].isFloat32())
-	{
-		ratingSliderArray[(int)message[0].getFloat32()]->setValue(message[1].getFloat32());
+		// CONTROL SLIDERS
+		if (message.size() == 2 && message.getAddressPattern() == "/slider" && message[0].isInt32() && message[1].isFloat32())
+		{
+			int sliderIndex = message[0].getInt32();
+			if (ratingSliderArray[sliderIndex] != nullptr)
+				ratingSliderArray[sliderIndex]->setValue(message[1].getFloat32());
+		}
 	}
 }
 

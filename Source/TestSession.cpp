@@ -8,7 +8,6 @@ TestSession::TestSession()
 	, m_randTrials(true)
 	, m_randConditions(true)
 {
-
 }
 
 void TestSession::reset()
