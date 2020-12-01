@@ -57,6 +57,20 @@ MainComponent::MainComponent()
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
 
+	clientTxIpLabel.onTextChange = [this]
+	{
+		lastRemoteIp = clientTxIpLabel.getText();
+	};
+
+	enableLocalIp.setButtonText("localhost");
+	enableLocalIp.setToggleState(false, dontSendNotification);
+	enableLocalIp.onClick = [this]
+	{
+		updateOscSettings();
+		connectOscButton.triggerClick();
+	};
+	addAndMakeVisible(enableLocalIp);
+
 	connectOscButton.setButtonText("Connect OSC");
 	connectOscButton.addListener(this);
 	addAndMakeVisible(&connectOscButton);
@@ -113,7 +127,7 @@ MainComponent::MainComponent()
 	lookAndFeel.setColour(Slider::trackColourId, Colour(12, 25, 39));
 
 	loadSettings();
-	connectOscButton.triggerClick(); // connect OSC on startup
+	updateOscSettings();
 }
 
 MainComponent::~MainComponent()
@@ -242,6 +256,8 @@ void MainComponent::resized()
 		clientTxPortLabel.setBounds(435, 35, 55, 25);
 		clientRxPortLabel.setBounds(495, 35, 55, 25);
 
+		enableLocalIp.setBounds(330, 13, 120, 20);
+
 		logWindow.setBounds(10, 660, 640, 130);
 
 		showMixedComp.setBounds(310, 105, 115, 25);
@@ -319,6 +335,21 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	}
 
 	repaint();
+}
+
+void MainComponent::updateOscSettings()
+{
+	if (enableLocalIp.getToggleState())
+	{
+		clientTxIpLabel.setText("127.0.0.1", dontSendNotification);
+		clientTxIpLabel.setEnabled(false);
+	}
+	else
+	{
+		clientTxIpLabel.setText(lastRemoteIp, dontSendNotification);
+		clientTxIpLabel.setEnabled(true);
+	}
+	connectOscButton.triggerClick();
 }
 
 void MainComponent::formCompleted()
@@ -416,7 +447,9 @@ void MainComponent::loadSettings()
 	if (appSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
 	{
 		// osc
-		clientTxIpLabel.setText(appSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
+		enableLocalIp.setToggleState(appSettings.getUserSettings()->getBoolValue("localIpEnabled"), dontSendNotification);
+		lastRemoteIp = appSettings.getUserSettings()->getValue("clientTxIp");
+		//clientTxIpLabel.setText(appSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
 		clientTxPortLabel.setText(appSettings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
 		clientRxPortLabel.setText(appSettings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
 
@@ -447,7 +480,8 @@ void MainComponent::saveSettings()
 	}
 
 	// osc
-	appSettings.getUserSettings()->setValue("clientTxIp", clientTxIpLabel.getText());
+	appSettings.getUserSettings()->setValue("localIpEnabled", enableLocalIp.getToggleState());
+	appSettings.getUserSettings()->setValue("clientTxIp", lastRemoteIp);
 	appSettings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
 	appSettings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
 

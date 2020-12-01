@@ -75,7 +75,7 @@ void TestSession::loadSession(const File& sessionFile)
 							MushraReference* ref = new MushraReference;
 							ref->name = referenceStimulus.getProperty("name", "");
 							ref->filepath = reference.getFullPathName();
-							ref->renderingOrder = referenceStimulus.getProperty("order", "");
+							//ref->renderingOrder = referenceStimulus.getProperty("order", "");
 							ref->gain = referenceStimulus.getProperty("gain", "");
 
 							if(ambixconfig.existsAsFile())
@@ -102,7 +102,7 @@ void TestSession::loadSession(const File& sessionFile)
 							con->filepath = source.getFullPathName();
 
 						con->score = 0.0f;
-						con->renderingOrder = stimulus.getProperty("order", "");
+						//con->renderingOrder = stimulus.getProperty("order", "");
 						con->gain = stimulus.getProperty("gain", "");
 						if (ambixconfig.existsAsFile()) con->ambixConfig = ambixconfig.getFullPathName();
 
@@ -204,8 +204,8 @@ void TestSession::exportResults()
 					else
 						fos << "-,";
 					
-					if (m_subjectData->m_gender.isNotEmpty())
-						fos << m_subjectData->m_gender << ",";
+					if (m_subjectData->m_email.isNotEmpty())
+						fos << m_subjectData->m_email << ",";
 					else
 						fos << "-,";
 				}
@@ -238,8 +238,8 @@ void TestSession::exportResults()
 					else
 						fos << "-,";
 
-					if (m_subjectData->m_gender.isNotEmpty())
-						fos << m_subjectData->m_gender << ",";
+					if (m_subjectData->m_email.isNotEmpty())
+						fos << m_subjectData->m_email << ",";
 					else
 						fos << "-,";
 				}

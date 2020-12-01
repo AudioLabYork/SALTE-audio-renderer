@@ -37,8 +37,8 @@ TestSessionForm::TestSessionForm()
 	m_labelName.setJustificationType(Justification::centredRight);
 	m_labelAge.setText("Age:", NotificationType::dontSendNotification);
 	m_labelAge.setJustificationType(Justification::centredRight);
-	m_labelGender.setText("Gender:", NotificationType::dontSendNotification);
-	m_labelGender.setJustificationType(Justification::centredRight);
+	m_labelEmail.setText("Email:", NotificationType::dontSendNotification);
+	m_labelEmail.setJustificationType(Justification::centredRight);
 
 	// load settings
 	initSettings();
@@ -47,15 +47,15 @@ TestSessionForm::TestSessionForm()
 		loadSettings();
 	}
 
-	// show name / age / gender fields
+	// show name / age / email fields
 	if (!m_anonymizeSubject)
 	{
 		addAndMakeVisible(m_labelName);
 		addAndMakeVisible(m_labelAge);
-		addAndMakeVisible(m_labelGender);
+		addAndMakeVisible(m_labelEmail);
 		addAndMakeVisible(m_editName);
 		addAndMakeVisible(m_editAge);
-		addAndMakeVisible(m_editGender);
+		addAndMakeVisible(m_editEmail);
 	}
 
 	m_btnAnon.setButtonText("Anonymize subject");
@@ -128,12 +128,12 @@ void TestSessionForm::resized()
 	m_labelSubjectID.setBounds(30, 150, 120, 25);
 	m_labelName.setBounds(30, 180, 120, 25);
 	m_labelAge.setBounds(30, 210, 120, 25);
-	m_labelGender.setBounds(30, 240, 120, 25);
+	m_labelEmail.setBounds(30, 240, 120, 25);
 
 	m_editSubjectID.setBounds(155, 150, 250, 25);
 	m_editName.setBounds(155, 180, 250, 25);
 	m_editAge.setBounds(155, 210, 250, 25);
-	m_editGender.setBounds(155, 240, 250, 25);
+	m_editEmail.setBounds(155, 240, 250, 25);
 
 	m_createRndSubjectIDButton.setBounds(410, 150, 200, 25);
 	m_btnAnon.setBounds(410, 180, 200, 25);
@@ -146,7 +146,7 @@ void TestSessionForm::timerCallback()
 {
 	if (m_sessionFile.getFullPathName().isEmpty() ||
 		m_exportFile.getFullPathName().isEmpty() ||
-		(!m_anonymizeSubject && (m_editSubjectID.getText().isEmpty() || m_editName.getText().isEmpty() || m_editAge.getText().isEmpty() || m_editGender.getText().isEmpty())) ||
+		(!m_anonymizeSubject && (m_editSubjectID.getText().isEmpty() || m_editName.getText().isEmpty() || m_editAge.getText().isEmpty() || m_editEmail.getText().isEmpty())) ||
 		(m_anonymizeSubject && m_editSubjectID.getText().isEmpty()) ||
 		!m_btnAgree.getToggleState())
 	{
@@ -167,19 +167,19 @@ void TestSessionForm::buttonClicked(Button* button)
 		{
 			m_labelName.setVisible(false);
 			m_labelAge.setVisible(false);
-			m_labelGender.setVisible(false);
+			m_labelEmail.setVisible(false);
 			m_editName.setVisible(false);
 			m_editAge.setVisible(false);
-			m_editGender.setVisible(false);
+			m_editEmail.setVisible(false);
 		}
 		else
 		{
 			addAndMakeVisible(m_labelName);
 			addAndMakeVisible(m_labelAge);
-			addAndMakeVisible(m_labelGender);
+			addAndMakeVisible(m_labelEmail);
 			addAndMakeVisible(m_editName);
 			addAndMakeVisible(m_editAge);
-			addAndMakeVisible(m_editGender);
+			addAndMakeVisible(m_editEmail);
 		}
 
 	}
@@ -198,12 +198,12 @@ void TestSessionForm::buttonClicked(Button* button)
 		// get subject ID
 		subject->m_id = m_editSubjectID.getText();;
 
-		// only collect subject data (name, age, gender) if it is not anonymous
+		// only collect subject data (name, age, email) if it is not anonymous
 		if (!m_anonymizeSubject)
 		{
 			subject->m_name = m_editName.getText();
 			subject->m_age = m_editAge.getText().getIntValue();
-			subject->m_gender = m_editGender.getText();
+			subject->m_email = m_editEmail.getText();
 		}
 
 		m_session->setSubjectData(std::move(subject));
@@ -223,7 +223,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		if (fc.browseForFileToOpen())
 		{
 			m_sessionFile = fc.getResult();
-			m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFileName(), NotificationType::dontSendNotification);
+			m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}
@@ -238,7 +238,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		if (fc.browseForFileToSave(true))
 		{
 			m_exportFile = fc.getResult();
-			m_labelExportFile.setText("Results File: " + m_exportFile.getFileName(), NotificationType::dontSendNotification);
+			m_labelExportFile.setText("Results File: " + m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}

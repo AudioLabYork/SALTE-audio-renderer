@@ -53,11 +53,11 @@ private:
 	Label m_labelSubjectID;
 	Label m_labelName;
 	Label m_labelAge;
-	Label m_labelGender;
+	Label m_labelEmail;
 	TextEditor m_editSubjectID;
 	TextEditor m_editName;
 	TextEditor m_editAge;
-	TextEditor m_editGender;
+	TextEditor m_editEmail;
 	ToggleButton m_btnAnon;
 	ToggleButton m_btnAgree;
 	TextButton m_btnBegin;

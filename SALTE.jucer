@@ -70,7 +70,6 @@
             file="Source/StimulusPlayer.cpp"/>
       <FILE id="wqfDrA" name="StimulusPlayer.h" compile="0" resource="0"
             file="Source/StimulusPlayer.h"/>
-      <FILE id="cb4RTH" name="SubjectData.cpp" compile="1" resource="0" file="Source/SubjectData.cpp"/>
       <FILE id="ahUtip" name="SubjectData.h" compile="0" resource="0" file="Source/SubjectData.h"/>
       <FILE id="s2ueny" name="TestSession.cpp" compile="1" resource="0" file="Source/TestSession.cpp"/>
       <FILE id="Qp9oqs" name="TestSession.h" compile="0" resource="0" file="Source/TestSession.h"/>

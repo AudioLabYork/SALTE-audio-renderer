@@ -544,9 +544,11 @@ void MixedMethodsComponent::updateRemoteInterface()
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 	if (trial != nullptr)
 	{
+		// trial index as int
+		m_oscTxRx->sendOscMessage("/trialIndex", (int)m_testSession->getNumberOfTrials(), (int)m_testSession->getCurrentTrialIndex() + 1);
 		// send string to display on the screen
-		String screenMessage1 = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
-		m_oscTxRx->sendOscMessage("/screenMessages", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+		String trialIndexMessage = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
+		m_oscTxRx->sendOscMessage("/screenMessages", (String)trialIndexMessage, (String)trial->getTrialName(), (String)trial->getTrialInstruction());
 
 		// rating labels
 		StringArray ratings = trial->getRatingOptions();

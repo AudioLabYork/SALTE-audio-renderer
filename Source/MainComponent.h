@@ -62,10 +62,14 @@ private:
 
 	TextButton openAudioDeviceManager, connectOscButton;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
+	String lastRemoteIp;
+	ToggleButton enableLocalIp;
 	TextButton showMixedComp, showLocComp;
 	TextButton openRouter;
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;
+
+	void updateOscSettings();
 
 	ImageComponent imageComponent;
 
