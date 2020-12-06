@@ -342,10 +342,10 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			m_player->pause();
 			
 			// save the position as loading a new source sets the position back to 0
-			double position = m_player->getPlaybackHeadPosition();
-			
+			double position;
+			if(savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 			m_player->loadSourceToTransport(trial->getMCondition(i)->filepath);
-			m_player->setPlaybackHeadPosition(position);
+			if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 			m_player->setGain(trial->getMCondition(i)->gain);
 
 			// renderer configuration
@@ -355,7 +355,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 				m_renderer->loadAmbixFile(File(trial->getMCondition(i)->ambixConfig));
 
 			// play the scene
-			m_player->play();
+			startPlayer();
 
 			// light the button
 			selectConditionButtonArray[i]->setToggleState(true, dontSendNotification);
@@ -375,10 +375,10 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_player->pause();
 
-		double position = m_player->getPlaybackHeadPosition();
-
+		double position;
+		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 		m_player->loadSourceToTransport(trial->getMReference(0)->filepath);
-		m_player->setPlaybackHeadPosition(position);
+		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getMReference(0)->gain);
 
 		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
@@ -386,7 +386,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (trial->getMReference(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getMReference(0)->ambixConfig));
 
-		m_player->play();
+		startPlayer();
 
 		selectReferenceButton.setToggleState(true, dontSendNotification);
 	}
@@ -404,10 +404,10 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_player->pause();
 		
-		double position = m_player->getPlaybackHeadPosition();
-
+		double position;
+		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 		m_player->loadSourceToTransport(trial->getTCondition(0)->filepath);
-		m_player->setPlaybackHeadPosition(position);
+		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(0)->gain);
 
 		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
@@ -415,7 +415,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (trial->getTCondition(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(0)->ambixConfig));
 
-		m_player->play();
+		startPlayer();
 
 		selectTConditionAButton.setToggleState(true, dontSendNotification);
 	}
@@ -433,10 +433,10 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		
 		m_player->pause();
 
-		double position = m_player->getPlaybackHeadPosition();
-
+		double position;
+		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 		m_player->loadSourceToTransport(trial->getTCondition(1)->filepath);
-		m_player->setPlaybackHeadPosition(position);
+		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(1)->gain);
 
 		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
@@ -444,7 +444,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		if (trial->getTCondition(1)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(1)->ambixConfig));
 
-		m_player->play();
+		startPlayer();
 
 		selectTConditionBButton.setToggleState(true, dontSendNotification);
 	}
@@ -551,6 +551,9 @@ void MixedMethodsComponent::updateRemoteInterface()
 				m_oscTxRx->sendOscMessage("/ratingLabel", (int)ratings.size(), (int)i, (String)ratings[i]);
 			}
 		}
+
+		// send 360 video file name
+		m_oscTxRx->sendOscMessage("/360videoFile", (String)trial->getTrial360Video());
 	}
 
 	// sliders
@@ -630,6 +633,9 @@ void MixedMethodsComponent::updateRemoteInterface()
 		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)0);
 	}
 
+	// send playback status for 360 video player
+	m_oscTxRx->sendOscMessage("/360videoStatus", (float)m_player->getPlaybackHeadPosition(), (int)m_player->checkPlaybackStatus());
+
 	// show UI
 	m_oscTxRx->sendOscMessage("/showUI", (int)1);
 }
@@ -708,5 +714,29 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 				updateRemoteInterface();
 			}
 		}
+	}
+}
+
+void MixedMethodsComponent::startPlayer()
+{
+	if (m_delayStart)
+		startTimer(1); // start timer with 1 ms resolution
+	else
+		m_player->play();
+}
+
+void MixedMethodsComponent::timerCallback()
+{
+	// int timeToWait = 20; // in ms
+	int timeToWait = 100; // in ms (for Quest)
+	if (m_delayedPlayCounter >= timeToWait)
+	{
+		m_player->play();
+		stopTimer();
+		m_delayedPlayCounter = 0;
+	}
+	else
+	{
+		m_delayedPlayCounter++;
 	}
 }

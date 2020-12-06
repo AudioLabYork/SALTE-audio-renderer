@@ -14,6 +14,7 @@ class MixedMethodsComponent
 	, private Slider::Listener
 	, private ChangeListener
 	, public ChangeBroadcaster
+	, private Timer
 {
 public:
 	//==============================================================================
@@ -51,6 +52,13 @@ private:
 
 	// void triggerConditionPlayback(int buttonIndex);
 	void updateRemoteInterface();
+
+	void startPlayer();
+	void timerCallback() override;
+	bool m_delayStart = true;
+	int m_delayedPlayCounter = 0;
+
+	bool savePbHeadPosOnCondChange = false;
 
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
 

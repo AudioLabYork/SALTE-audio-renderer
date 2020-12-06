@@ -59,6 +59,16 @@ String TestTrial::getTrialInstruction() const
 	return m_trialInstruction;
 }
 
+void TestTrial::setTrial360Video(const String& filename)
+{
+	m_video360filename = filename;
+}
+
+String TestTrial::getTrial360Video() const
+{
+	return m_video360filename;
+}
+
 void TestTrial::addMCondition(MushraCondition* condition)
 {
 	m_MConditions.add(condition);

@@ -58,6 +58,7 @@ void TestSession::loadSession(const File& sessionFile)
 
 			File sceneFolder(sessionFile.getParentDirectory().getFullPathName() + "/" + trial.getProperty("scenefolder", "").toString());
 			File ambixconfigFolder(sessionFile.getParentDirectory().getFullPathName() + "/" + trial.getProperty("ambixconfigfolder", "").toString());
+			testTrial->setTrial360Video(trial.getProperty("360videofile", ""));
 
 			if (sceneFolder.exists())
 			{
