@@ -23,6 +23,9 @@ OutputRouting::OutputRouting()
 	addAndMakeVisible(closeWindowBtn);
 
 	setSize(480, 680);
+
+	initRoutingMatrix();
+	initCalibrationMatrix();
 }
 
 OutputRouting::~OutputRouting()

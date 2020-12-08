@@ -533,6 +533,9 @@ void MixedMethodsComponent::updateRemoteInterface()
 	// hide UI
 	m_oscTxRx->sendOscMessage("/showUI", (int)0);
 
+	// send the renderer ip address so the VR interface could communicate back
+	m_oscTxRx->sendOscMessage("/rendererIp", (String)localIpAddress);
+
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 	if (trial != nullptr)
 	{
@@ -638,6 +641,11 @@ void MixedMethodsComponent::updateRemoteInterface()
 
 	// show UI
 	m_oscTxRx->sendOscMessage("/showUI", (int)1);
+}
+
+void MixedMethodsComponent::setLocalIpAddress(String ip)
+{
+	localIpAddress = ip;
 }
 
 void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)

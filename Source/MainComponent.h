@@ -62,7 +62,7 @@ private:
 
 	TextButton openAudioDeviceManager, connectOscButton;
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
-	String lastRemoteIp;
+	String lastRemoteIpAddress;
 	ToggleButton enableLocalIp;
 	TextButton showMixedComp, showLocComp;
 	TextButton openRouter;

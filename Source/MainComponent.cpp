@@ -59,7 +59,7 @@ MainComponent::MainComponent()
 
 	clientTxIpLabel.onTextChange = [this]
 	{
-		lastRemoteIp = clientTxIpLabel.getText();
+		lastRemoteIpAddress = clientTxIpLabel.getText();
 	};
 
 	enableLocalIp.setButtonText("localhost");
@@ -112,6 +112,7 @@ MainComponent::MainComponent()
 	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
+	showTestInterface.setEnabled(false);
 
 	openRouter.setButtonText("Output Routing");
 	openRouter.addListener(this);
@@ -339,14 +340,18 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 void MainComponent::updateOscSettings()
 {
+	static IPAddress localIp = IPAddress::getLocalAddress(false);
+	String localIpAddress = localIp.toString();
+	m_mixedMethods.setLocalIpAddress(localIpAddress);
+
 	if (enableLocalIp.getToggleState())
 	{
-		clientTxIpLabel.setText("127.0.0.1", dontSendNotification);
+		clientTxIpLabel.setText(localIpAddress, dontSendNotification);
 		clientTxIpLabel.setEnabled(false);
 	}
 	else
 	{
-		clientTxIpLabel.setText(lastRemoteIp, dontSendNotification);
+		clientTxIpLabel.setText(lastRemoteIpAddress, dontSendNotification);
 		clientTxIpLabel.setEnabled(true);
 	}
 	connectOscButton.triggerClick();
@@ -448,8 +453,7 @@ void MainComponent::loadSettings()
 	{
 		// osc
 		enableLocalIp.setToggleState(appSettings.getUserSettings()->getBoolValue("localIpEnabled"), dontSendNotification);
-		lastRemoteIp = appSettings.getUserSettings()->getValue("clientTxIp");
-		//clientTxIpLabel.setText(appSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
+		lastRemoteIpAddress = appSettings.getUserSettings()->getValue("clientTxIp");
 		clientTxPortLabel.setText(appSettings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
 		clientRxPortLabel.setText(appSettings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
 
@@ -466,6 +470,10 @@ void MainComponent::loadSettings()
 		m_lspkRouter.loadRoutingFile(appSettings.getUserSettings()->getValue("routingFile"));
 		m_lspkRouter.loadCalibrationFile(appSettings.getUserSettings()->getValue("calibrationFile"));
 	}
+	else
+	{
+		m_rendererView.setCurrentTab("2");
+	}
 }
 
 void MainComponent::saveSettings()
@@ -481,7 +489,7 @@ void MainComponent::saveSettings()
 
 	// osc
 	appSettings.getUserSettings()->setValue("localIpEnabled", enableLocalIp.getToggleState());
-	appSettings.getUserSettings()->setValue("clientTxIp", lastRemoteIp);
+	appSettings.getUserSettings()->setValue("clientTxIp", lastRemoteIpAddress);
 	appSettings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
 	appSettings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
 

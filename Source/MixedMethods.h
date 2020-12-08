@@ -24,6 +24,7 @@ public:
 	void init(OscTransceiver* oscTxRx, TestSession* testSession, StimulusPlayer* player, BinauralRenderer* renderer);
 
 	void loadTestSession();
+	void setLocalIpAddress(String ip);
 
 	class Listener
 	{
@@ -52,6 +53,7 @@ private:
 
 	// void triggerConditionPlayback(int buttonIndex);
 	void updateRemoteInterface();
+	String localIpAddress;
 
 	void startPlayer();
 	void timerCallback() override;
