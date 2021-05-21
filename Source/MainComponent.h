@@ -69,7 +69,7 @@ private:
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;
 
-	void updateOscSettings();
+	void updateOscSettings(bool keepConnected);
 
 	ImageComponent imageComponent;
 

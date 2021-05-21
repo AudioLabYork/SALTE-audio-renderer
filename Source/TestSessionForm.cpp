@@ -4,14 +4,9 @@ TestSessionForm::TestSessionForm()
 	: m_session(nullptr)
 	, m_anonymizeSubject(true)
 {
-	m_labelSession.setText("Session Data", NotificationType::dontSendNotification);
-	addAndMakeVisible(m_labelSession);
-
-	m_labelSessionFile.setText("Configuration File:", NotificationType::dontSendNotification);
 	m_labelSessionFile.setJustificationType(Justification::centredLeft);
 	addAndMakeVisible(m_labelSessionFile);
 
-	m_labelExportFile.setText("Results File:", NotificationType::dontSendNotification);
 	m_labelExportFile.setJustificationType(Justification::centredLeft);
 	addAndMakeVisible(m_labelExportFile);
 
@@ -26,8 +21,6 @@ TestSessionForm::TestSessionForm()
 	m_createRndSubjectIDButton.addListener(this);
 	addAndMakeVisible(m_createRndSubjectIDButton);
 
-	m_labelSubject.setText("Subject Data", NotificationType::dontSendNotification);
-	addAndMakeVisible(m_labelSubject);
 	m_labelSubjectID.setText("Subject ID:", NotificationType::dontSendNotification);
 	m_labelSubjectID.setJustificationType(Justification::centredRight);
 	addAndMakeVisible(m_labelSubjectID);
@@ -112,34 +105,37 @@ void TestSessionForm::paint(Graphics& g)
 {
 	g.setColour(Colours::black);
 	g.drawRect(getLocalBounds(), 1);
+
+	g.setColour(getLookAndFeel().findColour(Label::textColourId));
+	g.setFont(15.0f);
+	g.drawText("Session Data", 20, 20, 100, 25, Justification::centredLeft, true);
+	g.drawText("Subject Data", 20, 180, 100, 25, Justification::centredLeft, true);
+	g.drawText("Configuration File:", 30, 50, 500, 25, Justification::centredLeft, true);
+	g.drawText("Results File:", 30, 110, 500, 25, Justification::centredLeft, true);
 }
 
 void TestSessionForm::resized()
 {
-	m_labelSession.setBounds(20, 20, 100, 25);
-
-	m_labelSessionFile.setBounds(30, 50, 500, 25);
-	m_labelExportFile.setBounds(30, 80, 500, 25);
+	m_labelSessionFile.setBounds(30, 75, 500, 25);
+	m_labelExportFile.setBounds(30, 135, 500, 25);
 	m_btnSessionFile.setBounds(530, 50, 80, 25);
-	m_btnExportFile.setBounds(530, 80, 80, 25);
+	m_btnExportFile.setBounds(530, 110, 80, 25);
 
-	m_labelSubject.setBounds(20, 120, 100, 25);
+	m_labelSubjectID.setBounds(30, 150+60, 120, 25);
+	m_labelName.setBounds(30, 180 + 60, 120, 25);
+	m_labelAge.setBounds(30, 210 + 60, 120, 25);
+	m_labelEmail.setBounds(30, 240 + 60, 120, 25);
 
-	m_labelSubjectID.setBounds(30, 150, 120, 25);
-	m_labelName.setBounds(30, 180, 120, 25);
-	m_labelAge.setBounds(30, 210, 120, 25);
-	m_labelEmail.setBounds(30, 240, 120, 25);
+	m_editSubjectID.setBounds(155, 150 + 60, 250, 25);
+	m_editName.setBounds(155, 180 + 60, 250, 25);
+	m_editAge.setBounds(155, 210 + 60, 250, 25);
+	m_editEmail.setBounds(155, 240 + 60, 250, 25);
 
-	m_editSubjectID.setBounds(155, 150, 250, 25);
-	m_editName.setBounds(155, 180, 250, 25);
-	m_editAge.setBounds(155, 210, 250, 25);
-	m_editEmail.setBounds(155, 240, 250, 25);
+	m_createRndSubjectIDButton.setBounds(410, 150 + 60, 200, 25);
+	m_btnAnon.setBounds(410, 180 + 60, 200, 25);
 
-	m_createRndSubjectIDButton.setBounds(410, 150, 200, 25);
-	m_btnAnon.setBounds(410, 180, 200, 25);
-
-	m_btnAgree.setBounds(155, 295, 300, 25);
-	m_btnBegin.setBounds(305, 330, 100, 25);
+	m_btnAgree.setBounds(155, 295 + 60, 300, 25);
+	m_btnBegin.setBounds(305, 330 + 60, 100, 25);
 }
 
 void TestSessionForm::timerCallback()
@@ -223,7 +219,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		if (fc.browseForFileToOpen())
 		{
 			m_sessionFile = fc.getResult();
-			m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
+			m_labelSessionFile.setText(m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}
@@ -238,7 +234,7 @@ void TestSessionForm::buttonClicked(Button* button)
 		if (fc.browseForFileToSave(true))
 		{
 			m_exportFile = fc.getResult();
-			m_labelExportFile.setText("Results File: " + m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
+			m_labelExportFile.setText(m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
 		}
 #endif
 	}
@@ -265,8 +261,8 @@ void TestSessionForm::loadSettings()
 {
 	m_sessionFile = TestSessionFormSettings.getUserSettings()->getValue("configFilePath");
 	m_exportFile = TestSessionFormSettings.getUserSettings()->getValue("resultsFilePath");
-	m_labelSessionFile.setText("Configuration File: " + m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
-	m_labelExportFile.setText("Results File: " + m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
+	m_labelSessionFile.setText(m_sessionFile.getFullPathName(), NotificationType::dontSendNotification);
+	m_labelExportFile.setText(m_exportFile.getFullPathName(), NotificationType::dontSendNotification);
 }
 
 void TestSessionForm::saveSettings()

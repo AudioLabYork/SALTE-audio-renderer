@@ -3,7 +3,7 @@
 TestTrial::TestTrial()
 	: m_trialId(0)
 	, lastPlaybackHeadPosition(0.0f)
-	, isLooping(true)
+	, isLooping(false)
 	, loopStartTime(0.0f)
 	, loopEndTime(0.0f)
 {

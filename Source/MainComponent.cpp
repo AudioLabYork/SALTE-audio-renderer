@@ -12,6 +12,8 @@ MainComponent::MainComponent()
 	// setup loudspeaker renderer
 	m_loudspeakerRenderer.addChangeListener(this);
 
+	oscTxRx.addChangeListener(this); // to display osc +error messages in the log window
+
 	// setup binaural renderer, pass the osc transceiver
 	oscTxRx.addListener(&m_binauralRenderer);
 	m_binauralRenderer.addListener(&m_rendererView);
@@ -53,21 +55,22 @@ MainComponent::MainComponent()
 	clientTxIpLabel.setJustificationType(Justification::centred);
 	clientTxPortLabel.setJustificationType(Justification::centred);
 	clientRxPortLabel.setJustificationType(Justification::centred);
+	clientTxIpLabel.onTextChange = [this]
+	{
+		lastRemoteIpAddress = clientTxIpLabel.getText();
+		updateOscSettings(oscTxRx.isConnected());
+	};
+	clientTxPortLabel.onTextChange = [this] {updateOscSettings(oscTxRx.isConnected()); };
+	clientRxPortLabel.onTextChange = [this] {updateOscSettings(oscTxRx.isConnected()); };
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
 
-	clientTxIpLabel.onTextChange = [this]
-	{
-		lastRemoteIpAddress = clientTxIpLabel.getText();
-	};
-
-	enableLocalIp.setButtonText("localhost");
+	enableLocalIp.setButtonText("Local IP");
 	enableLocalIp.setToggleState(false, dontSendNotification);
 	enableLocalIp.onClick = [this]
 	{
-		updateOscSettings();
-		connectOscButton.triggerClick();
+		updateOscSettings(oscTxRx.isConnected());
 	};
 	addAndMakeVisible(enableLocalIp);
 
@@ -88,7 +91,6 @@ MainComponent::MainComponent()
 	m_mixedMethods.addChangeListener(this);
 	addChildComponent(m_mixedMethods);
 
-	// localisation component temporarily on top of the session form and mixed methods
 	m_localisationComponent.init(&oscTxRx, &m_stimulusPlayer, &m_binauralRenderer);
 	m_localisationComponent.addChangeListener(this);
 	addChildComponent(m_localisationComponent);
@@ -128,7 +130,7 @@ MainComponent::MainComponent()
 	lookAndFeel.setColour(Slider::trackColourId, Colour(12, 25, 39));
 
 	loadSettings();
-	updateOscSettings();
+	updateOscSettings(true);
 }
 
 MainComponent::~MainComponent()
@@ -213,7 +215,7 @@ void MainComponent::paint(Graphics& g)
 	}
 	else
 	{
-		juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
+		juce::Rectangle<int> oscRect(230, 10, 420, 150);        // osc status / vr interface status
 
 		g.setColour(Colours::black);
 		g.drawRect(oscRect, 1);
@@ -222,10 +224,10 @@ void MainComponent::paint(Graphics& g)
 		// OSC WINDOW
 		g.setColour(getLookAndFeel().findColour(Label::textColourId));
 		g.setFont(14.0f);
-		g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
-		g.drawText("Send to", 435, 10, 60, 25, Justification::centredLeft, true);
-		g.drawText("Receive at", 490, 10, 60, 25, Justification::centredLeft, true);
-		g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
+		g.drawText("Remote interface IP", 312, 10, 120, 25, Justification::centredLeft, true);
+		g.drawText("Send to", 436, 10, 60, 25, Justification::centredLeft, true);
+		g.drawText("Receive at", 493, 10, 60, 25, Justification::centredLeft, true);
+		//g.drawText("Remote interface", 220, 10, 70, 50, Justification::centredLeft, true);
 	}
 }
 
@@ -257,7 +259,7 @@ void MainComponent::resized()
 		clientTxPortLabel.setBounds(435, 35, 55, 25);
 		clientRxPortLabel.setBounds(495, 35, 55, 25);
 
-		enableLocalIp.setBounds(330, 13, 120, 20);
+		enableLocalIp.setBounds(230, 35, 120, 25);
 
 		logWindow.setBounds(10, 660, 640, 130);
 
@@ -278,29 +280,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	}
 	else if (buttonThatWasClicked == &connectOscButton)
 	{
-		if (!oscTxRx.isConnected())
-		{
-			// OSC sender and receiver connect
-			String clientIp = clientTxIpLabel.getText();
-			int clientSendToPort = clientTxPortLabel.getText().getIntValue();
-			int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
-			oscTxRx.connectTxRx(clientIp, clientSendToPort, clientReceiveAtPort);
-		}
-		else
-		{
-			oscTxRx.disconnectTxRx();
-		}
-
-		if (oscTxRx.isConnected())
-		{
-			connectOscButton.setColour(TextButton::buttonColourId, Colours::green);
-			connectOscButton.setButtonText("OSC connected");
-		}
-		else
-		{
-			connectOscButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			connectOscButton.setButtonText("Connect OSC");
-		}
+		updateOscSettings(!oscTxRx.isConnected());
 	}
 	else if (buttonThatWasClicked == &showMixedComp)
 	{
@@ -338,7 +318,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	repaint();
 }
 
-void MainComponent::updateOscSettings()
+void MainComponent::updateOscSettings(bool keepConnected)
 {
 	static IPAddress localIp = IPAddress::getLocalAddress(false);
 	String localIpAddress = localIp.toString();
@@ -354,7 +334,35 @@ void MainComponent::updateOscSettings()
 		clientTxIpLabel.setText(lastRemoteIpAddress, dontSendNotification);
 		clientTxIpLabel.setEnabled(true);
 	}
-	connectOscButton.triggerClick();
+
+	if (keepConnected)
+	{
+		if (oscTxRx.isConnected())
+		{
+			oscTxRx.disconnectTxRx();
+		}
+
+		// OSC sender and receiver connect
+		String clientIp = clientTxIpLabel.getText();
+		int clientSendToPort = clientTxPortLabel.getText().getIntValue();
+		int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
+		oscTxRx.connectTxRx(clientIp, clientSendToPort, clientReceiveAtPort);
+	}
+	else
+	{
+		oscTxRx.disconnectTxRx();
+	}
+
+	if (oscTxRx.isConnected())
+	{
+		connectOscButton.setColour(TextButton::buttonColourId, Colours::green);
+		connectOscButton.setButtonText("OSC connected");
+	}
+	else
+	{
+		connectOscButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		connectOscButton.setButtonText("Connect OSC");
+	}
 }
 
 void MainComponent::formCompleted()
@@ -420,6 +428,14 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 		{
 			logWindowMessage += "LocTest: " + m_localisationComponent.currentMessage;
 			m_localisationComponent.currentMessage.clear();
+		}
+	}
+	else if (source == &oscTxRx)
+	{
+		if (oscTxRx.currentMessage != "")
+		{
+			logWindowMessage += "OscTxRx: " + oscTxRx.currentMessage;
+			oscTxRx.currentMessage.clear();
 		}
 	}
 
