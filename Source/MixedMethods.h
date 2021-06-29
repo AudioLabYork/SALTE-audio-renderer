@@ -52,7 +52,7 @@ private:
 	void changeListenerCallback(ChangeBroadcaster* source) override;
 
 	// void triggerConditionPlayback(int buttonIndex);
-	void updateRemoteInterface();
+	void updateRemoteInterface(bool testIsOn);
 	String localIpAddress;
 
 	void startPlayer();

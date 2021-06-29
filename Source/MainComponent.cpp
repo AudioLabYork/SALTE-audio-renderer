@@ -114,7 +114,7 @@ MainComponent::MainComponent()
 	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
-	showTestInterface.setEnabled(false);
+	//showTestInterface.setEnabled(false);
 
 	openRouter.setButtonText("Output Routing");
 	openRouter.addListener(this);
@@ -299,13 +299,18 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_stimulusPlayer.setShowTest(show);
 		if (m_audioSetup.m_shouldBeVisible) m_audioSetup.setVisible(!show);
+
+		showMixedComp.setVisible(!show);
+		showLocComp.setVisible(!show);
 		m_rendererView.setVisible(!show);
 		m_headphoneCompensation.setVisible(!show);
+		openRouter.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
 		connectOscButton.setVisible(!show);
 		clientTxIpLabel.setVisible(!show);
 		clientTxPortLabel.setVisible(!show);
 		clientRxPortLabel.setVisible(!show);
+		enableLocalIp.setVisible(!show);
 		logWindow.setVisible(!show);
 		resized();
 	}
@@ -320,8 +325,17 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 void MainComponent::updateOscSettings(bool keepConnected)
 {
-	static IPAddress localIp = IPAddress::getLocalAddress(false);
-	String localIpAddress = localIp.toString();
+	auto addresses = IPAddress::getAllAddresses(false);
+	String localIpAddress = "127.0.0.1";
+
+	for (auto& a : addresses)
+	{
+		if (a.toString().contains("192.168"))
+		{
+			localIpAddress = a.toString();
+		}
+	}
+
 	m_mixedMethods.setLocalIpAddress(localIpAddress);
 
 	if (enableLocalIp.getToggleState())
@@ -370,6 +384,7 @@ void MainComponent::formCompleted()
 	m_mixedMethods.loadTestSession();
 	m_mixedMethods.setVisible(true);
 	m_rendererView.setTestInProgress(true);
+	showTestInterface.setToggleState(true, sendNotification);
 }
 
 void MainComponent::testCompleted()
@@ -377,6 +392,7 @@ void MainComponent::testCompleted()
 	m_testSessionForm.reset();
 	m_testSessionForm.setVisible(true);
 	m_rendererView.setTestInProgress(false);
+	showTestInterface.setToggleState(false, sendNotification);
 }
 
 // LOG WINDOW

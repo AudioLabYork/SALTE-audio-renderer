@@ -57,6 +57,9 @@ void MixedMethodsComponent::init(OscTransceiver* oscTxRx, TestSession* testSessi
 
 void MixedMethodsComponent::loadTestSession()
 {
+	//// to update ip
+	//updateRemoteInterface();
+
 	// loads the session with first trial
 	loadTrial(0);
 }
@@ -257,7 +260,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		endTestButton.setEnabled(false);
 
 	repaint();
-	updateRemoteInterface();
+	updateRemoteInterface(true);
 }
 
 void MixedMethodsComponent::paint(Graphics& g)
@@ -494,6 +497,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		mushraTestListeners.call([this](Listener& l) { l.testCompleted(); });
 
 		setVisible(false);
+		updateRemoteInterface(false);
 	}
 }
 
@@ -512,7 +516,7 @@ void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
 	}
 
-	updateRemoteInterface();
+	updateRemoteInterface(true);
 }
 
 void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDragging)
@@ -528,13 +532,11 @@ void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDr
 	}
 }
 
-void MixedMethodsComponent::updateRemoteInterface()
+void MixedMethodsComponent::updateRemoteInterface(bool testIsOn)
 {
-	// hide UI
-	m_oscTxRx->sendOscMessage("/showUI", (int)0);
-
 	// send the renderer ip address so the VR interface could communicate back
 	m_oscTxRx->sendOscMessage("/rendererIp", (String)localIpAddress);
+	sendMsgToLogWindow("update started, local ip: " + localIpAddress);
 
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 	if (trial != nullptr)
@@ -639,8 +641,16 @@ void MixedMethodsComponent::updateRemoteInterface()
 	// send playback status for 360 video player
 	m_oscTxRx->sendOscMessage("/360videoStatus", (float)m_player->getPlaybackHeadPosition(), (int)m_player->checkPlaybackStatus());
 
-	// show UI
-	m_oscTxRx->sendOscMessage("/showUI", (int)1);
+	if (testIsOn)
+	{
+		// show UI
+		m_oscTxRx->sendOscMessage("/showUI", (int)1);
+	}
+	else
+	{
+		// hide UI
+		m_oscTxRx->sendOscMessage("/showUI", (int)0);
+	}
 }
 
 void MixedMethodsComponent::setLocalIpAddress(String ip)
@@ -688,6 +698,10 @@ void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 			{
 				nextTrialButton.triggerClick();
 			}
+			else if (message[0].getString() == "finish")
+			{
+				endTestButton.triggerClick();
+			}
 		}
 
 		// CONDITION TRIGGER BUTTONS
@@ -719,7 +733,7 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 				trial->setLoopStart(static_cast<float>(m_player->getPlaybackStartOffset()));
 				trial->setLoopEnd(static_cast<float>(m_player->getPlaybackEndOffset()));
 				trial->setLooping(static_cast<float>(m_player->getLoopingState()));
-				updateRemoteInterface();
+				updateRemoteInterface(true);
 			}
 		}
 	}
