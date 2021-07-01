@@ -35,6 +35,10 @@
             file="Source/BinauralRenderer.cpp"/>
       <FILE id="i1aY0Y" name="BinauralRenderer.h" compile="0" resource="0"
             file="Source/BinauralRenderer.h"/>
+      <FILE id="fydDyp" name="DualBandFilter.cpp" compile="1" resource="0"
+            file="Source/DualBandFilter.cpp"/>
+      <FILE id="EOjD2G" name="DualBandFilter.h" compile="0" resource="0"
+            file="Source/DualBandFilter.h"/>
       <FILE id="ppGCbM" name="RendererView.cpp" compile="1" resource="0"
             file="Source/RendererView.cpp"/>
       <FILE id="vgSgS0" name="RendererView.h" compile="0" resource="0" file="Source/RendererView.h"/>

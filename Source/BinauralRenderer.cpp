@@ -11,7 +11,7 @@ BinauralRenderer::BinauralRenderer()
 	, m_pitch(0.0f)
 	, m_roll(0.0f)
 	, m_enableRenderer(false)
-	, m_enableDualBand(false)
+	, m_enableDualBand(true)
 	, m_enableRotation(true)
 {
 }
@@ -142,9 +142,6 @@ void BinauralRenderer::updateMatrices()
 
 	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
 	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
-
-	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
-	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
 }
 
 void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
@@ -185,7 +182,7 @@ void BinauralRenderer::enableRenderer(bool enable)
 void BinauralRenderer::enableDualBand(bool enable)
 {
 	m_enableDualBand = enable;
-	uploadHRIRsToEngine();
+	//uploadHRIRsToEngine();
 }
 
 void BinauralRenderer::enableRotation(bool enable)
@@ -215,6 +212,9 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 
 	if (!m_enableRenderer || buffer.getNumChannels() <= 2)
 		return;
+
+	if (m_enableDualBand)
+		m_dbFilter.process(buffer); // preprocess buffer with shelf filters
 
 	if (m_enableRotation)
 		m_headTrackRotator.process(buffer);
@@ -312,17 +312,11 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 		return false;
 	}
 
-	int filterTaps = 0;
-
-	if (m_enableDualBand)
-		filterTaps = 257;
-
 	// clear the current SHD HRIR as this process will create new ones
 	m_hrirShdBuffers.clear();
 
-	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
-	AudioBuffer<float> basicBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
-	AudioBuffer<float> weightedBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
+	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples());
+	AudioBuffer<float> basicBuffer(2, m_hrirBuffers[0].getNumSamples());
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
@@ -331,12 +325,10 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 		for (int j = 0; j < m_numLsChans; ++j)
 		{
 			basicBuffer.clear();
-			weightedBuffer.clear();
 
 			for (int n = 0; n < m_hrirBuffers[j].getNumChannels(); ++n)
 			{
 				basicBuffer.copyFrom(n, 0, m_hrirBuffers[j].getReadPointer(n), m_hrirBuffers[j].getNumSamples());
-				weightedBuffer.copyFrom(n, 0, m_hrirBuffers[j].getReadPointer(n), m_hrirBuffers[j].getNumSamples());
 			}
 
 			for (int k = 0; k < 2; ++k)
@@ -365,6 +357,8 @@ void BinauralRenderer::loadAmbixFile(const File& ambixFile)
 	clearVirtualLoudspeakers();
 
 	setOrder(loader.getAmbiOrder());
+
+	m_dbFilter.init(m_sampleRate, m_order); // initialize dual band filter
 
 	std::vector<float> azi;
 	std::vector<float> ele;

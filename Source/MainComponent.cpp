@@ -259,7 +259,7 @@ void MainComponent::resized()
 		clientTxPortLabel.setBounds(435, 35, 55, 25);
 		clientRxPortLabel.setBounds(495, 35, 55, 25);
 
-		enableLocalIp.setBounds(230, 35, 120, 25);
+		enableLocalIp.setBounds(230, 35, 80, 25);
 
 		logWindow.setBounds(10, 660, 640, 130);
 

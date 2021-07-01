@@ -39,9 +39,9 @@ void RendererView::init(LoudspeakerRenderer* lsRenderer, BinauralRenderer* binRe
 	addAndMakeVisible(m_binAmbixFileBrowse);
 
 	m_enableDualBand.setButtonText("Enable dual band");
-	m_enableDualBand.setToggleState(false, dontSendNotification);
+	m_enableDualBand.setToggleState(true, dontSendNotification);
 	m_enableDualBand.addListener(this);
-	m_enableDualBand.setEnabled(false);
+	//m_enableDualBand.setEnabled(false);
 	addAndMakeVisible(m_enableDualBand);
 
 	m_enableRotation.setButtonText("Enable rotation");

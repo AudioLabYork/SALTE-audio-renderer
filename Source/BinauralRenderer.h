@@ -2,6 +2,7 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "convoengine.h"
+#include "DualBandFilter.h"
 #include "AmbisonicRotation.h"
 #include "OscTransceiver.h"
 #include "AmbixLoader.h"
@@ -92,6 +93,7 @@ private:
 	std::vector<float> m_azi;
 	std::vector<float> m_ele;
 
+	DualBandFilter m_dbFilter;
 	AmbisonicRotation m_headTrackRotator;
 
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
