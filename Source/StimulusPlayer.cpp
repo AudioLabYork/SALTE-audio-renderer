@@ -2,11 +2,11 @@
 #include "StimulusPlayer.h"
 
 StimulusPlayer::StimulusPlayer()
-	: state(StimulusPlayer::Stopped)
+	: m_state(StimulusPlayer::Stopped)
 	, readAheadThread("transport read ahead")
 	, m_samplesPerBlockExpected(0)
 	, m_sampleRate(0.0)
-	, loopingEnabled(false)
+	, m_loopingEnabled(false)
 	, begOffsetTime(0.0)
 	, endOffsetTime(0.0)
 	, m_shouldShowTest(true)
@@ -110,6 +110,8 @@ StimulusPlayer::StimulusPlayer()
 
 	addAndMakeVisible(playerThumbnail);
 
+	transportSource.addChangeListener(this);
+
 	startTimerHz(60);
 }
 
@@ -130,14 +132,26 @@ void StimulusPlayer::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFil
 {
 	// check if the playback region has been reduced at the begining
 	if (transportSource.getNextReadPosition() < begOffsetTime * m_sampleRate)
-		transportSource.setPosition(begOffsetTime);
+		transportSource.setNextReadPosition(begOffsetTime * m_sampleRate);
 
 	// check if the playback region has been reduced at the end
-	if (transportSource.getNextReadPosition() > transportSource.getTotalLength() - endOffsetTime * m_sampleRate)
-		transportSource.setPosition(transportSource.getLengthInSeconds());
+	if (endOffsetTime > 0.0f && transportSource.getNextReadPosition() > transportSource.getTotalLength() - endOffsetTime * m_sampleRate)
+	{
+		if (m_loopingEnabled) //this looping method doesn't play samples remaining in the last buffer before jumping to the beginning, but it's fast
+		{
+			transportSource.setNextReadPosition(begOffsetTime * m_sampleRate);
+		}
+		else
+		{
+			transportSource.setNextReadPosition(transportSource.getTotalLength());
+		}
+	}
+	else if (endOffsetTime == 0.0f && m_loopingEnabled && transportSource.getNextReadPosition() > transportSource.getTotalLength() - m_samplesPerBlockExpected)
+	{
+		transportSource.setNextReadPosition(begOffsetTime * m_sampleRate);
+	}
 
 	transportSource.getNextAudioBlock(bufferToFill);
-
 	rotator.process(*bufferToFill.buffer);
 }
 
@@ -192,33 +206,6 @@ void StimulusPlayer::resized()
 	playerThumbnail.setBounds(10, 170, 710, 120);
 }
 
-void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
-{
-	if (source == &transportSource)
-	{
-		if (transportSource.isPlaying())
-		{
-			changeState(Playing);
-		}
-		else if ((state == Stopping) || (state == Playing))
-		{
-			if (transportSource.hasStreamFinished() && loopingEnabled)
-			{
-				transportSource.setPosition(begOffsetTime);
-				changeState(Starting);
-			}
-			else
-			{
-				changeState(Stopped);
-			}
-		}
-		else if (state == Pausing)
-		{
-			changeState(Paused);
-		}
-	}
-}
-
 void StimulusPlayer::buttonClicked(Button* buttonThatWasClicked)
 {
 	if (buttonThatWasClicked == &openButton)
@@ -251,46 +238,6 @@ void StimulusPlayer::setAudioFilesDir(String filePath)
 	if (File(filePath).exists())
 	{
 		audioFilesDir = filePath;
-	}
-}
-
-void StimulusPlayer::changeState(TransportState newState)
-{
-	if (state != newState)
-	{
-		state = newState;
-		switch (state)
-		{
-		case Stopping:
-			transportSource.stop();
-			break;
-		case Stopped:
-			transportSource.setPosition(begOffsetTime);
-			playButton.setButtonText("Play");
-			playButton.setToggleState(false, NotificationType::dontSendNotification);
-			stopButton.setToggleState(true, NotificationType::dontSendNotification);
-			break;
-		case Starting:
-			transportSource.start();
-			break;
-		case Playing:
-			playButton.setButtonText("Pause");
-			playButton.setToggleState(true, NotificationType::dontSendNotification);
-			stopButton.setToggleState(false, NotificationType::dontSendNotification);
-			break;
-		case Pausing:
-			transportSource.stop();
-			break;
-		case Paused:
-			playButton.setButtonText("Play");
-			break;
-		default:
-			// unknown state
-			jassertfalse;
-			break;
-		}
-
-		sendChangeMessage();
 	}
 }
 
@@ -382,15 +329,12 @@ void StimulusPlayer::loadSourceToTransport(const String& fullPath)
 		auto source_chnum = audioFormatReaderSources[index]->getAudioFormatReader()->numChannels;
 		auto source_bitdepth = audioFormatReaderSources[index]->getAudioFormatReader()->bitsPerSample;
 
-		transportSource.addChangeListener(this);
 		transportSource.setSource(
 			source_ptr,
 			32768, // tells it to buffer this many samples ahead
 			&readAheadThread, // this is the background thread to use for reading-ahead
 			source_fs, // allows for sample rate correction
 			source_chnum); // the maximum number of channels that may need to be played
-
-		transportSource.prepareToPlay(m_samplesPerBlockExpected, m_sampleRate);
 
 		playerThumbnail.createThumbnail(audioSourceFiles[index]);
 		loadedFileName.setText(audioSourceFiles[index].getFileName(), dontSendNotification);
@@ -450,36 +394,98 @@ void StimulusPlayer::play()
 {
 	if (transportSource.getLengthInSeconds() > 0.0)
 	{
-		if ((state == Stopped) || (state == Pausing) || (state == Paused))
+		if ((m_state == Stopped) || (m_state == Paused) || (m_state == Pausing))
 			changeState(Starting);
-		else if (state == Playing)
-			changeState(Pausing);
+		//else if (m_state == Playing)
+		//	changeState(Pausing);
 	}
 }
 
 void StimulusPlayer::pause()
 {
-	if (state == Playing)
+	if (m_state == Playing)
 		changeState(Pausing);
 }
 
 void StimulusPlayer::stop()
 {
-	if (state == Paused)
+	if (m_state == Paused)
 		changeState(Stopped);
-	else if (state == Playing)
+	else
 		changeState(Stopping);
 }
 
 void StimulusPlayer::loop(bool looping)
 {
-	loopingEnabled = looping;
+	m_loopingEnabled = looping;
 
 	// if loop gets called from elsewhere (a test component for example)
 	if (loopButton.getToggleState() != looping)
 		loopButton.setToggleState(looping, dontSendNotification);
+}
 
-	sendChangeMessage();
+void StimulusPlayer::changeState(TransportState newState)
+{
+	if (m_state != newState)
+	{
+		m_state = newState;
+		switch (m_state)
+		{
+		case Stopped:
+			playButton.setButtonText("Play");
+			playButton.setToggleState(false, NotificationType::dontSendNotification);
+			stopButton.setToggleState(true, NotificationType::dontSendNotification);
+			transportSource.setPosition(begOffsetTime);
+			sendChangeMessage(); // to inform test component that playback has stopped
+			break;
+		case Starting:
+			transportSource.start();
+			break;
+		case Playing:
+			playButton.setButtonText("Pause");
+			playButton.setToggleState(true, NotificationType::dontSendNotification);
+			stopButton.setToggleState(false, NotificationType::dontSendNotification);
+			break;
+		case Pausing:
+			transportSource.stop();
+			break;
+		case Paused:
+			playButton.setButtonText("Resume");
+			break;
+		case Stopping:
+			transportSource.stop();
+			break;
+		default:
+			// unknown state
+			jassertfalse;
+			break;
+		}
+		//sendMsgToLogWindow("State: " + TransportStateString[m_state]);
+	}
+}
+
+void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
+{
+	if (source == &transportSource)
+	{
+		if (transportSource.isPlaying())
+			changeState(Playing);
+		else if (m_state == Playing)
+			changeState(Stopped);
+			//if (m_loopingEnabled) //this looping method will play all samples but involves stop and start
+			//{
+			//	transportSource.setPosition(begOffsetTime);
+			//	transportSource.start();
+			//}
+			//else
+			//{
+			//	changeState(Stopped);
+			//}
+		else if (m_state == Stopping)
+			changeState(Stopped);
+		else if (m_state == Pausing)
+			changeState(Paused);
+	}
 }
 
 void StimulusPlayer::setGain(const float gainInDB)
@@ -490,7 +496,7 @@ void StimulusPlayer::setGain(const float gainInDB)
 
 bool StimulusPlayer::getLoopingState()
 {
-	return loopingEnabled;
+	return m_loopingEnabled;
 }
 
 bool StimulusPlayer::checkPlaybackStatus()
@@ -500,7 +506,7 @@ bool StimulusPlayer::checkPlaybackStatus()
 
 bool StimulusPlayer::checkLoopStatus()
 {
-	return loopingEnabled;
+	return m_loopingEnabled;
 }
 
 double StimulusPlayer::getTotalTimeForCachedFiles() const

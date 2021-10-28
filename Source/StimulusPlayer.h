@@ -46,8 +46,6 @@ public:
     void paint (Graphics&) override;
     void resized() override;
 
-	void changeListenerCallback(ChangeBroadcaster* source) override;
-	void changeState(TransportState newState);
 	void buttonClicked(Button* buttonThatWasClicked) override;
 	void sliderValueChanged(Slider* slider) override;
 	void timerCallback() override;
@@ -83,11 +81,13 @@ public:
 	String getAudioFilesDir();
 	void setAudioFilesDir(String filePath);
 private:
+	void changeListenerCallback(ChangeBroadcaster* source) override;
+	void changeState(TransportState newState);
 	void browseForFile();
 	void sendMsgToLogWindow(String message);
 	String returnHHMMSS(double lengthInSeconds);
 
-	TransportState state;
+	TransportState m_state;
 	TimeSliceThread readAheadThread;
 
 	File audioFilesDir;
@@ -103,7 +103,7 @@ private:
 
 	AmbisonicRotation rotator;
 
-	bool loopingEnabled;
+	bool m_loopingEnabled;
 	double begOffsetTime;
 	double endOffsetTime;
 
