@@ -14,6 +14,7 @@ class MixedMethodsComponent
 	, private Slider::Listener
 	, private ChangeListener
 	, public ChangeBroadcaster
+	, private Timer
 {
 public:
 	//==============================================================================
@@ -23,6 +24,7 @@ public:
 	void init(OscTransceiver* oscTxRx, TestSession* testSession, StimulusPlayer* player, BinauralRenderer* renderer);
 
 	void loadTestSession();
+	void setLocalIpAddress(String ip);
 
 	class Listener
 	{
@@ -50,7 +52,15 @@ private:
 	void changeListenerCallback(ChangeBroadcaster* source) override;
 
 	// void triggerConditionPlayback(int buttonIndex);
-	void updateRemoteInterface();
+	void updateRemoteInterface(bool testIsOn);
+	String localIpAddress;
+
+	void startPlayer();
+	void timerCallback() override;
+	bool m_delayStart = true;
+	int m_delayedPlayCounter = 0;
+
+	bool savePbHeadPosOnCondChange = false;
 
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
 

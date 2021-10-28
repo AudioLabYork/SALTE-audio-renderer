@@ -57,6 +57,9 @@ void MixedMethodsComponent::init(OscTransceiver* oscTxRx, TestSession* testSessi
 
 void MixedMethodsComponent::loadTestSession()
 {
+	//// to update ip
+	//updateRemoteInterface();
+
 	// loads the session with first trial
 	loadTrial(0);
 }
@@ -257,7 +260,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		endTestButton.setEnabled(false);
 
 	repaint();
-	updateRemoteInterface();
+	updateRemoteInterface(true);
 }
 
 void MixedMethodsComponent::paint(Graphics& g)
@@ -342,10 +345,10 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 			m_player->pause();
 			
 			// save the position as loading a new source sets the position back to 0
-			double position = m_player->getPlaybackHeadPosition();
-			
+			double position;
+			if(savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 			m_player->loadSourceToTransport(trial->getMCondition(i)->filepath);
-			m_player->setPlaybackHeadPosition(position);
+			if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 			m_player->setGain(trial->getMCondition(i)->gain);
 
 			// renderer configuration
@@ -353,11 +356,9 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 			if (trial->getMCondition(i)->ambixConfig.isNotEmpty())
 				m_renderer->loadAmbixFile(File(trial->getMCondition(i)->ambixConfig));
-			else
-				m_renderer->loadStandardDefault();
 
 			// play the scene
-			m_player->play();
+			startPlayer();
 
 			// light the button
 			selectConditionButtonArray[i]->setToggleState(true, dontSendNotification);
@@ -377,20 +378,18 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_player->pause();
 
-		double position = m_player->getPlaybackHeadPosition();
-
+		double position;
+		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 		m_player->loadSourceToTransport(trial->getMReference(0)->filepath);
-		m_player->setPlaybackHeadPosition(position);
+		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getMReference(0)->gain);
 
 		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
 
 		if (trial->getMReference(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getMReference(0)->ambixConfig));
-		else
-			m_renderer->loadStandardDefault();
 
-		m_player->play();
+		startPlayer();
 
 		selectReferenceButton.setToggleState(true, dontSendNotification);
 	}
@@ -408,20 +407,18 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_player->pause();
 		
-		double position = m_player->getPlaybackHeadPosition();
-
+		double position;
+		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 		m_player->loadSourceToTransport(trial->getTCondition(0)->filepath);
-		m_player->setPlaybackHeadPosition(position);
+		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(0)->gain);
 
 		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
 
 		if (trial->getTCondition(0)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(0)->ambixConfig));
-		else
-			m_renderer->loadStandardDefault();
 
-		m_player->play();
+		startPlayer();
 
 		selectTConditionAButton.setToggleState(true, dontSendNotification);
 	}
@@ -439,20 +436,18 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		
 		m_player->pause();
 
-		double position = m_player->getPlaybackHeadPosition();
-
+		double position;
+		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
 		m_player->loadSourceToTransport(trial->getTCondition(1)->filepath);
-		m_player->setPlaybackHeadPosition(position);
+		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
 		m_player->setGain(trial->getTCondition(1)->gain);
 
 		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
 
 		if (trial->getTCondition(1)->ambixConfig.isNotEmpty())
 			m_renderer->loadAmbixFile(File(trial->getTCondition(1)->ambixConfig));
-		else
-			m_renderer->loadStandardDefault();
 
-		m_player->play();
+		startPlayer();
 
 		selectTConditionBButton.setToggleState(true, dontSendNotification);
 	}
@@ -502,6 +497,7 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		mushraTestListeners.call([this](Listener& l) { l.testCompleted(); });
 
 		setVisible(false);
+		updateRemoteInterface(false);
 	}
 }
 
@@ -519,6 +515,8 @@ void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 		if (ratingType == "attribute") trial->getTAttribute(sliderIndex)->score = static_cast<float>(sliderThatWasChanged->getValue());
 		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
 	}
+
+	updateRemoteInterface(true);
 }
 
 void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDragging)
@@ -534,78 +532,59 @@ void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDr
 	}
 }
 
-void MixedMethodsComponent::updateRemoteInterface()
+void MixedMethodsComponent::updateRemoteInterface(bool testIsOn)
 {
-	// hide UI
-	m_oscTxRx->sendOscMessage("/showUI", (int)0);
+	// send the renderer ip address so the VR interface could communicate back
+	m_oscTxRx->sendOscMessage("/rendererIp", (String)localIpAddress);
+	sendMsgToLogWindow("update started, local ip: " + localIpAddress);
 
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 	if (trial != nullptr)
 	{
+		// trial index as int
+		m_oscTxRx->sendOscMessage("/trialIndex", (int)m_testSession->getNumberOfTrials(), (int)m_testSession->getCurrentTrialIndex() + 1);
 		// send string to display on the screen
-		String screenMessage1 = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
-		m_oscTxRx->sendOscMessage("/screenMessages", (String)screenMessage1, (String)trial->getTrialName() + "\n\n" + trial->getTrialInstruction());
+		String trialIndexMessage = "Trial " + String(m_testSession->getCurrentTrialIndex() + 1) + " of " + String(m_testSession->getNumberOfTrials());
+		m_oscTxRx->sendOscMessage("/screenMessages", (String)trialIndexMessage, (String)trial->getTrialName(), (String)trial->getTrialInstruction());
 
 		// rating labels
 		StringArray ratings = trial->getRatingOptions();
 		if (ratings.size() > 0)
 		{
-			m_oscTxRx->sendOscMessage("/numOfRatingLabels", (int)ratings.size());
 			for (int i = 0; i < ratings.size(); ++i)
 			{
-				m_oscTxRx->sendOscMessage("/ratingLabel", (int)i, (String)ratings[i]);
+				m_oscTxRx->sendOscMessage("/ratingLabel", (int)ratings.size(), (int)i, (String)ratings[i]);
 			}
 		}
-	}
 
-	// Transport controls
-	if (m_player->checkPlaybackStatus())
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)1);
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)0);
-	}
-	else
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)0);
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)1);
-	}
-
-	if (m_player->checkLoopStatus())
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)1);
-	}
-	else
-	{
-		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)0);
+		// send 360 video file name
+		m_oscTxRx->sendOscMessage("/360videoFile", (String)trial->getTrial360Video());
 	}
 
 	// sliders
 	if (ratingSliderArray.size() > 0)
 	{
-		m_oscTxRx->sendOscMessage("/numOfSliders", (int)ratingSliderArray.size());
 		for (int i = 0; i < ratingSliderArray.size(); ++i)
 		{
-			m_oscTxRx->sendOscMessage("/sliderState", (int)i, (float)ratingSliderArray[i]->getValue(), (float)ratingSliderArray[i]->getMinimum(), (float)ratingSliderArray[i]->getMaximum());
+			m_oscTxRx->sendOscMessage("/sliderState", (int)ratingSliderArray.size(), (int)i, (float)ratingSliderArray[i]->getMinimum(), (float)ratingSliderArray[i]->getMaximum(), (float)ratingSliderArray[i]->getValue());
 		}
 	}
 
 	// condition trigger buttons
 	if (selectConditionButtonArray.size() > 0)
 	{
-		m_oscTxRx->sendOscMessage("/numOfCondTrigButtons", (int)selectConditionButtonArray.size());
-		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		for (int i = 0; i < selectConditionButtonArray.size(); ++i)
 		{
-			m_oscTxRx->sendOscMessage("/condTrigButtonState", (int)i, (int)selectConditionButtonArray[i]->getToggleState());
+			m_oscTxRx->sendOscMessage("/condTrigButtonState", (int)selectConditionButtonArray.size(), (int)i, (int)selectConditionButtonArray[i]->getToggleState());
 		}
 	}
 
 	// attribute labels
 	if (attributeRatingLabels.size() > 0)
 	{
-		m_oscTxRx->sendOscMessage("/numOfAttributeLabels", (int)attributeRatingLabels.size());
-		for (int i = 0; i < ratingSliderArray.size(); ++i)
+		for (int i = 0; i < attributeRatingLabels.size(); ++i)
 		{
-			m_oscTxRx->sendOscMessage("/attributeLabel", (int)i, (String)attributeRatingLabels[i]->getText());
+			m_oscTxRx->sendOscMessage("/attributeLabel", (int)attributeRatingLabels.size(), (int)i, (String)attributeRatingLabels[i]->getText());
 		}
 	}
 
@@ -638,65 +617,108 @@ void MixedMethodsComponent::updateRemoteInterface()
 		m_oscTxRx->sendOscMessage("/RefTrigButtonPresent", (int)0);
 	}
 
-	// show UI
-	m_oscTxRx->sendOscMessage("/showUI", (int)1);
+	// Transport controls
+	if (m_player->checkPlaybackStatus())
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)1);
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)0);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"play", (int)0);
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"stop", (int)1);
+	}
+
+	if (m_player->checkLoopStatus())
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)1);
+	}
+	else
+	{
+		m_oscTxRx->sendOscMessage("/buttonState", (String)"loop", (int)0);
+	}
+
+	// send playback status for 360 video player
+	m_oscTxRx->sendOscMessage("/360videoStatus", (float)m_player->getPlaybackHeadPosition(), (int)m_player->checkPlaybackStatus());
+
+	if (testIsOn)
+	{
+		// show UI
+		m_oscTxRx->sendOscMessage("/showUI", (int)1);
+	}
+	else
+	{
+		// hide UI
+		m_oscTxRx->sendOscMessage("/showUI", (int)0);
+	}
+}
+
+void MixedMethodsComponent::setLocalIpAddress(String ip)
+{
+	localIpAddress = ip;
 }
 
 void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 {
-	// CONTROL BUTTONS
-	if (message.size() == 1 && message.getAddressPattern() == "/button" && message[0].isString())
+	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+	if (trial != nullptr)
 	{
-		if (message[0].getString() == "play")
+		// CONTROL BUTTONS
+		if (message.size() == 1 && message.getAddressPattern() == "/button" && message[0].isString())
 		{
-			m_player->play();
+			if (message[0].getString() == "play")
+			{
+				m_player->play();
+			}
+			else if (message[0].getString() == "stop")
+			{
+				m_player->stop();
+			}
+			else if (message[0].getString() == "loop")
+			{
+				m_player->loop(!m_player->checkLoopStatus());
+			}
+			else if (message[0].getString() == "A")
+			{
+				if (selectTConditionAButton.isVisible()) selectTConditionAButton.triggerClick();
+			}
+			else if (message[0].getString() == "B")
+			{
+				if (selectTConditionBButton.isVisible()) selectTConditionBButton.triggerClick();
+			}
+			else if (message[0].getString() == "reference")
+			{
+				if (selectReferenceButton.isVisible()) selectReferenceButton.triggerClick();
+			}
+			else if (message[0].getString() == "prev_trial")
+			{
+				prevTrialButton.triggerClick();
+			}
+			else if (message[0].getString() == "next_trial")
+			{
+				nextTrialButton.triggerClick();
+			}
+			else if (message[0].getString() == "finish")
+			{
+				endTestButton.triggerClick();
+			}
 		}
-		else if (message[0].getString() == "stop")
-		{
-			m_player->stop();
-		}
-		else if (message[0].getString() == "loop")
-		{
-			m_player->loop(!m_player->checkLoopStatus());
-		}
-		else if (message[0].getString() == "A")
-		{
-			if (selectTConditionAButton.isVisible()) selectTConditionAButton.triggerClick();
-		}
-		else if (message[0].getString() == "B")
-		{
-			if (selectTConditionBButton.isVisible()) selectTConditionBButton.triggerClick();
-		}
-		else if (message[0].getString() == "reference")
-		{
-			if (selectReferenceButton.isVisible()) selectReferenceButton.triggerClick();
-		}
-		else if (message[0].getString() == "condA") { if (selectConditionButtonArray[0] != nullptr) selectConditionButtonArray[0]->triggerClick(); }
-		else if (message[0].getString() == "condB") { if (selectConditionButtonArray[1] != nullptr) selectConditionButtonArray[1]->triggerClick(); }
-		else if (message[0].getString() == "condC") { if (selectConditionButtonArray[2] != nullptr) selectConditionButtonArray[2]->triggerClick(); }
-		else if (message[0].getString() == "condD") { if (selectConditionButtonArray[3] != nullptr) selectConditionButtonArray[3]->triggerClick(); }
-		else if (message[0].getString() == "condE") { if (selectConditionButtonArray[4] != nullptr) selectConditionButtonArray[4]->triggerClick(); }
-		else if (message[0].getString() == "condF") { if (selectConditionButtonArray[5] != nullptr) selectConditionButtonArray[5]->triggerClick(); }
-		else if (message[0].getString() == "condG") { if (selectConditionButtonArray[6] != nullptr) selectConditionButtonArray[6]->triggerClick(); }
-		else if (message[0].getString() == "condH") { if (selectConditionButtonArray[7] != nullptr) selectConditionButtonArray[7]->triggerClick(); }
-		else if (message[0].getString() == "condI") { if (selectConditionButtonArray[8] != nullptr) selectConditionButtonArray[8]->triggerClick(); }
-		else if (message[0].getString() == "condJ") { if (selectConditionButtonArray[9] != nullptr) selectConditionButtonArray[9]->triggerClick(); }
-		else if (message[0].getString() == "condK") { if (selectConditionButtonArray[10] != nullptr) selectConditionButtonArray[10]->triggerClick(); }
 
-		else if (message[0].getString() == "prev_trial")
+		// CONDITION TRIGGER BUTTONS
+		if (message.size() == 1 && message.getAddressPattern() == "/condButton" && message[0].isInt32())
 		{
-			prevTrialButton.triggerClick();
+			int sliderIndex = message[0].getInt32();
+			if (selectConditionButtonArray[sliderIndex] != nullptr)
+				selectConditionButtonArray[sliderIndex]->triggerClick();
 		}
-		else if (message[0].getString() == "next_trial")
-		{
-			nextTrialButton.triggerClick();
-		}
-	}
 
-	// CONTROL SLIDERS
-	if (message.size() == 2 && message.getAddressPattern() == "/slider" && message[0].isFloat32() && message[1].isFloat32())
-	{
-		ratingSliderArray[(int)message[0].getFloat32()]->setValue(message[1].getFloat32());
+		// CONTROL SLIDERS
+		if (message.size() == 2 && message.getAddressPattern() == "/slider" && message[0].isInt32() && message[1].isFloat32())
+		{
+			int sliderIndex = message[0].getInt32();
+			if (ratingSliderArray[sliderIndex] != nullptr)
+				ratingSliderArray[sliderIndex]->setValue(message[1].getFloat32());
+		}
 	}
 }
 
@@ -711,8 +733,32 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 				trial->setLoopStart(static_cast<float>(m_player->getPlaybackStartOffset()));
 				trial->setLoopEnd(static_cast<float>(m_player->getPlaybackEndOffset()));
 				trial->setLooping(static_cast<float>(m_player->getLoopingState()));
-				updateRemoteInterface();
+				updateRemoteInterface(true);
 			}
 		}
+	}
+}
+
+void MixedMethodsComponent::startPlayer()
+{
+	if (m_delayStart)
+		startTimer(1); // start timer with 1 ms resolution
+	else
+		m_player->play();
+}
+
+void MixedMethodsComponent::timerCallback()
+{
+	// int timeToWait = 20; // in ms
+	int timeToWait = 100; // in ms (for Quest)
+	if (m_delayedPlayCounter >= timeToWait)
+	{
+		m_player->play();
+		stopTimer();
+		m_delayedPlayCounter = 0;
+	}
+	else
+	{
+		m_delayedPlayCounter++;
 	}
 }

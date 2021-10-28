@@ -2,7 +2,6 @@
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "AmbixLoader.h"
-#include "ROM.h"
 #include "Maths.h"
 
 class LoudspeakerRenderer

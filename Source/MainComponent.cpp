@@ -12,12 +12,14 @@ MainComponent::MainComponent()
 	// setup loudspeaker renderer
 	m_loudspeakerRenderer.addChangeListener(this);
 
+	oscTxRx.addChangeListener(this); // to display osc +error messages in the log window
+
 	// setup binaural renderer, pass the osc transceiver
 	oscTxRx.addListener(&m_binauralRenderer);
 	m_binauralRenderer.addListener(&m_rendererView);
 	m_binauralRenderer.addChangeListener(this);
 	m_binauralRenderer.setOrder(1);
-	m_binauralRenderer.loadStandardDefault(); // load standard configuration
+	//m_binauralRenderer.loadStandardDefault(); // load standard configuration
 
 	m_rendererView.init(&m_loudspeakerRenderer, &m_binauralRenderer);
 	m_rendererView.addChangeListener(this);
@@ -53,9 +55,24 @@ MainComponent::MainComponent()
 	clientTxIpLabel.setJustificationType(Justification::centred);
 	clientTxPortLabel.setJustificationType(Justification::centred);
 	clientRxPortLabel.setJustificationType(Justification::centred);
+	clientTxIpLabel.onTextChange = [this]
+	{
+		lastRemoteIpAddress = clientTxIpLabel.getText();
+		updateOscSettings(oscTxRx.isConnected());
+	};
+	clientTxPortLabel.onTextChange = [this] {updateOscSettings(oscTxRx.isConnected()); };
+	clientRxPortLabel.onTextChange = [this] {updateOscSettings(oscTxRx.isConnected()); };
 	addAndMakeVisible(clientTxIpLabel);
 	addAndMakeVisible(clientTxPortLabel);
 	addAndMakeVisible(clientRxPortLabel);
+
+	enableLocalIp.setButtonText("Local IP");
+	enableLocalIp.setToggleState(false, dontSendNotification);
+	enableLocalIp.onClick = [this]
+	{
+		updateOscSettings(oscTxRx.isConnected());
+	};
+	addAndMakeVisible(enableLocalIp);
 
 	connectOscButton.setButtonText("Connect OSC");
 	connectOscButton.addListener(this);
@@ -74,7 +91,6 @@ MainComponent::MainComponent()
 	m_mixedMethods.addChangeListener(this);
 	addChildComponent(m_mixedMethods);
 
-	// localisation component temporarily on top of the session form and mixed methods
 	m_localisationComponent.init(&oscTxRx, &m_stimulusPlayer, &m_binauralRenderer);
 	m_localisationComponent.addChangeListener(this);
 	addChildComponent(m_localisationComponent);
@@ -98,6 +114,7 @@ MainComponent::MainComponent()
 	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
+	//showTestInterface.setEnabled(false);
 
 	openRouter.setButtonText("Output Routing");
 	openRouter.addListener(this);
@@ -113,7 +130,7 @@ MainComponent::MainComponent()
 	lookAndFeel.setColour(Slider::trackColourId, Colour(12, 25, 39));
 
 	loadSettings();
-	connectOscButton.triggerClick(); // connect OSC on startup
+	updateOscSettings(true);
 }
 
 MainComponent::~MainComponent()
@@ -198,7 +215,7 @@ void MainComponent::paint(Graphics& g)
 	}
 	else
 	{
-		juce::Rectangle<int> oscRect(250, 10, 400, 150);        // osc status / vr interface status
+		juce::Rectangle<int> oscRect(230, 10, 420, 150);        // osc status / vr interface status
 
 		g.setColour(Colours::black);
 		g.drawRect(oscRect, 1);
@@ -207,10 +224,10 @@ void MainComponent::paint(Graphics& g)
 		// OSC WINDOW
 		g.setColour(getLookAndFeel().findColour(Label::textColourId));
 		g.setFont(14.0f);
-		g.drawText("IP", 310, 10, 50, 25, Justification::centredLeft, true);
-		g.drawText("Send to", 435, 10, 60, 25, Justification::centredLeft, true);
-		g.drawText("Receive at", 490, 10, 60, 25, Justification::centredLeft, true);
-		g.drawText("Client", 260, 35, 50, 25, Justification::centredLeft, true);
+		g.drawText("Remote interface IP", 312, 10, 120, 25, Justification::centredLeft, true);
+		g.drawText("Send to", 436, 10, 60, 25, Justification::centredLeft, true);
+		g.drawText("Receive at", 493, 10, 60, 25, Justification::centredLeft, true);
+		//g.drawText("Remote interface", 220, 10, 70, 50, Justification::centredLeft, true);
 	}
 }
 
@@ -242,6 +259,8 @@ void MainComponent::resized()
 		clientTxPortLabel.setBounds(435, 35, 55, 25);
 		clientRxPortLabel.setBounds(495, 35, 55, 25);
 
+		enableLocalIp.setBounds(230, 35, 80, 25);
+
 		logWindow.setBounds(10, 660, 640, 130);
 
 		showMixedComp.setBounds(310, 105, 115, 25);
@@ -261,29 +280,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	}
 	else if (buttonThatWasClicked == &connectOscButton)
 	{
-		if (!oscTxRx.isConnected())
-		{
-			// OSC sender and receiver connect
-			String clientIp = clientTxIpLabel.getText();
-			int clientSendToPort = clientTxPortLabel.getText().getIntValue();
-			int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
-			oscTxRx.connectTxRx(clientIp, clientSendToPort, clientReceiveAtPort);
-		}
-		else
-		{
-			oscTxRx.disconnectTxRx();
-		}
-
-		if (oscTxRx.isConnected())
-		{
-			connectOscButton.setColour(TextButton::buttonColourId, Colours::green);
-			connectOscButton.setButtonText("OSC connected");
-		}
-		else
-		{
-			connectOscButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
-			connectOscButton.setButtonText("Connect OSC");
-		}
+		updateOscSettings(!oscTxRx.isConnected());
 	}
 	else if (buttonThatWasClicked == &showMixedComp)
 	{
@@ -302,13 +299,18 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_stimulusPlayer.setShowTest(show);
 		if (m_audioSetup.m_shouldBeVisible) m_audioSetup.setVisible(!show);
+
+		showMixedComp.setVisible(!show);
+		showLocComp.setVisible(!show);
 		m_rendererView.setVisible(!show);
 		m_headphoneCompensation.setVisible(!show);
+		openRouter.setVisible(!show);
 		openAudioDeviceManager.setVisible(!show);
 		connectOscButton.setVisible(!show);
 		clientTxIpLabel.setVisible(!show);
 		clientTxPortLabel.setVisible(!show);
 		clientRxPortLabel.setVisible(!show);
+		enableLocalIp.setVisible(!show);
 		logWindow.setVisible(!show);
 		resized();
 	}
@@ -321,11 +323,68 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	repaint();
 }
 
+void MainComponent::updateOscSettings(bool keepConnected)
+{
+	auto addresses = IPAddress::getAllAddresses(false);
+	String localIpAddress = "127.0.0.1";
+
+	for (auto& a : addresses)
+	{
+		if (a.toString().contains("192.168"))
+		{
+			localIpAddress = a.toString();
+		}
+	}
+
+	m_mixedMethods.setLocalIpAddress(localIpAddress);
+
+	if (enableLocalIp.getToggleState())
+	{
+		clientTxIpLabel.setText(localIpAddress, dontSendNotification);
+		clientTxIpLabel.setEnabled(false);
+	}
+	else
+	{
+		clientTxIpLabel.setText(lastRemoteIpAddress, dontSendNotification);
+		clientTxIpLabel.setEnabled(true);
+	}
+
+	if (keepConnected)
+	{
+		if (oscTxRx.isConnected())
+		{
+			oscTxRx.disconnectTxRx();
+		}
+
+		// OSC sender and receiver connect
+		String clientIp = clientTxIpLabel.getText();
+		int clientSendToPort = clientTxPortLabel.getText().getIntValue();
+		int clientReceiveAtPort = clientRxPortLabel.getText().getIntValue();
+		oscTxRx.connectTxRx(clientIp, clientSendToPort, clientReceiveAtPort);
+	}
+	else
+	{
+		oscTxRx.disconnectTxRx();
+	}
+
+	if (oscTxRx.isConnected())
+	{
+		connectOscButton.setColour(TextButton::buttonColourId, Colours::green);
+		connectOscButton.setButtonText("OSC connected");
+	}
+	else
+	{
+		connectOscButton.setColour(TextButton::buttonColourId, Component::findColour(TextButton::buttonColourId));
+		connectOscButton.setButtonText("Connect OSC");
+	}
+}
+
 void MainComponent::formCompleted()
 {
 	m_mixedMethods.loadTestSession();
 	m_mixedMethods.setVisible(true);
 	m_rendererView.setTestInProgress(true);
+	showTestInterface.setToggleState(true, sendNotification);
 }
 
 void MainComponent::testCompleted()
@@ -333,6 +392,7 @@ void MainComponent::testCompleted()
 	m_testSessionForm.reset();
 	m_testSessionForm.setVisible(true);
 	m_rendererView.setTestInProgress(false);
+	showTestInterface.setToggleState(false, sendNotification);
 }
 
 // LOG WINDOW
@@ -386,6 +446,14 @@ void MainComponent::changeListenerCallback(ChangeBroadcaster* source)
 			m_localisationComponent.currentMessage.clear();
 		}
 	}
+	else if (source == &oscTxRx)
+	{
+		if (oscTxRx.currentMessage != "")
+		{
+			logWindowMessage += "OscTxRx: " + oscTxRx.currentMessage;
+			oscTxRx.currentMessage.clear();
+		}
+	}
 
 	logWindow.setText(logWindowMessage);
 	logWindow.moveCaretToEnd();
@@ -416,7 +484,8 @@ void MainComponent::loadSettings()
 	if (appSettings.getUserSettings()->getBoolValue("loadSettingsFile"))
 	{
 		// osc
-		clientTxIpLabel.setText(appSettings.getUserSettings()->getValue("clientTxIp"), dontSendNotification);
+		enableLocalIp.setToggleState(appSettings.getUserSettings()->getBoolValue("localIpEnabled"), dontSendNotification);
+		lastRemoteIpAddress = appSettings.getUserSettings()->getValue("clientTxIp");
 		clientTxPortLabel.setText(appSettings.getUserSettings()->getValue("clientTxPort"), dontSendNotification);
 		clientRxPortLabel.setText(appSettings.getUserSettings()->getValue("clientRxPort"), dontSendNotification);
 
@@ -433,6 +502,10 @@ void MainComponent::loadSettings()
 		m_lspkRouter.loadRoutingFile(appSettings.getUserSettings()->getValue("routingFile"));
 		m_lspkRouter.loadCalibrationFile(appSettings.getUserSettings()->getValue("calibrationFile"));
 	}
+	else
+	{
+		m_rendererView.setCurrentTab("2");
+	}
 }
 
 void MainComponent::saveSettings()
@@ -447,7 +520,8 @@ void MainComponent::saveSettings()
 	}
 
 	// osc
-	appSettings.getUserSettings()->setValue("clientTxIp", clientTxIpLabel.getText());
+	appSettings.getUserSettings()->setValue("localIpEnabled", enableLocalIp.getToggleState());
+	appSettings.getUserSettings()->setValue("clientTxIp", lastRemoteIpAddress);
 	appSettings.getUserSettings()->setValue("clientTxPort", clientTxPortLabel.getText());
 	appSettings.getUserSettings()->setValue("clientRxPort", clientRxPortLabel.getText());
 

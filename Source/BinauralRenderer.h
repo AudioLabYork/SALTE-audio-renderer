@@ -1,12 +1,11 @@
 #pragma once
 
 #include "../JuceLibraryCode/JuceHeader.h"
-#include <convoengine.h>
+#include "convoengine.h"
+#include "DualBandFilter.h"
 #include "AmbisonicRotation.h"
 #include "OscTransceiver.h"
-#include "SOFAReader.h"
 #include "AmbixLoader.h"
-#include "ROM.h"
 #include "Maths.h"
 
 class BinauralRenderer
@@ -51,16 +50,13 @@ public:
 	void addHRIR(const AudioBuffer<float>& buffer);
 	bool uploadHRIRsToEngine();
 
-	void loadStandardDefault();
 	void loadAmbixFile(const File& ambixFile);
-	void loadHRIRsFromSofaFile(const File& sofaFile);
 
 	class Listener
 	{
 	public:
 		virtual ~Listener() = default;
 		virtual void ambixFileLoaded(const File& file) = 0;
-		virtual void sofaFileLoaded(const File& file) = 0;
 	};
 
 	void addListener(Listener* newListener);
@@ -71,8 +67,6 @@ private:
 	void updateMatrices();
 
 	bool convertHRIRToSHDHRIR();
-
-	void getMaxReWeights(std::vector<float>& weights);
 
 	CriticalSection m_procLock;
 
@@ -94,19 +88,15 @@ private:
 	std::vector<AudioBuffer<float>> m_hrirShdBuffers;
 
 	std::vector<float> m_basicDecodeMatrix;
-	std::vector<float> m_weightedDecodeMatrix;
 	std::vector<float> m_basicDecodeTransposeMatrix;
-	std::vector<float> m_maxreDecodeTransposeMatrix;
 
 	std::vector<float> m_azi;
 	std::vector<float> m_ele;
 
+	DualBandFilter m_dbFilter;
 	AmbisonicRotation m_headTrackRotator;
 
 	std::vector<std::unique_ptr<WDL_ConvolutionEngine>> m_convEngines;
-
-	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_lowPass;
-	dsp::ProcessorDuplicator<dsp::FIR::Filter<float>, dsp::FIR::Coefficients<float>> m_highPass;
 
 	bool m_enableRenderer;
 	bool m_enableDualBand;

@@ -88,6 +88,9 @@ public:
 	void setTrialInstruction(const String& instruction);
 	String getTrialInstruction() const;
 
+	void setTrial360Video(const String& filename); // 360 video loaded in the SALTE VR interface
+	String getTrial360Video() const;
+
 	void addMCondition(MushraCondition* condition);
 	void addMReference(MushraReference* reference);
 	void addTAttribute(TS26259Attribute* attribute);
@@ -122,6 +125,9 @@ private:
 	String m_trialId;
 	String m_trialName;
 	String m_trialInstruction;
+
+	// salte vr settings
+	String m_video360filename;
 
 	OwnedArray<MushraCondition> m_MConditions;
 	OwnedArray<MushraReference> m_MReferences;

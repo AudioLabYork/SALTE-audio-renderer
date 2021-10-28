@@ -32,6 +32,7 @@ void BinauralHeadView::setHeadOrientation(float roll, float pitch, float yaw)
 
 void BinauralHeadView::newOpenGLContextCreated()
 {
+	using namespace ::juce::gl;
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	createShaders();
 }
@@ -43,6 +44,7 @@ void BinauralHeadView::paint(Graphics& g)
 
 void BinauralHeadView::renderOpenGL()
 {
+	using namespace ::juce::gl;
 	jassert(OpenGLHelpers::isContextActive());
 
 	auto desktopScale = (float)m_renderingContext.getRenderingScale();

@@ -153,6 +153,7 @@ void AmbixLoader::parseFile(const File& file)
 					columns++;
 				}
 				m_numAmbiChans = columns;
+				m_order = sqrt(m_numAmbiChans) - 1;
 			}
 			m_numLsChans = rows;
 		}

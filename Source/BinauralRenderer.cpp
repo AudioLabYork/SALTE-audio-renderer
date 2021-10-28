@@ -11,10 +11,8 @@ BinauralRenderer::BinauralRenderer()
 	, m_pitch(0.0f)
 	, m_roll(0.0f)
 	, m_enableRenderer(false)
-	, m_enableDualBand(false)
+	, m_enableDualBand(true)
 	, m_enableRotation(true)
-	, m_lowPass(new dsp::FIR::Coefficients<float>(order_1_lo_band_48, 257))
-	, m_highPass(new dsp::FIR::Coefficients<float>(order_1_hi_band_48, 257))
 {
 }
 
@@ -89,26 +87,6 @@ void BinauralRenderer::processOscMessage(const OSCMessage& message)
 
 		setHeadTrackingData(roll, pitch, yaw);
 	}
-
-	if (message.size() == 1 && message.getAddressPattern() == "/rendering/loadsofa" && message[0].isString())
-	{
-		File sourcePath = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getChildFile("SOFA");
-
-		if (sourcePath.exists())
-		{
-			String filename = message[0].getString();
-			sourcePath = sourcePath.getChildFile(filename);
-
-			if (sourcePath.existsAsFile())
-			{
-				loadHRIRsFromSofaFile(sourcePath);
-			}
-			else
-			{
-				sendMsgToLogWindow("SOFA file could not be found");
-			}
-		}
-	}
 }
 
 void BinauralRenderer::setOrder(const int order)
@@ -158,53 +136,12 @@ void BinauralRenderer::setDecodingMatrix(std::vector<float>& decodeMatrix)
 	m_basicDecodeMatrix = decodeMatrix;
 }
 
-void BinauralRenderer::getMaxReWeights(std::vector<float>& weights)
-{
-	weights.resize(m_numAmbiChans * m_numAmbiChans);
-
-	const float x = cosf(137.9f * (MathConstants<float>::pi / 180.0f) / (m_order + 1.51f));
-	int idx = 0;
-	float p;
-	float sum = 0;
-	float sump2 = 0;
-
-	for (int n = 0; n <= m_order; n++)
-	{
-		p = legendreP(n, x);
-
-		for (int i = 0; i < 2 * n + 1; i++)
-		{
-			weights[(idx + i) * m_numAmbiChans + (idx + i)] = p;
-			sum += p;
-			sump2 += (p * p);
-		}
-
-		idx += 2 * n + 1;
-	}
-
-	float preserve = sqrt(m_numLsChans / sump2);
-
-	for (int i = 0; i < weights.size(); ++i)
-		weights[i] = weights[i] * preserve;
-}
-
 void BinauralRenderer::updateMatrices()
 {
 	ScopedLock lock(m_procLock);
 
 	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
 	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
-
-	std::vector<float> maxReWeights;
-	getMaxReWeights(maxReWeights);
-
-	m_weightedDecodeMatrix.resize(m_numLsChans * m_numAmbiChans);
-	mat_mult(m_weightedDecodeMatrix.data(), m_basicDecodeMatrix.data(), maxReWeights.data(), m_numLsChans, m_numAmbiChans, m_numAmbiChans, m_numAmbiChans);
-
-	m_basicDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
-	m_maxreDecodeTransposeMatrix.resize(m_numAmbiChans * m_numLsChans);
-	mat_trans(m_basicDecodeTransposeMatrix.data(), m_basicDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
-	mat_trans(m_maxreDecodeTransposeMatrix.data(), m_weightedDecodeMatrix.data(), m_numLsChans, m_numAmbiChans);
 }
 
 void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
@@ -245,7 +182,7 @@ void BinauralRenderer::enableRenderer(bool enable)
 void BinauralRenderer::enableDualBand(bool enable)
 {
 	m_enableDualBand = enable;
-	uploadHRIRsToEngine();
+	//uploadHRIRsToEngine();
 }
 
 void BinauralRenderer::enableRotation(bool enable)
@@ -267,11 +204,6 @@ void BinauralRenderer::prepareToPlay(int samplesPerBlockExpected, double sampleR
 		m_workingBuffer.setSize(64, m_blockSize);
 		m_convBuffer.setSize(2, m_blockSize);
 	}
-
-	ProcessSpec spec = { m_sampleRate, m_blockSize, 2 };
-
-	m_lowPass.prepare(spec);
-	m_highPass.prepare(spec);
 }
 
 void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
@@ -280,6 +212,9 @@ void BinauralRenderer::processBlock(AudioBuffer<float>& buffer)
 
 	if (!m_enableRenderer || buffer.getNumChannels() <= 2)
 		return;
+
+	if (m_enableDualBand)
+		m_dbFilter.process(buffer); // preprocess buffer with shelf filters
 
 	if (m_enableRotation)
 		m_headTrackRotator.process(buffer);
@@ -377,17 +312,11 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 		return false;
 	}
 
-	int filterTaps = 0;
-
-	if (m_enableDualBand)
-		filterTaps = 257;
-
 	// clear the current SHD HRIR as this process will create new ones
 	m_hrirShdBuffers.clear();
 
-	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
-	AudioBuffer<float> basicBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
-	AudioBuffer<float> weightedBuffer(2, m_hrirBuffers[0].getNumSamples() + filterTaps);
+	AudioBuffer<float> hrirShdBuffer(2, m_hrirBuffers[0].getNumSamples());
+	AudioBuffer<float> basicBuffer(2, m_hrirBuffers[0].getNumSamples());
 
 	for (int i = 0; i < m_numAmbiChans; ++i)
 	{
@@ -396,25 +325,10 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 		for (int j = 0; j < m_numLsChans; ++j)
 		{
 			basicBuffer.clear();
-			weightedBuffer.clear();
 
 			for (int n = 0; n < m_hrirBuffers[j].getNumChannels(); ++n)
 			{
 				basicBuffer.copyFrom(n, 0, m_hrirBuffers[j].getReadPointer(n), m_hrirBuffers[j].getNumSamples());
-				weightedBuffer.copyFrom(n, 0, m_hrirBuffers[j].getReadPointer(n), m_hrirBuffers[j].getNumSamples());
-			}
-
-			if (m_enableDualBand)
-			{
-				dsp::AudioBlock<float> basicAudioBlock(basicBuffer);
-				dsp::ProcessContextReplacing<float> basicContextReplacing(basicAudioBlock);
-				m_lowPass.reset();
-				m_lowPass.process(basicContextReplacing);
-
-				dsp::AudioBlock<float> weightedAudioBlock(weightedBuffer);
-				dsp::ProcessContextReplacing<float> weightedContextReplacing(weightedAudioBlock);
-				m_highPass.reset();
-				m_highPass.process(weightedContextReplacing);
 			}
 
 			for (int k = 0; k < 2; ++k)
@@ -423,12 +337,6 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 
 				const float basicMatrixIdx = m_basicDecodeTransposeMatrix[idx];
 				hrirShdBuffer.addFrom(k, 0, basicBuffer.getWritePointer(k), basicBuffer.getNumSamples(), basicMatrixIdx);
-
-				if (m_enableDualBand)
-				{
-					const float weightedMatrixIdx = m_weightedDecodeMatrix[idx];
-					hrirShdBuffer.addFrom(k, 0, weightedBuffer.getWritePointer(k), weightedBuffer.getNumSamples(), weightedMatrixIdx);
-				}
 			}
 		}
 
@@ -439,107 +347,6 @@ bool BinauralRenderer::convertHRIRToSHDHRIR()
 	return true;
 }
 
-void BinauralRenderer::loadStandardDefault()
-{
-	clearVirtualLoudspeakers();
-
-	std::vector<float> azi;
-	std::vector<float> ele;
-	int chans = 0;
-
-	std::vector<float> decodeMatrix;
-
-	switch (m_order)
-	{
-	case 1:
-	{
-		chans = 6;
-		
-		for (int i = 0; i < chans; ++i)
-		{
-			azi.push_back(octo[0][i]);
-			ele.push_back(octo[1][i]);
-		}
-
-		setVirtualLoudspeakers(azi, ele, chans);
-
-		decodeMatrix.resize(24);
-		std::copy(octo_lo_dec_mat, octo_lo_dec_mat + 24, decodeMatrix.begin());
-		break;
-	}
-	case 3:
-	{
-		chans = 26;
-		
-		for (int i = 0; i < chans; ++i)
-		{
-			azi.push_back(leb26[0][i]);
-			ele.push_back(leb26[1][i]);
-		}
-		
-		setVirtualLoudspeakers(azi, ele, chans);
-
-		decodeMatrix.resize(416);
-		std::copy(leb26_lo_dec_mat, leb26_lo_dec_mat + 416, decodeMatrix.begin());
-		break;
-	}
-	case 5:
-	{
-		chans = 50;
-		
-		for (int i = 0; i < chans; ++i)
-		{
-			azi.push_back(leb50[0][i]);
-			ele.push_back(leb50[1][i]);
-		}
-
-		setVirtualLoudspeakers(azi, ele, chans);
-
-		decodeMatrix.resize(1250);
-		std::copy(leb50_lo_dec_mat, leb50_lo_dec_mat + 1250, decodeMatrix.begin());
-		break;
-	}
-	default:
-	{
-		chans = 6;
-
-		for (int i = 0; i < chans; ++i)
-		{
-			azi.push_back(octo[0][i]);
-			ele.push_back(octo[1][i]);
-		}
-
-		setVirtualLoudspeakers(azi, ele, chans);
-
-		decodeMatrix.resize(24);
-		std::copy(octo_lo_dec_mat, octo_lo_dec_mat + 24, decodeMatrix.begin());
-		break;
-	}
-	}
-
-	setDecodingMatrix(decodeMatrix);
-
-	updateMatrices();
-
-	clearHRIR();
-
-	AudioBuffer<float> hrir(2, 256);
-
-	for (int i = 0; i < chans; ++i)
-	{
-		int idx = sHrirIndexOrder1[i];
-
-		for (int j = 0; j < 2; ++j)
-			hrir.copyFrom(j, 0, sDefaultHrirs[idx][j], 256);
-
-		addHRIR(hrir);
-	}
-
-	uploadHRIRsToEngine();
-
-	sendMsgToLogWindow("successfully loaded: default configuration");
-}
-
 void BinauralRenderer::loadAmbixFile(const File& ambixFile)
 {
 	if (!ambixFile.existsAsFile())
@@ -548,6 +355,10 @@ void BinauralRenderer::loadAmbixFile(const File& ambixFile)
 	AmbixLoader loader(ambixFile);
 
 	clearVirtualLoudspeakers();
+
+	setOrder(loader.getAmbiOrder());
+
+	m_dbFilter.init(m_sampleRate, m_order); // initialize dual band filter
 
 	std::vector<float> azi;
 	std::vector<float> ele;
@@ -575,50 +386,6 @@ void BinauralRenderer::loadAmbixFile(const File& ambixFile)
 	sendMsgToLogWindow("successfully loaded: " + ambixFile.getFileName());
 
 	listeners.call([&](BinauralRenderer::Listener& l) { l.ambixFileLoaded(ambixFile); });
-}
-
-void BinauralRenderer::loadHRIRsFromSofaFile(const File& sofaFile)
-{
-	String sofaFilePath = sofaFile.getFullPathName();
-
-	SOFAReader reader(sofaFilePath.toStdString());
-
-	std::vector<float> azi;
-	std::vector<float> ele;
-	int chans = 0;
-
-	getVirtualLoudspeakers(azi, ele, chans);
-
-	// there needs to be some speakers loaded in order to use sofa files
-	if (chans <= 0)
-		sendMsgToLogWindow("failed to load: " + sofaFile.getFileName());
-
-	clearHRIR();
-
-	std::vector<float> hrir;
-
-	std::size_t channels = reader.getNumImpulseChannels();
-	std::size_t samples = reader.getNumImpulseSamples();
-
-	for (int i = 0; i < chans; ++i)
-	{
-		if (reader.getResponseForSpeakerPosition(hrir, azi[i], ele[i]))
-		{
-			AudioBuffer<float> inputBuffer(static_cast<int>(channels), static_cast<int>(samples));
-
-			for (int c = 0; c < channels; ++c)
-				inputBuffer.copyFrom(c, 0, hrir.data(), static_cast<int>(samples));
-
-			addHRIR(inputBuffer);
-		}
-	}
-
-	if (!uploadHRIRsToEngine())
-		sendMsgToLogWindow("failed to load: " + sofaFile.getFileName());
-
-	sendMsgToLogWindow("successfully loaded: " + sofaFile.getFileName());
-
-	listeners.call([&](BinauralRenderer::Listener& l) { l.sofaFileLoaded(sofaFile); });
 }
 
 void BinauralRenderer::addListener(Listener* newListener)

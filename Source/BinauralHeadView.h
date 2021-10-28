@@ -1,9 +1,5 @@
 #pragma once
 
-#if JUCE_MAC
-#import <OpenGL/gl.h>
-#endif
-
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "WavefrontObjParser.h"
 
@@ -68,7 +64,7 @@ private:
 			"\n"
 			"void main()\n"
 			"{\n"
-			"    vec4 light = viewMatrix * lightPosition;\n"
+			"    vec4 light = (viewMatrix * lightPosition) * modelMatrix;\n"
 			"    lightIntensity = dot(light, normal);\n"
 			"\n"
 			"    gl_Position = projectionMatrix * viewMatrix * modelMatrix * position;\n"
@@ -132,6 +128,7 @@ private:
 
 		void enable(OpenGLContext& glContext)
 		{
+			using namespace ::juce::gl;
 			if (position.get() != nullptr)
 			{
 				glContext.extensions.glVertexAttribPointer(position->attributeID, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), nullptr);
@@ -214,6 +211,7 @@ private:
 
 		void draw(OpenGLContext& glContext, Attributes& glAttributes)
 		{
+			using namespace ::juce::gl;
 			for (auto* vertexBuffer : vertexBuffers)
 			{
 				vertexBuffer->bind();
@@ -230,6 +228,7 @@ private:
 			VertexBuffer(OpenGLContext& context, WavefrontObjFile::Shape& aShape)
 				: openGLContext(context)
 			{
+				using namespace ::juce::gl;
 				numIndices = aShape.mesh.indices.size();
 
 				openGLContext.extensions.glGenBuffers(1, &vertexBuffer);
@@ -257,6 +256,7 @@ private:
 
 			void bind()
 			{
+				using namespace ::juce::gl;
 				openGLContext.extensions.glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 				openGLContext.extensions.glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
 			}

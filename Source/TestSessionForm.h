@@ -33,7 +33,6 @@ private:
 	void buttonClicked(Button* button) override;
 
 	TestSession* m_session;
-	Label m_labelSession;
 
 	Label m_labelSessionFile;
 	Label m_labelExportFile;
@@ -48,16 +47,14 @@ private:
 	TextButton m_createRndSubjectIDButton;
 	void createRandomSubjectID();
 
-	Label m_labelSubject;
-
 	Label m_labelSubjectID;
 	Label m_labelName;
 	Label m_labelAge;
-	Label m_labelGender;
+	Label m_labelEmail;
 	TextEditor m_editSubjectID;
 	TextEditor m_editName;
 	TextEditor m_editAge;
-	TextEditor m_editGender;
+	TextEditor m_editEmail;
 	ToggleButton m_btnAnon;
 	ToggleButton m_btnAgree;
 	TextButton m_btnBegin;

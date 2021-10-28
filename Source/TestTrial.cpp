@@ -3,7 +3,7 @@
 TestTrial::TestTrial()
 	: m_trialId(0)
 	, lastPlaybackHeadPosition(0.0f)
-	, isLooping(true)
+	, isLooping(false)
 	, loopStartTime(0.0f)
 	, loopEndTime(0.0f)
 {
@@ -57,6 +57,16 @@ void TestTrial::setTrialInstruction(const String& instruction)
 String TestTrial::getTrialInstruction() const
 {
 	return m_trialInstruction;
+}
+
+void TestTrial::setTrial360Video(const String& filename)
+{
+	m_video360filename = filename;
+}
+
+String TestTrial::getTrial360Video() const
+{
+	return m_video360filename;
 }
 
 void TestTrial::addMCondition(MushraCondition* condition)

@@ -12,12 +12,12 @@ OscTransceiver::~OscTransceiver()
 void OscTransceiver::connectTxRx(String ipToSendTo, int portToSendTo, int portToReceiveAt)
 {
 	if (!sender.connect(ipToSendTo, portToSendTo))
-		showConnectionErrorMessage("Error: could not connect sender to UDP port: " + String(portToSendTo));
+		sendMsgToLogWindow("Error: could not connect sender to UDP port: " + String(portToSendTo));
 	else
 		isSenderConnected = true;
 
 	if (!connect(portToReceiveAt))
-		showConnectionErrorMessage("Error: could not connect receiver to UDP port " + String(portToReceiveAt));
+		sendMsgToLogWindow("Error: could not connect receiver to UDP port " + String(portToReceiveAt));
 	else
 		isReceiverConnected = true;
 }
@@ -25,12 +25,12 @@ void OscTransceiver::connectTxRx(String ipToSendTo, int portToSendTo, int portTo
 void OscTransceiver::disconnectTxRx()
 {
 	if (!sender.disconnect())
-		showConnectionErrorMessage("Error: could not disconnect sender from the currently used UDP port");
+		sendMsgToLogWindow("Error: could not disconnect sender from the currently used UDP port");
 	else
 		isSenderConnected = false;
 
 	if (!disconnect())
-		showConnectionErrorMessage("Error: could not disconnect receiver from the currently used UDP port.");
+		sendMsgToLogWindow("Error: could not disconnect receiver from the currently used UDP port.");
 	else
 		isReceiverConnected = false;
 }
@@ -43,10 +43,16 @@ bool OscTransceiver::isConnected()
 		return false;
 }
 
-void OscTransceiver::showConnectionErrorMessage(const String& messageText)
+//void OscTransceiver::showConnectionErrorMessage(const String& messageText)
+//{
+//	AlertWindow::showMessageBoxAsync(AlertWindow::WarningIcon,
+//		"Connection error",
+//		messageText,
+//		"OK");
+//}
+
+void OscTransceiver::sendMsgToLogWindow(String message)
 {
-	AlertWindow::showMessageBoxAsync(AlertWindow::WarningIcon,
-		"Connection error",
-		messageText,
-		"OK");
+	currentMessage += message + "\n";
+	sendChangeMessage();  // broadcast change message to inform and update the editor
 }
