@@ -249,6 +249,31 @@ void AuditoryLocalisation::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_player)
 	{
+		// send OSC
+		double time = Time::getMillisecondCounterHiRes() - m_activationTime;
+
+		if (audioFilesArray[m_currentTrialIndex].exists() && m_player->checkPlaybackStatus())
+		{
+			String filename = audioFilesArray[m_currentTrialIndex].getFileName();
+			String vis = filename.fromFirstOccurrenceOf("vis_", false, false).upToFirstOccurrenceOf("_", false, false);
+			String azi = filename.fromFirstOccurrenceOf("azi_", false, false).upToFirstOccurrenceOf("_", false, false);
+			String ele = filename.fromFirstOccurrenceOf("ele_", false, false).dropLastCharacters(4);
+			time = Time::getMillisecondCounterHiRes() - m_activationTime;
+			m_oscTxRx->sendOscMessage("/currentTrial", (int)time, (int)(m_currentTrialIndex + 1), (String)filename);
+			time = Time::getMillisecondCounterHiRes() - m_activationTime;
+			m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)time, (int)vis.getIntValue(), (float)azi.getFloatValue(), (float)ele.getFloatValue());
+			//sendMsgToLogWindow("vis: " + vis + ", azi: " + azi + ", ele: " + ele + ", file: " + audioFilesArray[m_currentTrialIndex].getFileName());
+		}
+		else
+		{
+			String filename = "no stimulus present";
+			time = Time::getMillisecondCounterHiRes() - m_activationTime;
+			m_oscTxRx->sendOscMessage("/currentTrial", (int)time, (int)(m_currentTrialIndex + 1), (String)filename);
+			time = Time::getMillisecondCounterHiRes() - m_activationTime;
+			m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)time, (int)0, (float)0.f, (float)0.f);
+		}
+
+		// load next trial
 		if (!m_player->checkPlaybackStatus() && m_startStopTest.getToggleState())
 		{
 			if (m_autoNextTrial.getToggleState()) changeTrial(m_currentTrialIndex + 1);
@@ -278,13 +303,6 @@ void AuditoryLocalisation::changeTrial(int newTrialIndex)
 
 void AuditoryLocalisation::playStimulus()
 {
-	String filename = audioFilesArray[m_currentTrialIndex].getFileName();
-	String vis = filename.fromFirstOccurrenceOf("vis_", false, false).upToFirstOccurrenceOf("_", false, false);
-	String azi = filename.fromFirstOccurrenceOf("azi_", false, false).upToFirstOccurrenceOf("_", false, false);
-	String ele = filename.fromFirstOccurrenceOf("ele_", false, false).dropLastCharacters(4);
-	sendMsgToLogWindow("vis: " + vis + ", azi: " + azi + ", ele: " + ele + ", file: " + audioFilesArray[m_currentTrialIndex].getFileName());
-	m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)vis.getIntValue(), (float)azi.getFloatValue(), (float)ele.getFloatValue());
-
 	m_player->pause();
 	m_player->loadSourceToTransport(audioFilesArray[m_currentTrialIndex].getFullPathName());
 	m_player->play();
@@ -337,101 +355,30 @@ void AuditoryLocalisation::indexAudioFiles()
 	String testName = m_testStimuliName.getText();
 	int testReps = m_testStimuliReps.getText().getIntValue();
 
-	if (testName.isNotEmpty() && calName.isNotEmpty() && testReps > 0)
-	{
-		calFilesInDir.clear();
-		DirectoryIterator iter1(audioFilesDir, false, calName);
-		while (iter1.next())
-			calFilesInDir.add(iter1.getFile());
-
-		audioFilesInDir.clear();
-		DirectoryIterator iter2(audioFilesDir, false, testName);
-		while (iter2.next())
-			audioFilesInDir.add(iter2.getFile());
-
-		for (int i = 0; i < testReps; ++i)
-		{
-			std::random_device seed;
-			std::mt19937 rng(seed());
-
-			std::shuffle(calFilesInDir.begin(), calFilesInDir.end(), rng);
-			audioFilesArray.addArray(calFilesInDir);
-
-			std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
-			audioFilesArray.addArray(audioFilesInDir);
-		}
-
-		std::random_device seed;
-		std::mt19937 rng(seed());
-
-		std::shuffle(calFilesInDir.begin(), calFilesInDir.end(), rng);
-		audioFilesArray.addArray(calFilesInDir);
-	}
-
-	/*
-	audioFilesArray.clear();
-	Array<File> audioFilesInDir;
-	
-	// create the test file array (visual stimuli)
-	audioFilesInDir.clear();
-	String calName = m_calStimuliName.getText();
-	int calReps = m_calStimuliReps.getText().getIntValue();
-
 	if (calName.isNotEmpty() && calReps > 0)
 	{
-		DirectoryIterator iter1(audioFilesDir, false, calName);
-		while (iter1.next())
-			audioFilesInDir.add(iter1.getFile());
-
+		calFilesInDir.clear();
+		DirectoryIterator iter(audioFilesDir, false, calName);
+		while (iter.next())
+			calFilesInDir.add(iter.getFile());
 		for (int i = 0; i < calReps; ++i)
-		{
-			std::random_device seed;
-			std::mt19937 rng(seed());
-			std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
-			audioFilesArray.addArray(audioFilesInDir);
-		}
+			audioFilesArray.addArray(calFilesInDir);
 	}
-
-	// create the test file array (audio stimuli)
-	audioFilesInDir.clear();
-	String testName = m_testStimuliName.getText();
-	int testReps = m_testStimuliReps.getText().getIntValue();
 
 	if (testName.isNotEmpty() && testReps > 0)
 	{
-		DirectoryIterator iter2(audioFilesDir, false, testName);
-		while (iter2.next())
-			audioFilesInDir.add(iter2.getFile());
-
+		audioFilesInDir.clear();
+		DirectoryIterator iter(audioFilesDir, false, testName);
+		while (iter.next())
+			audioFilesInDir.add(iter.getFile());
 		for (int i = 0; i < testReps; ++i)
-		{
-			std::random_device seed;
-			std::mt19937 rng(seed());
-			std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
 			audioFilesArray.addArray(audioFilesInDir);
-		}
 	}
 
-	// repeat cal stimuli
-	audioFilesInDir.clear();
+	std::random_device seed;
+	std::mt19937 rng(seed());
+	std::shuffle(audioFilesArray.begin(), audioFilesArray.end(), rng);
 
-	if (calName.isNotEmpty() && calReps > 0)
-	{
-		DirectoryIterator iter1(audioFilesDir, false, calName);
-		while (iter1.next())
-			audioFilesInDir.add(iter1.getFile());
-
-		for (int i = 0; i < calReps; ++i)
-		{
-			std::random_device seed;
-			std::mt19937 rng(seed());
-			std::shuffle(audioFilesInDir.begin(), audioFilesInDir.end(), rng);
-			audioFilesArray.addArray(audioFilesInDir);
-		}
-	}
-	*/
-
-	/* 
 	bool dumpFileList = true;
 	if (dumpFileList)
 	{
@@ -452,7 +399,7 @@ void AuditoryLocalisation::indexAudioFiles()
 		for (int i = 0; i < audioFilesArray.size(); ++i)
 			fos << audioFilesArray[i].getFileName() + "\n";
 	}
-	*/
+
 
 	m_player->clearPlayer();
 	totalTimeOfAudioFiles = 0.0f;
