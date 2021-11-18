@@ -177,7 +177,7 @@ void TestSession::exportResults()
 	{
 		m_exportFile.create();
 		FileOutputStream fos(m_exportFile);
-		fos << "ses_date,sub_id,sub_name,sub_age,sub_gender,trial_id,attribute,condition_id,condB_id,score\n";
+		fos << "ses_date,sub_id,sub_name,sub_age,sub_email,trial_id,attribute,condition_id,condB_id,score\n";
 	}
 
 	if (m_exportFile.exists())

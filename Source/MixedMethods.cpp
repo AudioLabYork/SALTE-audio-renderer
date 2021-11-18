@@ -329,39 +329,13 @@ void MixedMethodsComponent::resized()
 
 void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 {
-	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
-
 	// MUSHRA
 	for (int i = 0; i < selectConditionButtonArray.size(); ++i)
 	{
 		if (buttonThatWasClicked == selectConditionButtonArray[i])
 		{
-			if (trial == nullptr)
-				return;
-
-			sendMsgToLogWindow("Condition name: " + trial->getMCondition(i)->name);
-
-			// player configuration
-			m_player->pause();
-			
-			// save the position as loading a new source sets the position back to 0
-			double position;
-			if(savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
-			m_player->loadSourceToTransport(trial->getMCondition(i)->filepath);
-			if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
-			m_player->setGain(trial->getMCondition(i)->gain);
-
-			// renderer configuration
-			m_renderer->setOrder(trial->getMCondition(i)->renderingOrder);
-
-			if (trial->getMCondition(i)->ambixConfig.isNotEmpty())
-				m_renderer->loadAmbixFile(File(trial->getMCondition(i)->ambixConfig));
-
-			// play the scene
-			startPlayer();
-
-			// light the button
-			selectConditionButtonArray[i]->setToggleState(true, dontSendNotification);
+			if (loadCondition("MushraCondition", i))
+				selectConditionButtonArray[i]->setToggleState(true, dontSendNotification);
 		}
 		else
 		{
@@ -371,56 +345,19 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 	if (buttonThatWasClicked == &selectReferenceButton)
 	{
-		if (trial == nullptr)
-			return;
-		
-		sendMsgToLogWindow("Condition name: " + trial->getMReference(0)->name);
-
-		m_player->pause();
-
-		double position;
-		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
-		m_player->loadSourceToTransport(trial->getMReference(0)->filepath);
-		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
-		m_player->setGain(trial->getMReference(0)->gain);
-
-		m_renderer->setOrder(trial->getMReference(0)->renderingOrder);
-
-		if (trial->getMReference(0)->ambixConfig.isNotEmpty())
-			m_renderer->loadAmbixFile(File(trial->getMReference(0)->ambixConfig));
-
-		startPlayer();
-
-		selectReferenceButton.setToggleState(true, dontSendNotification);
+		if (loadCondition("MushraReference", 0))
+			selectReferenceButton.setToggleState(true, dontSendNotification);
 	}
 	else
 	{
 		selectReferenceButton.setToggleState(false, dontSendNotification);
 	}
 
+	// TS
 	if (buttonThatWasClicked == &selectTConditionAButton)
 	{
-		if (trial == nullptr)
-			return;
-		
-		sendMsgToLogWindow("Condition name: " + trial->getTCondition(0)->name);
-
-		m_player->pause();
-		
-		double position;
-		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
-		m_player->loadSourceToTransport(trial->getTCondition(0)->filepath);
-		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
-		m_player->setGain(trial->getTCondition(0)->gain);
-
-		m_renderer->setOrder(trial->getTCondition(0)->renderingOrder);
-
-		if (trial->getTCondition(0)->ambixConfig.isNotEmpty())
-			m_renderer->loadAmbixFile(File(trial->getTCondition(0)->ambixConfig));
-
-		startPlayer();
-
-		selectTConditionAButton.setToggleState(true, dontSendNotification);
+		if (loadCondition("TCondition", 0))
+			selectTConditionAButton.setToggleState(true, dontSendNotification);
 	}
 	else
 	{
@@ -429,27 +366,8 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 	if (buttonThatWasClicked == &selectTConditionBButton)
 	{
-		if (trial == nullptr)
-			return;
-		
-		sendMsgToLogWindow("Condition name: " + trial->getTCondition(1)->name);
-		
-		m_player->pause();
-
-		double position;
-		if (savePbHeadPosOnCondChange) position = m_player->getPlaybackHeadPosition();
-		m_player->loadSourceToTransport(trial->getTCondition(1)->filepath);
-		if (savePbHeadPosOnCondChange) m_player->setPlaybackHeadPosition(position);
-		m_player->setGain(trial->getTCondition(1)->gain);
-
-		m_renderer->setOrder(trial->getTCondition(1)->renderingOrder);
-
-		if (trial->getTCondition(1)->ambixConfig.isNotEmpty())
-			m_renderer->loadAmbixFile(File(trial->getTCondition(1)->ambixConfig));
-
-		startPlayer();
-
-		selectTConditionBButton.setToggleState(true, dontSendNotification);
+		if (loadCondition("TCondition", 1))
+			selectTConditionBButton.setToggleState(true, dontSendNotification);
 	}
 	else
 	{
@@ -739,26 +657,89 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 	}
 }
 
-void MixedMethodsComponent::startPlayer()
+bool MixedMethodsComponent::loadCondition(String type, int i)
 {
-	if (m_delayStart)
-		startTimer(1); // start timer with 1 ms resolution
+	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
+
+	if (trial == nullptr)
+		return false;
+
+	String name, filepath, ambixConfig;
+	float gain;
+
+	if (type == "MushraCondition")
+	{
+		name = trial->getMCondition(i)->name;
+		filepath = trial->getMCondition(i)->filepath;
+		gain = trial->getMCondition(i)->gain;
+		ambixConfig = trial->getMCondition(i)->ambixConfig;
+	}
+	else if (type == "MushraReference")
+	{
+		name = trial->getMReference(i)->name;
+		filepath = trial->getMReference(i)->filepath;
+		gain = trial->getMReference(i)->gain;
+		ambixConfig = trial->getMReference(i)->ambixConfig;
+	}
+	else if (type == "TCondition")
+	{
+		name = trial->getTCondition(i)->name;
+		filepath = trial->getTCondition(i)->filepath;
+		gain = trial->getTCondition(i)->gain;
+		ambixConfig = trial->getTCondition(i)->ambixConfig;
+	}
 	else
-		m_player->play();
+		return false;
+
+	sendMsgToLogWindow("Condition name: " + name);
+	
+	// renderer configuration
+	if (ambixConfig.isNotEmpty() && ambixConfig != m_lastAmbixConfig)
+	{
+		m_renderer->loadAmbixFile(File(ambixConfig));
+		m_lastAmbixConfig = ambixConfig;
+	}
+
+	m_player->setGain(gain);
+
+	if (m_continuousPlayback)
+	{
+		if (filepath != m_lastStimulusPath)
+		{
+			// player configuration
+			m_player->pause();
+			// save the position as loading a new source sets the position back to 0
+			double position;
+			position = m_player->getPlaybackHeadPosition();
+			m_player->loadSourceToTransport(filepath);
+			m_lastStimulusPath = filepath;
+			m_player->setPlaybackHeadPosition(position);
+			m_player->play();
+		}
+	}
+	else
+	{
+		// stop and return to zero
+		m_player->stop();
+
+		// play the scene
+		if (m_delayStart)
+		{
+			m_time = Time::getMillisecondCounter();
+			startTimer(1); // start timer with 1 ms resolution
+		}
+		else
+			m_player->play();
+	}
 }
 
 void MixedMethodsComponent::timerCallback()
 {
-	// int timeToWait = 20; // in ms
 	int timeToWait = 100; // in ms (for Quest)
-	if (m_delayedPlayCounter >= timeToWait)
+	if (Time::getMillisecondCounter() - m_time >= timeToWait)
 	{
 		m_player->play();
 		stopTimer();
-		m_delayedPlayCounter = 0;
-	}
-	else
-	{
-		m_delayedPlayCounter++;
+		m_time = 0;
 	}
 }

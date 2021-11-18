@@ -55,12 +55,13 @@ private:
 	void updateRemoteInterface(bool testIsOn);
 	String localIpAddress;
 
-	void startPlayer();
+	bool loadCondition(String type, int i);
 	void timerCallback() override;
-	bool m_delayStart = true;
-	int m_delayedPlayCounter = 0;
-
-	bool savePbHeadPosOnCondChange = false;
+	bool m_delayStart = false;
+	int64 m_time = 0;
+	bool m_continuousPlayback = true;
+	String m_lastStimulusPath = "";
+	String m_lastAmbixConfig = "";
 
 	TextButton prevTrialButton, nextTrialButton, endTestButton;
 

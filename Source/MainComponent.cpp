@@ -320,6 +320,7 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		showMixedComp.setVisible(!show);
 		showLocComp.setVisible(!show);
+		showLoc2Comp.setVisible(!show);
 		m_rendererView.setVisible(!show);
 		m_headphoneCompensation.setVisible(!show);
 		openRouter.setVisible(!show);
