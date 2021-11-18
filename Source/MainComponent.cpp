@@ -95,6 +95,10 @@ MainComponent::MainComponent()
 	m_localisationComponent.addChangeListener(this);
 	addChildComponent(m_localisationComponent);
 
+	m_loc2Component.init(&oscTxRx, &m_stimulusPlayer, &m_binauralRenderer);
+	m_loc2Component.addChangeListener(this);
+	addChildComponent(m_loc2Component);
+
 	// log window
 	logWindow.setMultiLine(true);
 	logWindow.setReadOnly(true);
@@ -106,9 +110,13 @@ MainComponent::MainComponent()
 	showMixedComp.addListener(this);
 	addAndMakeVisible(showMixedComp);
 
-	showLocComp.setButtonText("Localisation");
+	showLocComp.setButtonText("Loc 1");
 	showLocComp.addListener(this);
 	addAndMakeVisible(showLocComp);
+
+	showLoc2Comp.setButtonText("Loc 2");
+	showLoc2Comp.addListener(this);
+	addAndMakeVisible(showLoc2Comp);
 
 	showTestInterface.setButtonText("Show test interface");
 	showTestInterface.setClickingTogglesState(true);
@@ -238,6 +246,7 @@ void MainComponent::resized()
 	m_testSessionForm.setBounds(10, 170, 640, 480);
 	m_mixedMethods.setBounds(10, 170, 640, 480);
 	m_localisationComponent.setBounds(10, 170, 640, 480);
+	m_loc2Component.setBounds(10, 170, 640, 480);
 
 	if (showOnlyTestInterface)
 	{
@@ -263,8 +272,9 @@ void MainComponent::resized()
 
 		logWindow.setBounds(10, 660, 640, 130);
 
-		showMixedComp.setBounds(310, 105, 115, 25);
-		showLocComp.setBounds(435, 105, 115, 25);
+		showMixedComp.setBounds(310, 105, 70, 45);
+		showLocComp.setBounds(390, 105, 70, 45);
+		showLoc2Comp.setBounds(470, 105, 70, 45);
 		showTestInterface.setBounds(560, 70, 80, 60);
 
 		openRouter.setBounds(660, 605, 240, 25);
@@ -286,11 +296,19 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	{
 		m_testSessionForm.setVisible(true);
 		m_localisationComponent.setVisible(false);
+		m_loc2Component.setVisible(false);
 	}
 	else if (buttonThatWasClicked == &showLocComp)
 	{
 		m_testSessionForm.setVisible(false);
 		m_localisationComponent.setVisible(true);
+		m_loc2Component.setVisible(false);
+	}
+	else if (buttonThatWasClicked == &showLoc2Comp)
+	{
+		m_testSessionForm.setVisible(false);
+		m_localisationComponent.setVisible(false);
+		m_loc2Component.setVisible(true);
 	}
 	else if (buttonThatWasClicked == &showTestInterface)
 	{

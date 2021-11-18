@@ -53,9 +53,9 @@ private:
 
 	Label m_lsAmbixFileLabel;
 	TextButton m_lsAmbixFileBrowse;
-
 	Label m_binAmbixFileLabel;
 	TextButton m_binAmbixFileBrowse;
+	File ambixFilesDir;
 
 	ToggleButton m_enableDualBand;
 

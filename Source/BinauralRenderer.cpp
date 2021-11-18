@@ -151,7 +151,8 @@ void BinauralRenderer::setHeadTrackingData(float roll, float pitch, float yaw)
 	m_pitch = -pitch;
 	m_yaw = -yaw;
 
-	m_headTrackRotator.updateEulerRPY(m_roll, m_pitch, m_yaw);
+	//m_headTrackRotator.updateEulerRPY(m_roll, m_pitch, m_yaw);
+	m_headTrackRotator.updateEulerYPR(m_yaw, -m_pitch, m_roll);
 }
 
 float BinauralRenderer::getRoll()

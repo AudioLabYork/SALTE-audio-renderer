@@ -7,6 +7,7 @@
 #include "TestSession.h"
 #include "TestSessionForm.h"
 #include "AuditoryLocalisation.h"
+#include "AuditoryLocalisation2.h"
 #include "RendererView.h"
 #include "StimulusPlayer.h"
 #include "LoudspeakerRenderer.h"
@@ -48,6 +49,7 @@ private:
 	RendererView m_rendererView;
 	MixedMethodsComponent m_mixedMethods;
 	AuditoryLocalisation m_localisationComponent;
+	AuditoryLocalisation2 m_loc2Component;
 	HeadphoneCompensation m_headphoneCompensation;
 	OutputRouting m_lspkRouter;
 
@@ -64,7 +66,7 @@ private:
 	Label clientTxIpLabel, clientTxPortLabel, clientRxPortLabel;
 	String lastRemoteIpAddress;
 	ToggleButton enableLocalIp;
-	TextButton showMixedComp, showLocComp;
+	TextButton showMixedComp, showLocComp, showLoc2Comp;
 	TextButton openRouter;
 	TextButton showTestInterface;
 	bool showOnlyTestInterface;

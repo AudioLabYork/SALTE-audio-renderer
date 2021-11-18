@@ -242,13 +242,14 @@ void RendererView::browseForLsAmbixConfigFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
 	FileChooser fc("Select Ambix Config file to open...",
-		File::getCurrentWorkingDirectory(),
+		ambixFilesDir,
 		"*.config",
 		true);
 
 	if (fc.browseForFileToOpen())
 	{
 		File chosenFile = fc.getResult();
+		ambixFilesDir = chosenFile.getParentDirectory();
 		m_lsRenderer->loadAmbixFile(chosenFile);
 		m_lsAmbixFileLabel.setText("AmbiX Config File: " + m_lsRenderer->getCurrentAmbixFileName(), NotificationType::dontSendNotification);
 	}
@@ -259,14 +260,14 @@ void RendererView::browseForBinAmbixConfigFile()
 {
 #if JUCE_MODAL_LOOPS_PERMITTED
 	FileChooser fc("Select Ambix Config file to open...",
-		File::getCurrentWorkingDirectory(),
+		ambixFilesDir,
 		"*.config",
 		true);
 
 	if (fc.browseForFileToOpen())
 	{
 		File chosenFile = fc.getResult();
-
+		ambixFilesDir = chosenFile.getParentDirectory();
 		m_binRenderer->loadAmbixFile(chosenFile);
 	}
 #endif
@@ -283,6 +284,7 @@ void RendererView::timerCallback()
 		if (m_enableMirrorView.getToggleState())
 			m_binauralHeadView.setHeadOrientation(m_binRenderer->getRoll(), m_binRenderer->getPitch(), -m_binRenderer->getYaw());
 		else
-			m_binauralHeadView.setHeadOrientation(m_binRenderer->getRoll(), m_binRenderer->getPitch(), m_binRenderer->getYaw() + 180);
+			// m_binauralHeadView.setHeadOrientation(m_binRenderer->getRoll(), m_binRenderer->getPitch(), m_binRenderer->getYaw() + 180);
+			m_binauralHeadView.setHeadOrientation(-m_binRenderer->getRoll(), m_binRenderer->getPitch(), m_binRenderer->getYaw() + 180.f);
 	}
 }

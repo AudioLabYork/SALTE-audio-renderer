@@ -278,35 +278,23 @@ void StimulusPlayer::timerCallback()
 
 void StimulusPlayer::browseForFile()
 {
-	auto chooser = std::make_unique<juce::FileChooser>("Select a Wave file to play...", audioFilesDir,"*.wav");
-	auto chooserFlags = juce::FileBrowserComponent::openMode
-		| juce::FileBrowserComponent::canSelectFiles;
+#if JUCE_MODAL_LOOPS_PERMITTED
+	FileChooser fc("Select a Wave file to play...",
+		audioFilesDir,
+		"*.wav", true);
 
-	chooser->launchAsync(chooserFlags, [this](const FileChooser& fc)
+	if (fc.browseForFileToOpen())
+	{
+		File file = fc.getResult();
+		if (file != File{})
 		{
-			File file = fc.getResult();
-			if (file != File{})
-			{
-				audioFilesDir = file.getParentDirectory();
-				clearPlayer();
-				cacheFileToPlayer(file.getFullPathName());
-				loadSourceToTransport(file.getFullPathName());
-			}
-		});
-
-
-	//FileChooser chooser("Select a Wave file to play...",
-	//	audioFilesDir,
-	//	"*.wav", true);
-
-	//if (chooser.browseForFileToOpen())
-	//{
-	//	
-	//	audioFilesDir = file.getParentDirectory();
-	//	clearPlayer();
-	//	cacheFileToPlayer(file.getFullPathName());
-	//	loadSourceToTransport(file.getFullPathName());
-	//}
+			audioFilesDir = file.getParentDirectory();
+			clearPlayer();
+			cacheFileToPlayer(file.getFullPathName());
+			loadSourceToTransport(file.getFullPathName());
+		}
+	}
+#endif
 }
 
 void StimulusPlayer::clearPlayer()
