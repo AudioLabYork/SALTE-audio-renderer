@@ -334,12 +334,15 @@ void StimulusPlayer::loadSourceToTransport(const String& fullPath)
 		auto source_chnum = audioFormatReaderSources[index]->getAudioFormatReader()->numChannels;
 		auto source_bitdepth = audioFormatReaderSources[index]->getAudioFormatReader()->bitsPerSample;
 
+		transportSource.stop();
 		transportSource.setSource(
 			source_ptr,
 			32768, // tells it to buffer this many samples ahead
 			&readAheadThread, // this is the background thread to use for reading-ahead
 			source_fs, // allows for sample rate correction
 			source_chnum); // the maximum number of channels that may need to be played
+
+		transportSource.setPosition(begOffsetTime);
 
 		playerThumbnail.createThumbnail(audioSourceFiles[index]);
 		loadedFileName.setText(audioSourceFiles[index].getFileName(), dontSendNotification);
@@ -401,8 +404,6 @@ void StimulusPlayer::play()
 	{
 		if ((m_state == Stopped) || (m_state == Paused) || (m_state == Pausing))
 			changeState(Starting);
-		//else if (m_state == Playing)
-		//	changeState(Pausing);
 	}
 }
 
@@ -440,7 +441,6 @@ void StimulusPlayer::changeState(TransportState newState)
 			playButton.setButtonText("Play");
 			playButton.setToggleState(false, NotificationType::dontSendNotification);
 			stopButton.setToggleState(true, NotificationType::dontSendNotification);
-			transportSource.setPosition(begOffsetTime);
 			sendChangeMessage(); // to inform test component that playback has stopped
 			break;
 		case Starting:
@@ -465,7 +465,7 @@ void StimulusPlayer::changeState(TransportState newState)
 			jassertfalse;
 			break;
 		}
-		//sendMsgToLogWindow("State: " + TransportStateString[m_state]);
+		sendMsgToLogWindow("State: " + TransportStateString[m_state]);
 	}
 }
 

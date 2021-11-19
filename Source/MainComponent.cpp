@@ -402,8 +402,8 @@ void MainComponent::formCompleted()
 {
 	m_mixedMethods.loadTestSession();
 	m_mixedMethods.setVisible(true);
-	m_rendererView.setTestInProgress(true);
-	showTestInterface.setToggleState(true, sendNotification);
+	//m_rendererView.setTestInProgress(true);
+	//showTestInterface.setToggleState(true, sendNotification);
 }
 
 void MainComponent::testCompleted()

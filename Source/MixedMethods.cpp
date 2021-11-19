@@ -90,6 +90,9 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		return;
 	}
 
+	if (m_player->checkPlaybackStatus()) m_player->stop();
+	m_player->clearPlayer();
+
 	ratingSliderArray.clear();
 	ratingReadouts.clear();
 	selectConditionButtonArray.clear();
@@ -260,6 +263,9 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 		endTestButton.setEnabled(false);
 
 	repaint();
+
+
+
 	updateRemoteInterface(true);
 }
 
@@ -382,10 +388,6 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		{
 			currentIndex--;
 			m_testSession->setCurrentTrialIndex(currentIndex);
-
-			m_player->stop();
-			m_player->clearPlayer();
-
 			loadTrial(currentIndex);
 		}
 	}
@@ -397,17 +399,13 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 		{
 			currentIndex++;
 			m_testSession->setCurrentTrialIndex(currentIndex);
-
-			m_player->stop();
-			m_player->clearPlayer();
-
 			loadTrial(currentIndex);
 		}
 	}
 	else if (buttonThatWasClicked == &endTestButton)
 	{
 		// save up and close
-		m_player->stop();
+		if (m_player->checkPlaybackStatus()) m_player->stop();
 		m_player->clearPlayer();
 
 		m_testSession->exportResults();
@@ -625,9 +623,9 @@ void MixedMethodsComponent::oscMessageReceived(const OSCMessage& message)
 		// CONDITION TRIGGER BUTTONS
 		if (message.size() == 1 && message.getAddressPattern() == "/condButton" && message[0].isInt32())
 		{
-			int sliderIndex = message[0].getInt32();
-			if (selectConditionButtonArray[sliderIndex] != nullptr)
-				selectConditionButtonArray[sliderIndex]->triggerClick();
+			int buttonIndex = message[0].getInt32();
+			if (selectConditionButtonArray[buttonIndex] != nullptr)
+				selectConditionButtonArray[buttonIndex]->triggerClick();
 		}
 
 		// CONTROL SLIDERS
@@ -711,6 +709,7 @@ bool MixedMethodsComponent::loadCondition(String type, int i)
 			// save the position as loading a new source sets the position back to 0
 			double position;
 			position = m_player->getPlaybackHeadPosition();
+			//m_player->stop();
 			m_player->loadSourceToTransport(filepath);
 			m_lastStimulusPath = filepath;
 			m_player->setPlaybackHeadPosition(position);
@@ -731,6 +730,11 @@ bool MixedMethodsComponent::loadCondition(String type, int i)
 		else
 			m_player->play();
 	}
+
+	if(!m_player->checkPlaybackStatus())
+		m_player->play();
+
+	return true;
 }
 
 void MixedMethodsComponent::timerCallback()
