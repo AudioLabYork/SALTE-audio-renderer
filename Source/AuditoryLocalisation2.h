@@ -34,11 +34,9 @@ private:
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;
 	BinauralRenderer* m_renderer;
-
 	TextButton m_chooseStimuliFolder;
-
-	Label m_calStimuliName, m_testStimuliName;
-	Label m_calStimuliReps, m_testStimuliReps;
+	Label m_testStimuliName;
+	Label m_testStimuliReps;
 
 	ToggleButton m_autoNextTrial, m_loopStimulus;
 	TextButton m_prevTrial, m_nextTrial;
@@ -47,19 +45,20 @@ private:
 	Label m_messageCounter;
 	TextEditor m_lastMessage, m_logHeaderTE;
 
-
-
 	Label m_distance;
 	ToggleButton m_horizonLocked, m_meshHorizonOn, m_pointerOn;
+	
 	void setHorizon();
-
 	void selectSrcPath();
-	void indexAudioFiles();
+	void createTestTrials();
 	String returnHHMMSS(double lengthInSeconds);
 	File audioFilesDir;
-	Array<File> audioFilesArray;
 	AudioFormatManager formatManager;
 	double totalTimeOfAudioFiles = 0;
+
+	Array<File> audioFilesArray;
+	Array<File> ambixConfigFilesArray;
+	StringArray testTrials;
 
 	int m_currentTrialIndex = 0;
 	void changeTrial(int newTrialIndex);

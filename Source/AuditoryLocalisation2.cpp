@@ -12,33 +12,19 @@ AuditoryLocalisation2::AuditoryLocalisation2()
 	m_chooseStimuliFolder.addListener(this);
 	addAndMakeVisible(m_chooseStimuliFolder);
 
-	//m_calStimuliName.setEditable(false, true, false);
-	//m_calStimuliName.setText("stim_vis_1_*.wav", dontSendNotification);
-	//m_calStimuliName.setColour(Label::outlineColourId, Colours::black);
-	//m_calStimuliName.setJustificationType(Justification::centred);
-	//m_calStimuliName.onTextChange = [this] { indexAudioFiles(); };
-	//addAndMakeVisible(m_calStimuliName);
+	m_testStimuliName.setEditable(false, true, false);
+	m_testStimuliName.setText("*.wav", dontSendNotification);
+	m_testStimuliName.setColour(Label::outlineColourId, Colours::black);
+	m_testStimuliName.setJustificationType(Justification::centred);
+	m_testStimuliName.onTextChange = [this] { createTestTrials(); };
+	addAndMakeVisible(m_testStimuliName);
 
-	//m_testStimuliName.setEditable(false, true, false);
-	//m_testStimuliName.setText("stim_vis_0_*.wav", dontSendNotification);
-	//m_testStimuliName.setColour(Label::outlineColourId, Colours::black);
-	//m_testStimuliName.setJustificationType(Justification::centred);
-	//m_testStimuliName.onTextChange = [this] { indexAudioFiles(); };
-	//addAndMakeVisible(m_testStimuliName);
-
-	//m_calStimuliReps.setEditable(false, true, false);
-	//m_calStimuliReps.setText("0", dontSendNotification);
-	//m_calStimuliReps.setColour(Label::outlineColourId, Colours::black);
-	//m_calStimuliReps.setJustificationType(Justification::centred);
-	//m_calStimuliReps.onTextChange = [this] { indexAudioFiles(); };
-	//addAndMakeVisible(m_calStimuliReps);
-
-	//m_testStimuliReps.setEditable(false, true, false);
-	//m_testStimuliReps.setText("0", dontSendNotification);
-	//m_testStimuliReps.setColour(Label::outlineColourId, Colours::black);
-	//m_testStimuliReps.setJustificationType(Justification::centred);
-	//m_testStimuliReps.onTextChange = [this] { indexAudioFiles(); };
-	//addAndMakeVisible(m_testStimuliReps);
+	m_testStimuliReps.setEditable(false, true, false);
+	m_testStimuliReps.setText("0", dontSendNotification);
+	m_testStimuliReps.setColour(Label::outlineColourId, Colours::black);
+	m_testStimuliReps.setJustificationType(Justification::centred);
+	m_testStimuliReps.onTextChange = [this] { createTestTrials(); };
+	addAndMakeVisible(m_testStimuliReps);
 
 	m_autoNextTrial.setToggleState(false, dontSendNotification);
 	m_autoNextTrial.setButtonText("Auto mode");
@@ -85,9 +71,6 @@ AuditoryLocalisation2::AuditoryLocalisation2()
 	m_nextTrial.addListener(this);
 	addAndMakeVisible(m_nextTrial);
 
-	// osc logging
-	startTimerHz(60);
-
 	m_saveLogButton.setButtonText("Save Log");
 	m_saveLogButton.addListener(this);
 	m_saveLogButton.setEnabled(false);
@@ -111,6 +94,22 @@ AuditoryLocalisation2::AuditoryLocalisation2()
 	m_logHeaderTE.setScrollbarsShown(false);
 	m_logHeaderTE.setText(m_logHeader.replace(",", "\n"), dontSendNotification);
 	addAndMakeVisible(m_logHeaderTE);
+
+	// specify audio files dir
+	setAudioFilesDir("C:/TR_FILES/local_repositories/encode-noise-ambisonics/output");
+
+	// add config files
+	File ambixConfigFile = File("C:/TR_FILES/local_repositories/XR-HRTF-processing/data/20211104-q2_tr/ambix_wav/xr-hrtf-5OA-50Leb.config");
+	if (ambixConfigFile.existsAsFile()) ambixConfigFilesArray.add(ambixConfigFile);
+	ambixConfigFile = File("C:/TR_FILES/local_repositories/XR-HRTF-processing/data/SADIE_II_selected_HRTFs/KU100/O5_3d_sn3d_50Leb_pinv_basic.config");
+	if (ambixConfigFile.existsAsFile()) ambixConfigFilesArray.add(ambixConfigFile);
+	ambixConfigFile = File("C:/TR_FILES/local_repositories/XR-HRTF-processing/data/SADIE_II_selected_HRTFs/KEMAR/O5_3d_sn3d_50Leb_pinv_basic.config");
+	if (ambixConfigFile.existsAsFile()) ambixConfigFilesArray.add(ambixConfigFile);
+
+	DBG("number of ambix files added: " + String(ambixConfigFilesArray.size()));
+
+	// osc logging
+	startTimerHz(60);
 }
 
 AuditoryLocalisation2::~AuditoryLocalisation2()
@@ -134,23 +133,20 @@ void AuditoryLocalisation2::paint(Graphics& g)
 
 	g.setColour(Colours::white);
 	g.drawText(audioFilesDir.getFullPathName(), 180, 20, 440, 25, Justification::centredLeft);
-	g.drawText("Number of trials: " + String(audioFilesArray.size()) + ", total length: " + returnHHMMSS(totalTimeOfAudioFiles), 20, 120, 440, 25, Justification::centredLeft);
+	g.drawText("Number of audio files: " + String(audioFilesArray.size()), 20, 90, 440, 25, Justification::centredLeft);
+	g.drawText("Number of ambix config files: " + String(ambixConfigFilesArray.size()), 20, 115, 440, 25, Justification::centredLeft);
+	g.drawText("Number of trials: " + String(testTrials.size()) + ", approximate test length: " + returnHHMMSS(totalTimeOfAudioFiles * testTrials.size()), 20, 140, 440, 25, Justification::centredLeft);
 	
 	if(audioFilesArray.size() > 0)
-		g.drawText("Current trial: " + String(m_currentTrialIndex + 1) + " of " + String(audioFilesArray.size()), 180, 410, 300, 25, Justification::centredLeft);
-
-	// g.setFont(20.0f);
-	// g.drawText("The localisation component is under development.", getLocalBounds(), Justification::centred);
+		g.drawText("Current trial: " + String(m_currentTrialIndex + 1) + " of " + String(testTrials.size()), 180, 410, 300, 25, Justification::centredLeft);
 }
 
 void AuditoryLocalisation2::resized()
 {
 	m_chooseStimuliFolder.setBounds(20, 20, 150, 25);
 
-	//m_calStimuliName.setBounds(20, 60, 150, 25);
-	//m_testStimuliName.setBounds(20, 90, 150, 25);
-	//m_calStimuliReps.setBounds(180, 60, 40, 25);
-	//m_testStimuliReps.setBounds(180, 90, 40, 25);
+	m_testStimuliName.setBounds(20, 60, 150, 25);
+	m_testStimuliReps.setBounds(180, 60, 40, 25);
 	
 	m_autoNextTrial.setBounds(20, 180, 150, 25);
 	m_loopStimulus.setBounds(20, 210, 150, 25);
@@ -200,7 +196,7 @@ void AuditoryLocalisation2::buttonClicked(Button* buttonThatWasClicked)
 		{
 			oscMessageList.clear();
 			setHorizon();
-			indexAudioFiles();
+			createTestTrials();
 			m_oscTxRx->addListener(this);
 			m_activationTime = Time::getMillisecondCounterHiRes();
 			changeTrial(0);
@@ -285,7 +281,7 @@ void AuditoryLocalisation2::changeTrial(int newTrialIndex)
 {
 	if (newTrialIndex != m_currentTrialIndex || newTrialIndex == 0)
 	{
-		if (newTrialIndex >= 0 && newTrialIndex <= audioFilesArray.size() - 1)
+		if (newTrialIndex >= 0 && newTrialIndex <= testTrials.size() - 1)
 		{
 			m_currentTrialIndex = newTrialIndex;
 			playStimulus();
@@ -303,9 +299,14 @@ void AuditoryLocalisation2::changeTrial(int newTrialIndex)
 
 void AuditoryLocalisation2::playStimulus()
 {
-	m_player->pause();
-	m_player->loadSourceToTransport(audioFilesArray[m_currentTrialIndex].getFullPathName());
-	m_player->play();
+	StringArray currentTrial = StringArray::fromTokens(testTrials[m_currentTrialIndex], ",", "\"");
+	if (currentTrial.size() == 2)
+	{
+		m_player->pause();
+		m_renderer->loadAmbixFile(File(currentTrial[1]));
+		m_player->loadSourceToTransport(currentTrial[0]);
+		m_player->play();
+	}
 }
 
 void AuditoryLocalisation2::playBeep(int beep_type)
@@ -330,7 +331,7 @@ void AuditoryLocalisation2::setAudioFilesDir(String filePath)
 	if (File(filePath).exists())
 	{
 		audioFilesDir = filePath;
-		indexAudioFiles();
+		createTestTrials();
 	}
 }
 
@@ -342,48 +343,41 @@ void AuditoryLocalisation2::selectSrcPath()
 	if (fc.browseForDirectory())
 	{
 		audioFilesDir = fc.getResult();
-		indexAudioFiles();
+		createTestTrials();
 	}
 }
 
-void AuditoryLocalisation2::indexAudioFiles()
+void AuditoryLocalisation2::createTestTrials()
 {
+	StringArray testTrialsCopy;
 	audioFilesArray.clear();
-	Array<File> calFilesInDir, audioFilesInDir;
-	String calName = m_calStimuliName.getText();
-	int calReps = m_calStimuliReps.getText().getIntValue();
 	String testName = m_testStimuliName.getText();
 	int testReps = m_testStimuliReps.getText().getIntValue();
 
-	if (calName.isNotEmpty() && calReps > 0)
+	if (testName.isNotEmpty())
 	{
-		calFilesInDir.clear();
-		DirectoryIterator iter(audioFilesDir, false, calName);
-		while (iter.next())
-			calFilesInDir.add(iter.getFile());
-		for (int i = 0; i < calReps; ++i)
-			audioFilesArray.addArray(calFilesInDir);
-	}
-
-	if (testName.isNotEmpty() && testReps > 0)
-	{
-		audioFilesInDir.clear();
 		DirectoryIterator iter(audioFilesDir, false, testName);
 		while (iter.next())
-			audioFilesInDir.add(iter.getFile());
-		for (int i = 0; i < testReps; ++i)
-			audioFilesArray.addArray(audioFilesInDir);
+			audioFilesArray.add(iter.getFile());
 	}
+
+	for (int i = 0; i < audioFilesArray.size(); ++i)
+		for (int j = 0; j < ambixConfigFilesArray.size(); ++j)
+			testTrialsCopy.add(audioFilesArray[i].getFullPathName() + "," + ambixConfigFilesArray[j].getFullPathName());
+
+	testTrials.clear();
+	for (int i = 0; i < testReps; ++i)
+		testTrials.addArray(testTrialsCopy);
 
 	std::random_device seed;
 	std::mt19937 rng(seed());
-	std::shuffle(audioFilesArray.begin(), audioFilesArray.end(), rng);
+	std::shuffle(testTrials.begin(), testTrials.end(), rng);
 
 	bool dumpFileList = true;
 	if (dumpFileList)
 	{
 		File logFile;
-		logFile = audioFilesDir.getFullPathName() + "/filelist.csv";
+		logFile = audioFilesDir.getFullPathName() + "/testTrialList.csv";
 		if (logFile.exists())
 		{
 			logFile.deleteFile();
@@ -395,17 +389,16 @@ void AuditoryLocalisation2::indexAudioFiles()
 		}
 		FileOutputStream fos(logFile);
 		// create csv file header
-		fos << "filename\n";
-		for (int i = 0; i < audioFilesArray.size(); ++i)
-			fos << audioFilesArray[i].getFileName() + "\n";
+		fos << "audiofile,ambixconfigfile\n";
+		for (int i = 0; i < testTrials.size(); ++i)
+			fos << testTrials[i] + "\n";
 	}
 
-
-	m_player->clearPlayer();
-	totalTimeOfAudioFiles = 0.0f;
-
-	if (audioFilesArray.size() > 0)
+	if (audioFilesArray.size() > 0 && testTrials.size() > 0)
 	{
+		m_player->clearPlayer();
+		totalTimeOfAudioFiles = 0.0f;
+
 		// load files to the player
 		for (auto& file : audioFilesArray)
 		{
@@ -417,8 +410,8 @@ void AuditoryLocalisation2::indexAudioFiles()
 			}
 		}
 
-		m_player->cacheFileToPlayer(audioFilesDir.getFullPathName() + "/single_beep.wav");
-		m_player->cacheFileToPlayer(audioFilesDir.getFullPathName() + "/double_beep.wav");
+		//m_player->cacheFileToPlayer(audioFilesDir.getFullPathName() + "/single_beep.wav");
+		//m_player->cacheFileToPlayer(audioFilesDir.getFullPathName() + "/double_beep.wav");
 		m_startStopTest.setEnabled(true);
 	}
 	else
