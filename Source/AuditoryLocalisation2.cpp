@@ -40,22 +40,22 @@ AuditoryLocalisation2::AuditoryLocalisation2()
 	m_distance.setText("1.2", dontSendNotification);
 	m_distance.setColour(Label::outlineColourId, Colours::black);
 	m_distance.setJustificationType(Justification::centred);
-	m_distance.onTextChange = [this] { setHorizon(); };
+	m_distance.onTextChange = [this] { updateRemoteInterface(); };
 	addAndMakeVisible(m_distance);
 
 	m_horizonLocked.setToggleState(false, dontSendNotification);
 	m_horizonLocked.setButtonText("Locked");
-	m_horizonLocked.onStateChange = [this] { setHorizon(); };
+	m_horizonLocked.onStateChange = [this] { updateRemoteInterface(); };
 	addAndMakeVisible(m_horizonLocked);
 
 	m_meshHorizonOn.setToggleState(true, dontSendNotification);
 	m_meshHorizonOn.setButtonText("Mesh");
-	m_meshHorizonOn.onStateChange = [this] { setHorizon(); };
+	m_meshHorizonOn.onStateChange = [this] { updateRemoteInterface(); };
 	addAndMakeVisible(m_meshHorizonOn);
 
 	m_pointerOn.setToggleState(false, dontSendNotification);
 	m_pointerOn.setButtonText("Pointer");
-	m_pointerOn.onStateChange = [this] { setHorizon(); };
+	m_pointerOn.onStateChange = [this] { updateRemoteInterface(); };
 	addAndMakeVisible(m_pointerOn);
 
 	m_startStopTest.setButtonText("Start Test");
@@ -195,7 +195,6 @@ void AuditoryLocalisation2::buttonClicked(Button* buttonThatWasClicked)
 		else
 		{
 			oscMessageList.clear();
-			setHorizon();
 			createTestTrials();
 			m_oscTxRx->addListener(this);
 			m_activationTime = Time::getMillisecondCounterHiRes();
@@ -203,6 +202,8 @@ void AuditoryLocalisation2::buttonClicked(Button* buttonThatWasClicked)
 			m_startStopTest.setToggleState(true, dontSendNotification);
 			m_startStopTest.setButtonText("Stop Test");
 		}
+
+		updateRemoteInterface();
 	}
 	else if (buttonThatWasClicked == &m_prevTrial)
 	{
@@ -335,6 +336,11 @@ void AuditoryLocalisation2::setAudioFilesDir(String filePath)
 	}
 }
 
+bool AuditoryLocalisation2::isTestInProgress()
+{
+	return m_startStopTest.getToggleState();
+}
+
 void AuditoryLocalisation2::selectSrcPath()
 {
 	FileChooser fc("Select the stimuli folder...",
@@ -435,8 +441,13 @@ String AuditoryLocalisation2::returnHHMMSS(double lengthInSeconds)
 	return output;
 }
 
-void AuditoryLocalisation2::setHorizon()
+void AuditoryLocalisation2::updateRemoteInterface()
 {
+	if (m_startStopTest.getToggleState())
+		m_oscTxRx->sendOscMessage("/testSceneType", (String)"test_scene_localization");
+	else
+		m_oscTxRx->sendOscMessage("/testSceneType", (String)"start_scene_localization");
+
 	float distance = m_distance.getText().getFloatValue();
 	bool lock = m_horizonLocked.getToggleState();
 	bool mesh = m_meshHorizonOn.getToggleState();

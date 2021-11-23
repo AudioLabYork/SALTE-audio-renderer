@@ -30,6 +30,8 @@ public:
 
 	String getAudioFilesDir();
 	void setAudioFilesDir(String filePath);
+
+	bool isTestInProgress();
 private:
 	OscTransceiver* m_oscTxRx;
 	StimulusPlayer* m_player;
@@ -48,7 +50,7 @@ private:
 	Label m_distance;
 	ToggleButton m_horizonLocked, m_meshHorizonOn, m_pointerOn;
 	
-	void setHorizon();
+	void updateRemoteInterface();
 	void selectSrcPath();
 	void createTestTrials();
 	String returnHHMMSS(double lengthInSeconds);

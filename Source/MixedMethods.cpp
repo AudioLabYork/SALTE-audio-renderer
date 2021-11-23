@@ -57,9 +57,6 @@ void MixedMethodsComponent::init(OscTransceiver* oscTxRx, TestSession* testSessi
 
 void MixedMethodsComponent::loadTestSession()
 {
-	//// to update ip
-	//updateRemoteInterface();
-
 	// loads the session with first trial
 	loadTrial(0);
 }
@@ -264,9 +261,7 @@ void MixedMethodsComponent::loadTrial(int trialIndex)
 
 	repaint();
 
-
-
-	updateRemoteInterface(true);
+	updateRemoteInterface();
 }
 
 void MixedMethodsComponent::paint(Graphics& g)
@@ -410,10 +405,8 @@ void MixedMethodsComponent::buttonClicked(Button* buttonThatWasClicked)
 
 		m_testSession->exportResults();
 
-		mushraTestListeners.call([this](Listener& l) { l.testCompleted(); });
-
 		setVisible(false);
-		updateRemoteInterface(false);
+		mushraTestListeners.call([this](Listener& l) { l.testCompleted(); });
 	}
 }
 
@@ -432,7 +425,7 @@ void MixedMethodsComponent::sliderValueChanged(Slider* sliderThatWasChanged)
 		ratingReadouts[sliderIndex]->setText(String(sliderThatWasChanged->getValue()), NotificationType::dontSendNotification);
 	}
 
-	updateRemoteInterface(true);
+	updateRemoteInterface();
 }
 
 void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDragging)
@@ -448,7 +441,7 @@ void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDr
 	}
 }
 
-void MixedMethodsComponent::updateRemoteInterface(bool testIsOn)
+void MixedMethodsComponent::updateRemoteInterface()
 {
 	// send the renderer ip address so the VR interface could communicate back
 	m_oscTxRx->sendOscMessage("/rendererIp", (String)localIpAddress);
@@ -557,16 +550,8 @@ void MixedMethodsComponent::updateRemoteInterface(bool testIsOn)
 	// send playback status for 360 video player
 	m_oscTxRx->sendOscMessage("/360videoStatus", (float)m_player->getPlaybackHeadPosition(), (int)m_player->checkPlaybackStatus());
 
-	if (testIsOn)
-	{
-		// show UI
-		m_oscTxRx->sendOscMessage("/showUI", (int)1);
-	}
-	else
-	{
-		// hide UI
-		m_oscTxRx->sendOscMessage("/showUI", (int)0);
-	}
+	// load the mixed methods test screen
+	m_oscTxRx->sendOscMessage("/testSceneType", (String)"test_scene_mixed_methods");
 }
 
 void MixedMethodsComponent::setLocalIpAddress(String ip)
@@ -649,7 +634,7 @@ void MixedMethodsComponent::changeListenerCallback(ChangeBroadcaster* source)
 				trial->setLoopStart(static_cast<float>(m_player->getPlaybackStartOffset()));
 				trial->setLoopEnd(static_cast<float>(m_player->getPlaybackEndOffset()));
 				trial->setLooping(static_cast<float>(m_player->getLoopingState()));
-				updateRemoteInterface(true);
+				updateRemoteInterface();
 			}
 		}
 	}

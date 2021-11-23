@@ -84,7 +84,7 @@ MainComponent::MainComponent()
 
 	m_testSessionForm.init(&m_testSession);
 	m_testSessionForm.addListener(this);
-	addAndMakeVisible(m_testSessionForm);
+	addChildComponent(m_testSessionForm);
 
 	m_mixedMethods.init(&oscTxRx, &m_testSession, &m_stimulusPlayer, &m_binauralRenderer);
 	m_mixedMethods.addListener(this);
@@ -122,7 +122,6 @@ MainComponent::MainComponent()
 	showTestInterface.setClickingTogglesState(true);
 	showTestInterface.addListener(this);
 	addAndMakeVisible(showTestInterface);
-	//showTestInterface.setEnabled(false);
 
 	openRouter.setButtonText("Output Routing");
 	openRouter.addListener(this);
@@ -193,7 +192,7 @@ void MainComponent::getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill
 
 void MainComponent::releaseResources()
 {
-	// relese resources taken by stimulus player object
+	// release resources taken by stimulus player object
 	m_stimulusPlayer.releaseResources();
 	m_loudspeakerRenderer.releaseResources();
 	m_binauralRenderer.releaseResources();
@@ -215,6 +214,8 @@ void MainComponent::paint(Graphics& g)
 
 	g.setFont(18.0f);
 	g.drawMultiLineText("Spatial\nAudio\nListening\nTest\nEnvironment", 120, 33, 120, Justification::left, 1.2f);
+
+	if(!m_testSessionForm.isVisible()) g.drawText("SELECT TEST COMPONENT", 10, 170, 640, 480, Justification::centred);
 
 
 	if (showOnlyTestInterface)
@@ -294,21 +295,36 @@ void MainComponent::buttonClicked(Button* buttonThatWasClicked)
 	}
 	else if (buttonThatWasClicked == &showMixedComp)
 	{
-		m_testSessionForm.setVisible(true);
+		if (m_mixedMethods.isVisible())
+		{
+			m_testSessionForm.setVisible(false);
+			oscTxRx.sendOscMessage("/testSceneType", (String)"test_scene_mixed_methods");
+		}
+		else
+		{
+			m_testSessionForm.setVisible(true);
+			oscTxRx.sendOscMessage("/testSceneType", (String)"start_scene_mixed_methods");
+		}
 		m_localisationComponent.setVisible(false);
-		m_loc2Component.setVisible(false);
+		m_loc2Component.setVisible(false);	
 	}
 	else if (buttonThatWasClicked == &showLocComp)
 	{
 		m_testSessionForm.setVisible(false);
+		m_mixedMethods.setVisible(false);
 		m_localisationComponent.setVisible(true);
 		m_loc2Component.setVisible(false);
 	}
 	else if (buttonThatWasClicked == &showLoc2Comp)
 	{
 		m_testSessionForm.setVisible(false);
+		m_mixedMethods.setVisible(false);
 		m_localisationComponent.setVisible(false);
 		m_loc2Component.setVisible(true);
+		if (m_loc2Component.isTestInProgress())
+			oscTxRx.sendOscMessage("/testSceneType", (String)"test_scene_localization");
+		else
+			oscTxRx.sendOscMessage("/testSceneType", (String)"start_scene_localization");
 	}
 	else if (buttonThatWasClicked == &showTestInterface)
 	{
@@ -412,6 +428,7 @@ void MainComponent::testCompleted()
 	m_testSessionForm.setVisible(true);
 	m_rendererView.setTestInProgress(false);
 	showTestInterface.setToggleState(false, sendNotification);
+	oscTxRx.sendOscMessage("/testSceneType", (String)"start_scene_mixed_methods");
 }
 
 // LOG WINDOW
