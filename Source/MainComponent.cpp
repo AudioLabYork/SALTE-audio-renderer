@@ -406,6 +406,10 @@ void MainComponent::updateOscSettings(bool keepConnected)
 	{
 		connectOscButton.setColour(TextButton::buttonColourId, Colours::green);
 		connectOscButton.setButtonText("OSC connected");
+
+		// send the renderer ip address so the VR interface could communicate back
+		oscTxRx.sendOscMessage("/rendererIp", (String)localIpAddress);
+		DBG("renderer ip address sent, local ip: " + localIpAddress);
 	}
 	else
 	{

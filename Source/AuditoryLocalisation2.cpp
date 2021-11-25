@@ -98,7 +98,7 @@ AuditoryLocalisation2::AuditoryLocalisation2()
 	// specify audio files dir
 	setAudioFilesDir("C:/TR_FILES/local_repositories/encode-noise-ambisonics/output");
 
-	// add config files
+	// add config files (C:\TR_FILES\SALTE-XR-HRTF-TEST\HRTFs)
 	File ambixConfigFile = File("C:/TR_FILES/local_repositories/XR-HRTF-processing/data/20211104-q2_tr/ambix_wav/xr-hrtf-5OA-50Leb.config");
 	if (ambixConfigFile.existsAsFile()) ambixConfigFilesArray.add(ambixConfigFile);
 	ambixConfigFile = File("C:/TR_FILES/local_repositories/XR-HRTF-processing/data/SADIE_II_selected_HRTFs/KU100/O5_3d_sn3d_50Leb_pinv_basic.config");
@@ -186,18 +186,21 @@ void AuditoryLocalisation2::buttonClicked(Button* buttonThatWasClicked)
 	{
 		if (m_startStopTest.getToggleState())
 		{
-			//m_player->stop();
+			// stopping test
 			m_startStopTest.setToggleState(false, dontSendNotification);
 			m_startStopTest.setButtonText("Start Test");
 			m_oscTxRx->removeListener(this);
-			m_loopStimulus.setToggleState(false, sendNotification);
+			saveResults(audioFilesDir.getChildFile(m_sessionId + ".csv"));
+			//m_loopStimulus.setToggleState(false, sendNotification);
 		}
 		else
 		{
+			// starting test
 			oscMessageList.clear();
 			createTestTrials();
 			m_oscTxRx->addListener(this);
 			m_activationTime = Time::getMillisecondCounterHiRes();
+			m_sessionId = Time::getCurrentTime().formatted("%y%m%d_%H%M%S");
 			changeTrial(0);
 			m_startStopTest.setToggleState(true, dontSendNotification);
 			m_startStopTest.setButtonText("Stop Test");
@@ -217,7 +220,7 @@ void AuditoryLocalisation2::buttonClicked(Button* buttonThatWasClicked)
 	{
 		if (oscMessageList.size() > 0)
 		{
-			saveLog();
+			browseToSaveResults();
 		}
 	}
 	repaint();
@@ -246,29 +249,29 @@ void AuditoryLocalisation2::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_player)
 	{
-		// send OSC
-		double time = Time::getMillisecondCounterHiRes() - m_activationTime;
+		//// send OSC
+		//double time = Time::getMillisecondCounterHiRes() - m_activationTime;
 
-		if (audioFilesArray[m_currentTrialIndex].exists() && m_player->checkPlaybackStatus())
-		{
-			String filename = audioFilesArray[m_currentTrialIndex].getFileName();
-			String vis = filename.fromFirstOccurrenceOf("vis_", false, false).upToFirstOccurrenceOf("_", false, false);
-			String azi = filename.fromFirstOccurrenceOf("azi_", false, false).upToFirstOccurrenceOf("_", false, false);
-			String ele = filename.fromFirstOccurrenceOf("ele_", false, false).dropLastCharacters(4);
-			time = Time::getMillisecondCounterHiRes() - m_activationTime;
-			m_oscTxRx->sendOscMessage("/currentTrial", (int)time, (int)(m_currentTrialIndex + 1), (String)filename);
-			time = Time::getMillisecondCounterHiRes() - m_activationTime;
-			m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)time, (int)vis.getIntValue(), (float)azi.getFloatValue(), (float)ele.getFloatValue());
-			//sendMsgToLogWindow("vis: " + vis + ", azi: " + azi + ", ele: " + ele + ", file: " + audioFilesArray[m_currentTrialIndex].getFileName());
-		}
-		else
-		{
-			String filename = "no stimulus present";
-			time = Time::getMillisecondCounterHiRes() - m_activationTime;
-			m_oscTxRx->sendOscMessage("/currentTrial", (int)time, (int)(m_currentTrialIndex + 1), (String)filename);
-			time = Time::getMillisecondCounterHiRes() - m_activationTime;
-			m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)time, (int)0, (float)0.f, (float)0.f);
-		}
+		//if (audioFilesArray[m_currentTrialIndex].exists() && m_player->checkPlaybackStatus())
+		//{
+		//	String filename = audioFilesArray[m_currentTrialIndex].getFileName();
+		//	String vis = filename.fromFirstOccurrenceOf("vis_", false, false).upToFirstOccurrenceOf("_", false, false);
+		//	String azi = filename.fromFirstOccurrenceOf("azi_", false, false).upToFirstOccurrenceOf("_", false, false);
+		//	String ele = filename.fromFirstOccurrenceOf("ele_", false, false).dropLastCharacters(4);
+		//	time = Time::getMillisecondCounterHiRes() - m_activationTime;
+		//	m_oscTxRx->sendOscMessage("/currentTrial", (int)time, (int)(m_currentTrialIndex + 1), (String)filename);
+		//	time = Time::getMillisecondCounterHiRes() - m_activationTime;
+		//	m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)time, (int)vis.getIntValue(), (float)azi.getFloatValue(), (float)ele.getFloatValue());
+		//	//sendMsgToLogWindow("vis: " + vis + ", azi: " + azi + ", ele: " + ele + ", file: " + audioFilesArray[m_currentTrialIndex].getFileName());
+		//}
+		//else
+		//{
+		//	String filename = "no stimulus present";
+		//	time = Time::getMillisecondCounterHiRes() - m_activationTime;
+		//	m_oscTxRx->sendOscMessage("/currentTrial", (int)time, (int)(m_currentTrialIndex + 1), (String)filename);
+		//	time = Time::getMillisecondCounterHiRes() - m_activationTime;
+		//	m_oscTxRx->sendOscMessage("/targetVisAzEl", (int)time, (int)0, (float)0.f, (float)0.f);
+		//}
 
 		// load next trial
 		if (!m_player->checkPlaybackStatus() && m_startStopTest.getToggleState())
@@ -292,6 +295,7 @@ void AuditoryLocalisation2::changeTrial(int newTrialIndex)
 			if (m_startStopTest.getToggleState())
 			{
 				m_startStopTest.triggerClick();
+				if(m_player->checkPlaybackStatus()) m_player->stop();
 			}
 		}
 	}
@@ -469,7 +473,12 @@ void AuditoryLocalisation2::oscBundleReceived(const OSCBundle& bundle)
 
 void AuditoryLocalisation2::processOscMessage(const OSCMessage& message)
 {
-	if (message.getAddressPattern().toString() == "/etptr")
+	if (message.getAddressPattern().toString() == "/attenuation")
+	{
+		m_player->setAttenuation(message[0].getFloat32());
+	}
+
+	if (message.getAddressPattern().toString() == "/pointing")
 	{
 		// add message to the message list
 		String arguments;
@@ -482,53 +491,51 @@ void AuditoryLocalisation2::processOscMessage(const OSCMessage& message)
 
 		double time = Time::getMillisecondCounterHiRes() - m_activationTime;
 		String messageText = String((int)time) + "," + String(m_currentTrialIndex + 1) + ",";
-
-		if (audioFilesArray[m_currentTrialIndex].exists() && m_player->checkPlaybackStatus())
-		{
-			messageText += audioFilesArray[m_currentTrialIndex].getFileName() + "," + message.getAddressPattern().toString() + arguments + "\n";
-		}
-		else
-		{
-			messageText += "no stimulus present," + message.getAddressPattern().toString() + arguments + "\n";
-		}
+		messageText += testTrials[m_currentTrialIndex] + ","; // audio filename and ambix config name
+		messageText += message.getAddressPattern().toString() + arguments + "\n";
 
 		oscMessageList.add(messageText);
 	}
 
-	if (message.getAddressPattern().toString() == "/control")
+	if (message.getAddressPattern().toString() == "/next_trial")
 	{
 		// control the test component
 		if (message[0].isString() && message[0].getString() == "confirm")
 		{
-			m_nextTrial.triggerClick(); //changeTrial(m_currentTrialIndex + 1);
+			m_nextTrial.triggerClick();
 		}
 	}
 
 }
 
-void AuditoryLocalisation2::saveLog()
+void AuditoryLocalisation2::browseToSaveResults()
 {
+	File browseLocation = File::getCurrentWorkingDirectory();
+	if (audioFilesDir.exists())
+		browseLocation = audioFilesDir;
+
 	FileChooser fc("Select or create results export file...",
-		File::getCurrentWorkingDirectory(),
+		browseLocation,
 		"*.csv",
 		true);
 
 	if (fc.browseForFileToSave(true))
 	{
-		File logFile;
-
-		logFile = fc.getResult();
-
-		if (!logFile.exists())
-			logFile.create();
-
-		FileOutputStream fos(logFile);
-
-		// create csv file header
-		fos << m_logHeader;
-		for (int i = 0; i < oscMessageList.size(); ++i)
-			fos << oscMessageList[i];
+		saveResults(fc.getResult());
 	}
+}
+
+void AuditoryLocalisation2::saveResults(File results)
+{
+	if (!results.exists())
+		results.create();
+
+	FileOutputStream fos(results);
+
+	// create csv file header
+	fos << m_logHeader;
+	for (int i = 0; i < oscMessageList.size(); ++i)
+		fos << oscMessageList[i];
 }
 
 void AuditoryLocalisation2::sendMsgToLogWindow(String message)

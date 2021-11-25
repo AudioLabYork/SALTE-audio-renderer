@@ -495,8 +495,18 @@ void StimulusPlayer::changeListenerCallback(ChangeBroadcaster* source)
 
 void StimulusPlayer::setGain(const float gainInDB)
 {
-	transportSource.setGain(Decibels::decibelsToGain(gainInDB));
-	gainSlider.setValue(gainInDB, dontSendNotification);
+	m_gain = gainInDB;
+	float overallGain = m_gain - m_attenuation;
+	transportSource.setGain(Decibels::decibelsToGain(overallGain));
+	gainSlider.setValue(overallGain, dontSendNotification);
+}
+
+void StimulusPlayer::setAttenuation(const float attInDB)
+{
+	m_attenuation = attInDB;
+	float overallGain = m_gain - m_attenuation;
+	transportSource.setGain(Decibels::decibelsToGain(overallGain));
+	//gainSlider.setValue(overallGain, dontSendNotification);
 }
 
 bool StimulusPlayer::getLoopingState()

@@ -443,10 +443,6 @@ void MixedMethodsComponent::sliderDragStarted(Slider* sliderThatHasBeenStartedDr
 
 void MixedMethodsComponent::updateRemoteInterface()
 {
-	// send the renderer ip address so the VR interface could communicate back
-	m_oscTxRx->sendOscMessage("/rendererIp", (String)localIpAddress);
-	sendMsgToLogWindow("update started, local ip: " + localIpAddress);
-
 	TestTrial* trial = m_testSession->getTrial(m_testSession->getCurrentTrialIndex());
 	if (trial != nullptr)
 	{

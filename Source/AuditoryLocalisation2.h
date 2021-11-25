@@ -68,11 +68,13 @@ private:
 	void playBeep(int beep_type);
 	void sendMsgToLogWindow(String message);
 
+	String m_sessionId;
 
 	// OSC logging
 	void processOscMessage(const OSCMessage& message);
-	void saveLog();
+	void browseToSaveResults();
+	void saveResults(File results);
 	double m_activationTime = 0.0f;
 	StringArray oscMessageList;
-	String m_logHeader = "salte_time,trial_index,stimulus,osc_pattern,ml_time,et_az,et_el,et_rot,et_dist,et_conf,cal_status,leye_conf,reye_conf,ptr_az,ptr_el,target_az,target_el\n";
+	String m_logHeader = "salte_time,trial_index,stimulus,ambix_config,osc_address,unity_time,head_az,head_el,ptr_az,ptr_el,ptr_dist\n";
 };

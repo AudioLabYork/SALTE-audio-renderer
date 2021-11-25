@@ -57,6 +57,7 @@ public:
 	void loop(bool looping);
 
 	void setGain(const float gainInDB);
+	void setAttenuation(const float attInDB);
 	bool getLoopingState();
 	bool checkPlaybackStatus();
 	bool checkLoopStatus();
@@ -102,6 +103,8 @@ private:
 	AudioFormatManager formatManager;
 
 	AmbisonicRotation rotator;
+
+	float m_gain = 0.0f, m_attenuation = 0.0f;
 
 	bool m_loopingEnabled;
 	double begOffsetTime;
